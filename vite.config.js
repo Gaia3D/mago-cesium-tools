@@ -8,8 +8,8 @@ export default defineConfig({
         }
     )],
     test: {
-        globals: true, // Jest 스타일의 전역 메서드 (`describe`, `it`, `expect` 등) 사용 가능
-        environment: 'jsdom', // DOM 테스트를 위해 jsdom 환경 사용
+        globals: true,
+        environment: 'jsdom',
     },
     build: {
         lib: {
@@ -26,5 +26,6 @@ export default defineConfig({
                 },
             },
         }
-    }
+    },
+    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vs, **/*.fs'],
 });

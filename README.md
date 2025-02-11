@@ -11,15 +11,16 @@ language : `vanilla js`
 - vite
 - vite-plugin-cesium
 - cesium
-- react
-- vue
+- jsdom
 
-## Installation
+## Getting Started
+
+### Installation
 add `mago-cesium-tools` to your project
 ```bash
 npm i mago-cesium-tools
 ```
-or with yarn
+or with `yarn`
 ```bash
 yarn add mago-cesium-tools
 ```
@@ -35,23 +36,21 @@ const magoViewer = new MagoViewer(viewer);
 magoViewer.sample(10000);
 ```
 
-![img.png](img.png)
-
 ## Development
 
-## Install
+### Install
 install dependencies for development
 ```bash
 npm install
 ```
 
-## Start
+### Start
 start dev server at `localhost:5173`
 ```bash
 npm run start
 ```
 
-## Build
+### Build
 build project, output to `dist` directory
 ```bash
 npm run build
