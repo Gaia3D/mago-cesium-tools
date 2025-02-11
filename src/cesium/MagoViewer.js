@@ -1,5 +1,13 @@
 import { Viewer, Entity, Cartesian3, Color } from "cesium";
 
+/**
+ * MagoViewer is a class that creates a viewer to render points on a globe.
+ * @class
+ * @param {Viewer} viewer - Cesium Viewer instance
+ * @example
+ * const magoViewer = new MagoViewer(viewer);
+ * magoViewer.sample(100);
+ */
 export class MagoViewer {
     constructor(viewer) {
         this.viewer = viewer;
@@ -17,6 +25,12 @@ export class MagoViewer {
         );
     }
 
+    /**
+     * Samples random points on the globe.
+     * @param count
+     * @function
+     * @returns {void}
+     */
     sample(count) {
         for (let i = 0; i < count; i++) {
             // random points
