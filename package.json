@@ -1,20 +1,34 @@
 {
   "name": "mago-cesium-tools",
   "private": false,
-  "version": "0.0.0-alpha",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "publish": "npm publish --access public",
+    "test": "vitest"
   },
   "devDependencies": {
-    "vite": "^6.1.0"
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
   },
   "peerDependencies": {
     "cesium": "^1.114.0",
     "react": "^18.0.0",
-    "vue": "^3.0.0",
-    "vite-plugin-cesium": "^1.2.0"
-  }
+    "vite-plugin-cesium": "^1.2.0",
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "jsdom": "^26.0.0"
+  },
+  "description": "mago-cesium-tools description",
+  "main": "vite.config.js",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
