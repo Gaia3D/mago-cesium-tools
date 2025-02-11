@@ -17,5 +17,6 @@ document.querySelector('#app').innerHTML = `
 const viewer = new Viewer("cesiumContainer");
 
 const magoViewer = new MagoViewer(viewer);
-magoViewer.addPoint(126.978388, 37.566609);
-magoViewer.addRandomPoint(20000);
+magoViewer.sample(20000);
+
+export { MagoViewer };

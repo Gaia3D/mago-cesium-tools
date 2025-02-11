@@ -17,7 +17,7 @@ export class MagoViewer {
         );
     }
 
-    addRandomPoint(count) {
+    sample(count) {
         for (let i = 0; i < count; i++) {
             // random points
             let randomX = (Math.random() * 360) - 180;
@@ -33,6 +33,7 @@ export class MagoViewer {
             );
         }
     }
+
     destroy() {
         this.viewer.destroy();
     }
