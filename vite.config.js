@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import cesium from 'vite-plugin-cesium';
+import * as path from "node:path";
 export default defineConfig({
     plugins: [
         cesium({
@@ -12,9 +13,9 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: 'src/entry.js',
+            entry: path.resolve(__dirname, 'src/entry.js'),
             name: 'mago-cesium-tools',
-            fileName: (format) => `mago-cesium-tools.${format}.js`,
+            fileName: (format) => `index.${format}.js`,
             formats: ['es', 'cjs']
         },
         rollupOptions: {
