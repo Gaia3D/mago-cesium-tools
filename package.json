@@ -3,6 +3,8 @@
   "private": false,
   "version": "0.0.8",
   "type": "module",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
   "exports": {
     ".": {
       "import": "./dist/index.es.js",
@@ -14,7 +16,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "buildPublish": "vite build && npm publish"
+    "build-publish": "vite build && npm publish"
   },
   "devDependencies": {
     "vite": "^6.1.0",
@@ -30,7 +32,6 @@
     "jsdom": "^26.0.0"
   },
   "description": "mago-cesium-tools description",
-  "main": "vite.config.js",
   "directories": {
     "test": "test"
   },
