@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import grid from '../assets/128x128.gltf';
-import {MagoEdgeRender} from "./MagoEdgeRender.js";
+import tree from '../assets/lowpoly-tree.glb';
 
 const modelUrl = new URL(grid, import.meta.url).href;
 
@@ -17,24 +17,14 @@ export class MagoSimulation {
         this.viewer = viewer;
     }
 
-    init() {
+    createAsset() {
         const model = this.viewer.entities.add({
             name: 'Model', position: Cesium.Cartesian3.fromDegrees(0, 0, 0), model: {
-                uri: modelUrl, scale: 1.0,
+                uri: tree,
+                scale: 1.0,
             }
         });
-
-        this.viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(0, 0, 10000), orientation: {
-                heading: Cesium.Math.toRadians(0.0), pitch: Cesium.Math.toRadians(-90.0)
-            }, duration: 0
-        });
-    }
-
-    outline() {
-        setTimeout(() => {
-            const magoEdgeRender = new MagoEdgeRender(this.viewer);
-            magoEdgeRender.on();
-        }, 1000);
+        let hpr = new Cesium.HeadingPitchRange(0.0, -90.0, 0.0);
+        this.viewer.zoomTo(model, hpr)
     }
 }

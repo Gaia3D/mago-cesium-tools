@@ -1,4 +1,5 @@
 import { Viewer, Entity, Cartesian3, Color } from "cesium";
+import * as Cesium from 'cesium'
 
 /**
  * MagoViewer is a class that creates a viewer to render points on a globe.
@@ -13,13 +14,46 @@ export class MagoViewer {
         this.viewer = viewer;
     }
 
-    addPoint(longitude, latitude) {
+    /**
+     * Initializes the viewer to render points on a globe.
+     * @function
+     * @returns {void}
+     */
+    init() {
+        const initPosition = Cesium.Cartesian3.fromDegrees(0, 0, 1000);
+        this.viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString("#111133");
+        /*this.viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(initPosition.x, initPosition.y, initPosition.z),
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-90.0)
+            },
+            duration: 0
+        })*/
+        const grid = new Cesium.GridImageryProvider({
+            cells: 8,
+            color : Cesium.Color.WHITE.withAlpha(0.25),
+            glowColor : Cesium.Color.BLACK.withAlpha(0.0),
+            glowWidth : 4,
+            backgroundColor: Cesium.Color.BLACK.withAlpha(0.05),
+            maximumLevel: 5
+        })
+        this.viewer.scene.imageryLayers.addImageryProvider(grid)
+    }
+
+    /**
+     * Adds a point to the globe.
+     * @param cssColor - CSS color string (e.g., "#ff0000")
+     */
+    addRandomPoint(cssColor = "#ff0000") {
+        let randomX = (Math.random() * 360) - 180;
+        let randomY = (Math.random() * 180) - 90;
         this.viewer.entities.add(
             new Entity({
-                position: Cartesian3.fromDegrees(longitude, latitude),
+                position: Cartesian3.fromDegrees(randomX, randomY),
                 point: {
-                    pixelSize: 5,
-                    color: Color.RED
+                    pixelSize: 3,
+                    color: Color.fromCssColorString(cssColor)
                 },
             })
         );
@@ -31,20 +65,9 @@ export class MagoViewer {
      * @function
      * @returns {void}
      */
-    sample(count) {
+    addRandomPoints(count, cssColor = "#0000ff") {
         for (let i = 0; i < count; i++) {
-            // random points
-            let randomX = (Math.random() * 360) - 180;
-            let randomY = (Math.random() * 180) - 90;
-            this.viewer.entities.add(
-            new Entity({
-                position: Cartesian3.fromDegrees(randomX, randomY),
-                point: {
-                    pixelSize: 5,
-                    color: Color.BLUE
-                },
-            })
-            );
+            this.addRandomPoint(cssColor);
         }
     }
 

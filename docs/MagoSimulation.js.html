@@ -19,16 +19,16 @@
 
     <h1 class="page-title">Source: MagoSimulation.js</h1>
 
-    
 
 
 
-    
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import * as Cesium from 'cesium';
 import grid from '../assets/128x128.gltf';
-import {MagoEdgeRender} from "./MagoEdgeRender.js";
+import {OutlineRender} from "./OutlineRender.js";
 
 const modelUrl = new URL(grid, import.meta.url).href;
 
@@ -61,7 +61,7 @@ export class MagoSimulation {
 
     outline() {
         setTimeout(() => {
-            const magoEdgeRender = new MagoEdgeRender(this.viewer);
+            const magoEdgeRender = new OutlineRender(this.viewer);
             magoEdgeRender.on();
         }, 1000);
     }
@@ -75,7 +75,7 @@ export class MagoSimulation {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoEdgeRender.html">MagoEdgeRender</a></li><li><a href="MagoSimulation.html">MagoSimulation</a></li><li><a href="MagoViewer.html">MagoViewer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoEdgeRender.html">OutlineRender</a></li><li><a href="MagoSimulation.html">MagoSimulation</a></li><li><a href="MagoViewer.html">MagoViewer</a></li></ul>
 </nav>
 
 <br class="clear">
