@@ -18,6 +18,9 @@
     "test": "vitest",
     "build-publish": "vite build && npm publish"
   },
+  "dependencies": {
+    "jsdom": "^26.0.0"
+  },
   "devDependencies": {
     "vite": "^6.1.0",
     "vitest": "^3.0.5"
@@ -27,9 +30,6 @@
     "react": "^18.0.0",
     "vite-plugin-cesium": "^1.2.0",
     "vue": "^3.0.0"
-  },
-  "dependencies": {
-    "jsdom": "^26.0.0"
   },
   "description": "mago-cesium-tools description",
   "directories": {

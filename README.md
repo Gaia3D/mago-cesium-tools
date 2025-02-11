@@ -28,12 +28,14 @@ yarn add mago-cesium-tools
 ### Usage
 ```javascript
 import { Viewer } from 'cesium';
-import { MagoCesiumTools } from 'mago-cesium-tools';
+import { MagoViewer } from 'mago-cesium-tools'
 
 const viewer = new Viewer('cesiumContainer');
-const magoCesiumTools = new MagoCesiumTools(viewer);
-magoCesiumTools.sample();
+const magoViewer = new MagoViewer(viewer);
+magoViewer.sample(10000);
 ```
+
+![img.png](img.png)
 
 ## Development
 
