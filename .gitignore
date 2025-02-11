@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.iml
+
+package-lock.json
+yarn.lock
