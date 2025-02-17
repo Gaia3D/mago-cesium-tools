@@ -27,5 +27,5 @@ export default defineConfig({
             },
         }
     },
-    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vs, **/*.fs'],
+    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vert, **/*.frag'],
 });
