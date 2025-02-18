@@ -1,3 +1,15 @@
+@font-face {
+    font-family: 'Montserrat';
+    src: url('../fonts/Montserrat-VariableFont_wght.ttf') format('woff');
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+* {
+    font-family: 'Montserrat', sans-serif;
+}
+
 #cesiumContainer {
     position: absolute;
     top: 0;
@@ -9,7 +21,90 @@
 
 #toolbar {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 0;
+    left: 0;
+    margin: 10px;
     z-index: 100;
+    max-width: 350px;
+    padding: 20px 15px;
+    text-align: left;
+    color: #e3e3e3;
+
+    /* From https://css.glass */
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#toolbar span.line {
+    display: block;
+    margin: 5px 0 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#toolbar > h1 {
+    margin: 0 0 10px;
+    font-size: 16px;
+}
+
+#toolbar > h2 {
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+#toolbar > h3 {
+    margin: 0 0 10px;
+    font-size: 12px;
+}
+
+#toolbar > p {
+    margin: 0 0 10px;
+    font-size: 12px;
+}
+
+#toolbar > label {
+    margin: 0 0 5px;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+#toolbar > button {
+    cursor: pointer;
+}
+
+#toolbar > button, #toolbar > input, #toolbar > select {
+    position: relative;
+    margin-right: 5px;
+    padding: 5px 10px;
+    color: #272727;
+    font-size: 12px;
+    vertical-align: middle;
+
+    /* From https://css.glass */
+    background: rgba(255, 255, 255, 0.37);
+    border-radius: 8px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    /*backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);*/
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#toolbar > input[type="range"] {
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0 0;
+}
+
+#toolbar > input[type="text"] {
+    width: 50px;
+    text-align: center;
+}
+
+#toolbar > button:hover, #toolbar > input:hover, #toolbar > select:hover {
+    background: rgba(255, 255, 255, 0.5);
 }

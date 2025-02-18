@@ -149,6 +149,7 @@ void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
     v_water_height = waterHeight;
     v_temp_water_height = tempWaterHeight;
     v_flux_value = getVelocity(texCoord);
+    v_water_color = u_water_color;
 
     vsOutput.positionMC = vsInput.attributes.positionMC + vec3(-(u_grid_size / 2.0), terrainHeight + waterHeight, + (u_grid_size / 2.0));
 

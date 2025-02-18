@@ -9,6 +9,8 @@ uniform sampler2D uFluxUpTexture;
 uniform sampler2D uFluxDownTexture;
 uniform sampler2D uFluxLeftTexture;
 uniform sampler2D uFluxRightTexture;
+uniform sampler2D uMinusSourceTexture;
+uniform sampler2D uSeaWallTexture;
 
 uniform float uGridSize;
 uniform float uMaxHeight;
@@ -19,6 +21,7 @@ uniform float uGravity;
 uniform float uWaterDensity;
 uniform float uTimeStep;
 uniform float uCushionFactor;
+uniform float uEvaporationRate;
 
 uniform bool uSimulationConfine;
 
@@ -58,6 +61,12 @@ void main() {
     vec2 right = vec2(textureCoordinate.x + divX, textureCoordinate.y);
 
     vec4 source = texture2D(uSourceTexture, textureCoordinate);
+    vec4 minusSource = texture2D(uMinusSourceTexture, textureCoordinate);
+    vec4 seaWall = texture2D(uSeaWallTexture, textureCoordinate);
+    vec4 seaWallUp = texture2D(uSeaWallTexture, up);
+    vec4 seaWallDown = texture2D(uSeaWallTexture, down);
+    vec4 seaWallLeft = texture2D(uSeaWallTexture, left);
+    vec4 seaWallRight = texture2D(uSeaWallTexture, right);
 
     vec4 water = texture2D(uWaterTexture, textureCoordinate);
     vec4 waterUp = texture2D(uWaterTexture, up);
@@ -77,6 +86,13 @@ void main() {
     vec4 fluxRight = texture2D(uFluxRightTexture, textureCoordinate);
 
     float sourceValue = unpackDepth(source) * maxHeight;
+    float minusSourceValue = unpackDepth(minusSource) * maxHeight;
+
+    float seaWallValue = unpackDepth(seaWall) * maxHeight;
+    float seaWallUpValue = unpackDepth(seaWallUp) * maxHeight;
+    float seaWallDownValue = unpackDepth(seaWallDown) * maxHeight;
+    float seaWallLeftValue = unpackDepth(seaWallLeft) * maxHeight;
+    float seaWallRightValue = unpackDepth(seaWallRight) * maxHeight;
 
     float waterValue = unpackDepth(water) * maxHeight;
     float waterUpValue = unpackDepth(waterUp) * maxHeight;
@@ -85,11 +101,16 @@ void main() {
     float waterRightValue = unpackDepth(waterRight) * maxHeight;
 
     float terrainValue = unpackDepth(terrain) * maxHeight;
-
     float terrainUpValue = unpackDepth(terrainUp) * maxHeight;
     float terrainDownValue = unpackDepth(terrainDown) * maxHeight;
     float terrainLeftValue = unpackDepth(terrainLeft) * maxHeight;
     float terrainRightValue = unpackDepth(terrainRight) * maxHeight;
+
+    terrainValue = terrainValue + seaWallValue;
+    terrainUpValue = terrainUpValue + seaWallUpValue;
+    terrainDownValue = terrainDownValue + seaWallDownValue;
+    terrainLeftValue = terrainLeftValue + seaWallLeftValue;
+    terrainRightValue = terrainRightValue + seaWallRightValue;
 
     if (uSimulationConfine) {
         if (up.y > 1.0) {
@@ -109,7 +130,6 @@ void main() {
             terrainRightValue = 0.0;
         }
     }
-
 
     if (textureCoordinate.x <= 0.0) {
         terrainLeftValue = maxHeight;
@@ -183,8 +203,13 @@ void main() {
         outFluxRight = outFluxRight * factor;
     }
 
+    float evaporation = uEvaporationRate;
+
     //sourceValue = 1.0 / maxHeight / 60.0;
-    waterValue = waterValue + sourceValue;
+    waterValue = waterValue + sourceValue - minusSourceValue - evaporation;
+    if (waterValue < 0.0) {
+        waterValue = 0.0;
+    }
 
     // fragColor
     gl_FragData[0] = packDepth(waterValue / maxHeight);

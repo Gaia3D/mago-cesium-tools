@@ -42,29 +42,45 @@ export class MagoWaterSimulation {
         this.intervalObject = undefined;
 
         this.options = {
+            waterColor : new Cesium.Color(0.25, 0.75, 1.0),
+
             cellSize : 1,
             gridSize : 512,
             maxHeight : 10000.0,
             maxFlux : 10000.,
-            interval : 1000 / 30,
-            gravity : 9.8,
+            interval : 1000 / 60,
+            gravity : 9.80665,
             timeStep : 0.1,
             waterDensity : 998.0,
             cushionFactor : 0.998,
+            evaporationRate : 0.0001,
 
             /* rain */
-            rainAmount : 0,
-            rainMaxPrecipitation : 100000, // mm/s
+            rainAmount : 1, // percent
+            rainMaxPrecipitation : 0.00,
 
             /* water source */
-            waterSourceAmount : 1,
-            waterSourcePosition : 0, // cell position
+            waterSourceAmount : 5,
+            //waterSourcePosition : -1,
+            waterSourcePositions : [],
+            waterSourceArea : 1,
+
+            /* water minus source */
+            waterMinusSourceAmount : 5,
+            //waterMinusSourcePosition : -1,
+            waterMinusSourcePositions : [],
+            waterMinusSourceArea : 2,
+
+            /* seawall */
+            waterSeawallHeight : 20.0,
+            waterSeawallPositions : [],
+            waterSeawallArea : 4,
 
             colorIntensity : 1.0,
-            heightPalette : true,
+            heightPalette : false,
             waterSkirt : true,
             simulationConfine : false,
-            waterBrightness : 1.0
+            waterBrightness : 0.5,
         }
         this.init(viewer);
     }
@@ -111,7 +127,7 @@ export class MagoWaterSimulation {
             extent = this.extent;
         }
         const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
-        return viewer.entities.add({
+        return this.viewer.entities.add({
             rectangle: {
                 coordinates: rectangle,
                 material: Cesium.Color.BLACK.withAlpha(0.1),
@@ -136,8 +152,17 @@ export class MagoWaterSimulation {
 
     calcLonLat(center, offset)  {
         const transformMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        let translationMatrix = Cesium.Matrix4.fromTranslation(offset);
-        let translatedMatrix = Cesium.Matrix4.multiply(transformMatrix, translationMatrix, new Cesium.Matrix4());
+        let translatedMatrix = Cesium.Matrix4.multiplyByTranslation(transformMatrix, offset, new Cesium.Matrix4());
+        let translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
+        let cartographic = Cesium.Cartographic.fromCartesian(translation);
+        return {
+            lon: Cesium.Math.toDegrees(cartographic.longitude),
+            lat: Cesium.Math.toDegrees(cartographic.latitude)
+        }
+    }
+
+    calcLonLatWithCenterMatrix(centerMatrix, offset)  {
+        let translatedMatrix = Cesium.Matrix4.multiplyByTranslation(centerMatrix, offset, new Cesium.Matrix4());
         let translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
         let cartographic = Cesium.Cartographic.fromCartesian(translation);
         return {
@@ -168,7 +193,7 @@ export class MagoWaterSimulation {
         await this.initWaterSimulation(options);
         await this.initializeWater();
         await this.initializeTerrain();
-        this.initWaterSource();
+        //this.initWaterSource();
         this.renderFrame(true);
     }
 
@@ -182,17 +207,73 @@ export class MagoWaterSimulation {
         }
     }
 
-    initWaterSource() {
+    /*initWaterSource() {
         const gridSize = this.options.gridSize;
         let cellPosition = ((gridSize * (gridSize / 2)) + (gridSize / 2)) * 4;
         console.log('[MCT][WATER] setWaterSourcePosition', cellPosition);
         this.options.waterSourcePosition = cellPosition;
-    }
+    }*/
 
-    setWaterSourcePosition(lon, lat) {
+    /*setWaterSourcePosition(lon, lat) {
         let cellPosition = this.findCellFromDegree(lon, lat);
         console.log('[MCT][WATER] setWaterSourcePosition', cellPosition);
         this.options.waterSourcePosition = cellPosition;
+    }*/
+
+    clearWaterSourcePositions() {
+        this.options.waterSourcePositions = [];
+    }
+
+    clearWaterMinusSourcePositions() {
+        this.options.waterMinusSourcePositions = [];
+    }
+
+    clearSeaWallPositions() {
+        this.options.waterSeawallPositions = [];
+    }
+
+    addWaterSourcePosition(lon, lat) {
+        let cellPosition = this.findCellFromDegree(lon, lat);
+        let centerPosition = this.calcCellCenterPosition(cellPosition);
+
+        this.options.waterSourcePositions.push(cellPosition * 4);
+        console.log('[MCT][WATER] setWaterSourcePosition', cellPosition * 4);
+        return centerPosition;
+    }
+
+    addWaterMinusSourcePosition(lon, lat) {
+        let cellPosition = this.findCellFromDegree(lon, lat);
+        let centerPosition = this.calcCellCenterPosition(cellPosition);
+
+        this.options.waterMinusSourcePositions.push(cellPosition * 4);
+        console.log('[MCT][WATER] setWaterMinusSourcePosition', cellPosition * 4);
+        return centerPosition;
+    }
+
+    addSeaWallPosition(lon, lat) {
+        let cellPosition = this.findCellFromDegree(lon, lat);
+        let centerPosition = this.calcCellCenterPosition(cellPosition);
+
+        this.options.waterSeawallPositions.push(cellPosition * 4);
+        console.log('[MCT][WATER] setWaterSeawallPosition', cellPosition * 4);
+        return centerPosition;
+    }
+
+    /*setWaterMinusSourcePosition(lon, lat) {
+        let cellPosition = this.findCellFromDegree(lon, lat);
+        console.log('[MCT][WATER] setWaterMinusSourcePosition', cellPosition);
+        this.options.waterMinusSourcePosition = cellPosition;
+    }*/
+
+    setRandomSourcePosition() {
+        const gridSize = this.options.gridSize;
+        const max = gridSize * gridSize;
+
+        const randomSourceCell = Math.floor(Math.random() * max) * 4;
+        console.log('[MCT][WATER] setWaterSourcePosition', randomSourceCell);
+        this.options.waterSourcePosition = randomSourceCell;
+
+        this.options.waterSourceAmount = Math.floor(Math.random() * 10);
     }
 
     initOptions(options) {
@@ -318,7 +399,11 @@ export class MagoWaterSimulation {
                 }, u_height_palette: {
                     type: Cesium.UniformType.BOOL,
                     value: this.options.heightPalette
-                }, /*u_water_normal_texture: {
+                }, u_water_color: {
+                    type: Cesium.UniformType.VEC3,
+                    value: this.options.waterColor,
+                },
+                /*u_water_normal_texture: {
                     type: Cesium.UniformType.SAMPLER_2D,
                     value: this.waterNormalTexture
                 }*/
@@ -330,7 +415,8 @@ export class MagoWaterSimulation {
                 v_texCoord: Cesium.VaryingType.VEC2,
                 v_isNoWater: Cesium.VaryingType.FLOAT,
                 //v_normal_texture: Cesium.VaryingType.VEC3,
-                v_flux_value: Cesium.VaryingType.VEC2
+                v_flux_value: Cesium.VaryingType.VEC2,
+                v_water_color: Cesium.VaryingType.VEC3
             },
             vertexShaderText: vertexShaderText,
             fragmentShaderText: fragmentShaderText,
@@ -375,6 +461,7 @@ export class MagoWaterSimulation {
         this.customShader.setUniform('u_water_skirt', this.options.waterSkirt);
         this.customShader.setUniform('u_water_brightness', this.options.waterBrightness);
         this.customShader.setUniform('u_height_palette', this.options.heightPalette);
+        this.customShader.setUniform('u_water_color', this.options.waterColor);
 
         if (isFirstFrame) {
             console.log('[MCT][WATER] render first frame');
@@ -414,6 +501,7 @@ export class MagoWaterSimulation {
             }*/
         } else if (terrainProvider instanceof Cesium.CesiumTerrainProvider) {
             const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon, minLat);
+            const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
             let positions = [];
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
@@ -421,7 +509,7 @@ export class MagoWaterSimulation {
                     let realj = j * cellSize;
                     let reali = i * cellSize;
 
-                    let gridPosition = this.calcLonLat(leftBottomCartesian, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+                    let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
                     let position = new Cesium.Cartographic(Cesium.Math.toRadians(gridPosition.lon), Cesium.Math.toRadians(gridPosition.lat), 0);
                     positions.push(position);
                 }
@@ -448,6 +536,22 @@ export class MagoWaterSimulation {
         }
     }
 
+    calcCellCenterPosition(index) {
+        const gridSize = this.options.gridSize;
+        const cellSize = this.options.cellSize;
+        const realGridSize = gridSize * cellSize;
+        const realj = (index % gridSize) * cellSize;
+        const reali = Math.floor(index / gridSize) * cellSize;
+
+        const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(this.extent.getMinLon(), this.extent.getMinLat());
+        const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
+        let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+
+        console.log('[MCT][WATER] calcCellCenterPosition', gridPosition);
+
+        return gridPosition;
+    }
+
     findCellFromDegree(lon, lat) {
         const extent = this.extent;
         const minLon = extent.getMinLon();
@@ -458,18 +562,18 @@ export class MagoWaterSimulation {
         const realGridSize = gridSize * cellSize;
 
         const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon, minLat);
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
+        const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
+        for (let i = 0; i < gridSize - 1; i++) {
+            for (let j = 0; j < gridSize - 1; j++) {
                 let realj = j * cellSize;
                 let reali = i * cellSize;
-                let gridPosition = this.calcLonLat(leftBottomCartesian, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+                let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+                let nextGridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - (reali - cellSize), (realj - cellSize), 0));
 
-                let inLon = gridPosition.lon <= lon && (gridPosition.lon + cellSize) >= lon;
-                let inLat =  gridPosition.lat <= lat && (gridPosition.lat + cellSize) >= lat;
+                let inLon = gridPosition.lon <= lon && nextGridPosition.lon >= lon;
+                let inLat = gridPosition.lat >= lat && nextGridPosition.lat <= lat;
                 if (inLon && inLat) {
-                    /*console.log('[MCT][WATER] findCellFromDegree', i, j);
-                    console.log('[MCT][WATER] findCellFromDegree', gridPosition);*/
-                    const index = this.findIndex(j, i) * 4;
+                    const index = this.findIndex(j, i);
                     console.log('[MCT][WATER] findCellFromDegree', index);
                     return index;
                 }

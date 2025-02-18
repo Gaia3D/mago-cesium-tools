@@ -11,6 +11,9 @@ export class WaterSimulator {
             framebuffer: null,
 
             sourceTexture: null,
+            minusSourceTexture: null,
+            seaWallTexture: null,
+
             waterTexture: null,
             terrainTexture: null,
             fluxUpTexture: null,
@@ -276,11 +279,14 @@ export class WaterSimulator {
             fluxShaderInfo.sourceTexture = sourceTexture;
         } else {
             const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
-            const rainAmount = this.options.rainAmount / (this.options.cellSize * this.options.cellSize);
+            //const rainAmount = this.options.rainAmount / (this.options.cellSize * this.options.cellSize);
+            const gridArea = this.options.gridSize * this.options.gridSize;
 
-            const precipitation = (this.options.rainMaxPrecipitation / (1000 / this.options.interval)) / 1000;
+            const rainLoop = gridArea / 100 * this.options.rainAmount;
+
+            const precipitation = this.options.rainMaxPrecipitation;
             const rainMaxPrecipitation = precipitation / (this.options.cellSize * this.options.cellSize);
-            for (let i = 0; i < rainAmount; i++) {
+            for (let i = 0; i < rainLoop; i++) {
                 let randomGridIndex = Math.floor(Math.random() * this.options.gridSize * this.options.gridSize);
                 randomGridIndex = randomGridIndex * 4;
 
@@ -298,17 +304,133 @@ export class WaterSimulator {
             //let gridSize = this.options.gridSize;
             //let cellPosition = ((gridSize * (gridSize / 2)) + (gridSize / 2)) * 4;
 
+            /* water source */
+            /*let area = this.options.waterSourceArea;
             let cellPosition = this.options.waterSourcePosition;
             if (cellPosition >= 0) {
-                pixel[cellPosition] = values[0] * 255;
-                pixel[cellPosition + 1] = values[1] * 255;
-                pixel[cellPosition + 2] = values[2] * 255;
-                pixel[cellPosition + 3] = values[3] * 255;
+                for (let i = 0; i < area; i++) {
+                    for (let j = 0; j < area; j++) {
+                        if (cellPosition > pixel.length + 3) {
+                            return;
+                        }
+                        let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                        pixel[cellIndex] = values[0] * 255;
+                        pixel[cellIndex + 1] = values[1] * 255;
+                        pixel[cellIndex + 2] = values[2] * 255;
+                        pixel[cellIndex + 3] = values[3] * 255;
+                    }
+                }
+            }*/
+
+            /* water source */
+            let area = this.options.waterSourceArea;
+            let cellPositions = this.options.waterSourcePositions;
+            for (let cellPosition of cellPositions) {
+                if (cellPosition >= 0) {
+                    for (let i = -area; i <= area; i++) {
+                        for (let j = -area; j <= area; j++) {
+                            if (cellPosition > pixel.length + 3) {
+                                return;
+                            } else if (cellPosition < 0) {
+                                return;
+                            }
+                            let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                            pixel[cellIndex] = values[0] * 255;
+                            pixel[cellIndex + 1] = values[1] * 255;
+                            pixel[cellIndex + 2] = values[2] * 255;
+                            pixel[cellIndex + 3] = values[3] * 255;
+                        }
+                    }
+                }
             }
 
             gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
         }
+
+        let minusSourceTexture = fluxShaderInfo.minusSourceTexture;
+        if (!minusSourceTexture) {
+            minusSourceTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, minusSourceTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            fluxShaderInfo.minusSourceTexture = minusSourceTexture;
+        } else {
+            const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
+            let sampleHeight = this.options.waterMinusSourceAmount / (this.options.cellSize * this.options.cellSize);
+            let values= this.pack(sampleHeight / this.options.maxHeight);
+
+            /* water minus source */
+            let area = this.options.waterMinusSourceArea;
+            let cellPositions = this.options.waterMinusSourcePositions;
+            for (let cellPosition of cellPositions) {
+                if (cellPosition >= 0) {
+                    for (let i = -area; i <= area; i++) {
+                        for (let j = -area; j <= area; j++) {
+                            if (cellPosition > pixel.length + 3) {
+                                return;
+                            } else if (cellPosition < 0) {
+                                return;
+                            }
+                            let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                            pixel[cellIndex] = values[0] * 255;
+                            pixel[cellIndex + 1] = values[1] * 255;
+                            pixel[cellIndex + 2] = values[2] * 255;
+                            pixel[cellIndex + 3] = values[3] * 255;
+                        }
+                    }
+                }
+            }
+
+
+            gl.bindTexture(gl.TEXTURE_2D, minusSourceTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+        }
+
+        let seaWallTexture = fluxShaderInfo.seaWallTexture;
+        if (!seaWallTexture) {
+            seaWallTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, seaWallTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            fluxShaderInfo.seaWallTexture = seaWallTexture;
+        } else {
+            const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
+            let sampleHeight = this.options.waterSeawallHeight / (this.options.cellSize * this.options.cellSize);
+            let values= this.pack(sampleHeight / this.options.maxHeight);
+
+            /* water minus source */
+            let area = this.options.waterSeawallArea;
+            let cellPositions = this.options.waterSeawallPositions;
+            for (let cellPosition of cellPositions) {
+                if (cellPosition >= 0) {
+                    for (let i = -area; i <= area; i++) {
+                        for (let j = -area; j <= area; j++) {
+                            if (cellPosition > pixel.length + 3) {
+                                return;
+                            } else if (cellPosition < 0) {
+                                return;
+                            }
+                            let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                            pixel[cellIndex] = values[0] * 255;
+                            pixel[cellIndex + 1] = values[1] * 255;
+                            pixel[cellIndex + 2] = values[2] * 255;
+                            pixel[cellIndex + 3] = values[3] * 255;
+                        }
+                    }
+                }
+            }
+
+            gl.bindTexture(gl.TEXTURE_2D, seaWallTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+        }
+
 
         let terrainTexture = fluxShaderInfo.terrainTexture;
         if (!terrainTexture) {
@@ -522,6 +644,7 @@ export class WaterSimulator {
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity", this.options.waterDensity);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor", this.options.cushionFactor);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uEvaporationRate", this.options.evaporationRate);
         this.shaderLoader.addIntegerUniform(gl, shaderProgram, "uSimulationConfine", this.options.simulationConfine);
         this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture", fluxShaderInfo.waterTexture, 0);
         this.shaderLoader.addTextureUniform(gl, shaderProgram, "uSourceTexture", fluxShaderInfo.sourceTexture, 1);
@@ -530,6 +653,8 @@ export class WaterSimulator {
         this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxDownTexture", fluxShaderInfo.fluxDownTexture, 4);
         this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxLeftTexture", fluxShaderInfo.fluxLeftTexture, 5);
         this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxRightTexture", fluxShaderInfo.fluxRightTexture, 6);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uMinusSourceTexture", fluxShaderInfo.minusSourceTexture, 7);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uSeaWallTexture", fluxShaderInfo.seaWallTexture, 8);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         fluxShaderInfo.waterTexture = fluxShaderInfo.waterOutputTexture;

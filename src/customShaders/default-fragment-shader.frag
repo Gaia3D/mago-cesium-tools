@@ -1,7 +1,7 @@
 float minimum = 0.01;
 float maximum = 0.3;
 
-vec3 interpolateHeightColor(float waterHeight) {
+vec3 interpolateHeightMapColor(float waterHeight) {
     if (waterHeight > 300.0) {
         return vec3(0.0, 0.0, 0.0);
     } else if (waterHeight > 200.0) {
@@ -39,7 +39,7 @@ vec3 interpolateHeightColor(float waterHeight) {
 
 float interpolateAlpha(float waterHeight) {
     float minimum = 0.01;
-    float maximum = 0.3;
+    float maximum = 0.5;
     float intensity = u_color_intensity;
 
     maximum = min(0.8, maximum * intensity);
@@ -60,13 +60,16 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
     vec3 color;
     bool isCompare = gl_FragCoord.x >= 1280.0;
     if (u_height_palette) {
-        color = interpolateHeightColor(v_water_height);
+        color = interpolateHeightMapColor(v_water_height);
         if (v_water_height != v_temp_water_height) {
-            color = interpolateHeightColor(0.0);
+            color = interpolateHeightMapColor(0.0);
         }
         material.alpha = 0.75;
     } else {
-        color = vec3(0.75, 1.25, 2.00) * u_water_brightness;
+        //color = vec3(0.75, 1.25, 2.00) * u_water_brightness;
+        //color = vec3(0.75, 1.25, 4.00) * u_water_brightness;
+        //color = vec3(0.0, 0.5, 1.0) * u_water_brightness;
+        color = v_water_color * u_water_brightness;
         material.alpha = interpolateAlpha(v_water_height);
         //color = color * (norTex * 0.5 + 0.5);
         color = color;
