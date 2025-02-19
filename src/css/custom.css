@@ -25,7 +25,7 @@
     left: 0;
     margin: 10px;
     z-index: 100;
-    max-width: 350px;
+    max-width: 400px;
     padding: 20px 15px;
     text-align: left;
     color: #e3e3e3;
@@ -45,42 +45,45 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-#toolbar > h1 {
+#toolbar div {
+    margin: 0 0 5px;
+}
+
+#toolbar h1 {
     margin: 0 0 10px;
     font-size: 16px;
 }
 
-#toolbar > h2 {
-    margin: 0 0 10px;
+#toolbar h2 {
+    margin: 0 0 5px;
     font-size: 14px;
 }
 
-#toolbar > h3 {
-    margin: 0 0 10px;
+#toolbar h3 {
+    margin: 0 0 5px;
     font-size: 12px;
 }
 
-#toolbar > p {
-    margin: 0 0 10px;
+#toolbar p {
+    margin: 0 0 5px;
     font-size: 12px;
 }
 
-#toolbar > label {
+#toolbar label {
     margin: 0 0 5px;
     font-size: 12px;
     vertical-align: middle;
 }
 
-#toolbar > button {
+#toolbar button {
     cursor: pointer;
 }
 
-#toolbar > button, #toolbar > input, #toolbar > select {
+#toolbar button, #toolbar input, #toolbar select {
     position: relative;
-    margin-right: 5px;
-    padding: 5px 10px;
+    padding: 4px 10px;
     color: #272727;
-    font-size: 12px;
+    font-size: 11px;
     vertical-align: middle;
 
     /* From https://css.glass */
@@ -92,7 +95,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-#toolbar > input[type="range"] {
+#toolbar input[type="range"] {
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -100,11 +103,11 @@
     padding: 0 0;
 }
 
-#toolbar > input[type="text"] {
-    width: 50px;
+#toolbar input[type="text"] {
+    width: 75px;
     text-align: center;
 }
 
-#toolbar > button:hover, #toolbar > input:hover, #toolbar > select:hover {
+#toolbar button:hover, #toolbar input:hover, #toolbar select:hover {
     background: rgba(255, 255, 255, 0.5);
 }

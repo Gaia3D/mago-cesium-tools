@@ -41,6 +41,10 @@ export class MagoWaterSimulation {
 
         this.intervalObject = undefined;
 
+        this.info = {
+            totalWater: 0,
+        }
+
         this.options = {
             waterColor : new Cesium.Color(0.25, 0.75, 1.0),
 
@@ -76,10 +80,10 @@ export class MagoWaterSimulation {
             waterSeawallPositions : [],
             waterSeawallArea : 4,
 
-            colorIntensity : 1.0,
             heightPalette : false,
             waterSkirt : true,
             simulationConfine : false,
+            colorIntensity : 1.0,
             waterBrightness : 0.5,
         }
         this.init(viewer);
@@ -144,7 +148,7 @@ export class MagoWaterSimulation {
                     rectangle.west, rectangle.south
                 ]),
                 width: 3,
-                material: Cesium.Color.BLUE,
+                material: Cesium.Color.RED.withAlpha(0.5),
                 clampToGround: true
             }
         });
@@ -441,7 +445,7 @@ export class MagoWaterSimulation {
             const isInitialFrame = stepCount === 0;
             this.renderFrame(isInitialFrame);
             stepCount++;
-        }, this.interval);
+        }, this.options.interval);
     }
 
     renderFrame(isFirstFrame) {
@@ -452,6 +456,7 @@ export class MagoWaterSimulation {
         const simulationInfo = this.waterSimulator.simulationInfo;
 
         this.waterSimulator.calculateSimulation();
+        this.info.totalWater = simulationInfo.totalWater;
         this.waterTextureUniform.typedArray = simulationInfo.waterUint8Array;
         this.fluxTextureUniform.typedArray = simulationInfo.fluxUint8Array;
 

@@ -57,6 +57,7 @@ export class WaterSimulator {
             extensionBuffers: null,
             waterUint8Array: null,
             fluxUint8Array: null,
+            totalWater: 0, // ton / m^3
         }
     }
 
@@ -86,6 +87,24 @@ export class WaterSimulator {
 
         this.simulationInfo.gl = gl;
         return this.simulationInfo.gl;
+    }
+
+    calcTotalWater() {
+        let gridSize = this.options.gridSize;
+        let waterUint8Array = this.simulationInfo.waterUint8Array;
+        let totalWater = 0;
+        let loop = gridSize * gridSize * 4;
+        for (let i = 0; i < loop; i += 4) {
+            let r = waterUint8Array[i] / 255;
+            let g = waterUint8Array[i + 1] / 255;
+            let b = waterUint8Array[i + 2] / 255;
+            let a = waterUint8Array[i + 3] / 255;
+            let waterArray = [r, g, b, a];
+            totalWater += this.unpack(waterArray) * this.options.maxHeight * (this.options.cellSize * this.options.cellSize);
+        }
+
+        this.simulationInfo.totalWater = Math.round(totalWater);
+        return totalWater;
     }
 
     async calculateSimulation() {
@@ -122,6 +141,8 @@ export class WaterSimulator {
             //const particlesShaderProgram = await initParticleShaderProgram();
             //renderParticles(particlesShaderProgram);
             //GL.bindFramebuffer(GL.FRAMEBUFFER, null);
+
+            this.calcTotalWater();
 
             return this.simulationInfo.waterUint8Array;
         }
@@ -285,7 +306,7 @@ export class WaterSimulator {
             const rainLoop = gridArea / 100 * this.options.rainAmount;
 
             const precipitation = this.options.rainMaxPrecipitation;
-            const rainMaxPrecipitation = precipitation / (this.options.cellSize * this.options.cellSize);
+            const rainMaxPrecipitation = precipitation;
             for (let i = 0; i < rainLoop; i++) {
                 let randomGridIndex = Math.floor(Math.random() * this.options.gridSize * this.options.gridSize);
                 randomGridIndex = randomGridIndex * 4;
@@ -642,7 +663,7 @@ export class WaterSimulator {
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxFlux", this.options.maxFlux);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGravity", this.options.gravity);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity", this.options.waterDensity);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep / Math.sqrt(this.options.cellSize));
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor", this.options.cushionFactor);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uEvaporationRate", this.options.evaporationRate);
         this.shaderLoader.addIntegerUniform(gl, shaderProgram, "uSimulationConfine", this.options.simulationConfine);
@@ -693,7 +714,7 @@ export class WaterSimulator {
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxFlux", this.options.maxFlux);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGravity", this.options.gravity);
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity", this.options.waterDensity);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep / Math.sqrt(this.options.cellSize));
         this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor", this.options.cushionFactor);
         this.shaderLoader.addIntegerUniform(gl, shaderProgram, "uSimulationConfine", this.options.simulationConfine);
         this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture", fluxShaderInfo.waterTexture, 0);
@@ -807,7 +828,9 @@ export class WaterSimulator {
     }
 
     unpack = (values) => {
-        return values[0] + values[1] * 1.0 / 255.0 + values[2] * 1.0 / 65025.0 + values[3] * 1.0 / 16581375.0;
+        // dot(rgba_depth, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+        return values[0] + values[1] / 255.0 + values[2] / 65025.0 + values[3] / 16581375.0;
+        //return values[0] + values[1] / 256.0 + values[2] / 65536.0 + values[3] / 16777216.0;
     }
 
     unpackDepth = (values) => {

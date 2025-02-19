@@ -12,60 +12,117 @@ document.querySelector('#app').innerHTML = `
     <h1>Mago3D Water Simulation</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
-    <h2>WaterSimulation</h2>
-    <p>Water simulation on the globe</p>
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
-    <span class="line"></span>
-    <button id="clearWater">ClearWater</button>
+    <h3>Initialization</h3>
     <button id="simulationRectangle">Select Area</button>
     <span class="line"></span>
-    <button id="reload">Reload</button>
+    <div>
+        <label for="gridSize">Grid Size : </label>
+        <select id="gridSize">
+            <option value="128">128</option>
+            <option value="256">256</option>
+            <option value="512">512</option>
+            <option value="1024">1024</option>
+            <!--<option value="2048">2048</option>-->
+        </select>
+    </div>
+    <div>
+        <label for="cellSize">Cell Size : </label>
+        <select id="cellSize">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+        </select>
+    </div>
     <span class="line"></span>
-    <button id="wireframe">Wireframe</button>
-    <button id="heightLegend">Height Legend</button>
+    <h3>Controller</h3>
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+    <button id="reload">Reset</button>
     <span class="line"></span>
-    <label for="gridSize">Grid Size : </label>
-    <select id="gridSize">
-        <option value="128">128</option>
-        <option value="256">256</option>
-        <option value="512">512</option>
-        <option value="1024">1024</option>
-    </select>
+    <div>
+        <label for="interval">Interval : </label>
+        <input type="range" id="interval" value="60" step="1" min="1" max="120">
+        <input type="text" id="intervalValue" readonly>
+    </div>
+    <div>
+        <label for="timeStep">Time Step : </label>
+        <input type="range" id="timeStep" value="0.1" step="0.001" min="0.0" max="0.2">
+        <input type="text" id="timeStepValue" readonly>
+    </div>
+    <div>
+        <label for="waterDensity">Water Density : </label>
+        <input type="range" id="waterDensity" value="998.0" step="1.0" min="1.0" max="1000.0">
+        <input type="text" id="waterDensityValue" readonly>
+    </div>
+    <div>
+        <label for="cushionFactor">Cushion Factor : </label>
+        <input type="range" id="cushionFactor" value="0.995" step="0.001" min="0.5" max="1.0">
+        <input type="text" id="cushionFactorValue" readonly>
+    </div>
     <span class="line"></span>
-    <label for="cellSize">Cell Size : </label>
-    <select id="cellSize">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="4">4</option>
-        <option value="8">8</option>
-    </select>
+    <h3>Visualization</h3>
+    <div>
+        <button id="wireframe">Wireframe</button>
+        <button id="heightLegend">Height Legend</button>
+    </div>
+    <div>
+        <button id="waterSkirt">Water Skirt</button>
+        <button id="simulationConfine">Simulation Confine</button>
+    </div>
+    <div>
+        <label for="color">Water Color : </label>
+        <input type="color" id="color" value="#ff0000">
+    </div>
+    <!-- intensity -->
+    <div>
+        <label for="intensity">Intensity : </label>
+        <input type="range" id="intensity" value="1.0" step="0.1" min="0.1" max="2.0">
+        <input type="text" id="intensityValue" readonly>
+    </div>
+    <div>
+        <label for="brightness">Brightness : </label>
+        <input type="range" id="brightness" value="1.0" step="0.1" min="0.1" max="2.0">
+        <input type="text" id="brightnessValue" readonly>
+    </div>
     <span class="line"></span>
-    <h2>Water Source</h2>
-    <button id="clearWaterSource">ClearWaterSource</button>
-    <span class="line"></span>
+    <h3>Water Source</h3>
     <button id="createWaterSource">Create WaterSource</button>
+    <div>
+        <label for="water">Water : </label>
+        <input type="range" id="water" value="0.0" step="0.1" min="0.0" max="100.0">
+        <input type="text" id="waterValue" readonly>
+    </div>
     <span class="line"></span>
-    <label for="water">Water: </label>
-    <input type="range" id="water" value="0.0" step="0.1" min="0.0" max="100.0">
-    <input type="text" id="waterValue" readonly>
-    <span class="line"></span>
+    <h3>Waterspout</h3>
     <button id="createWaterspout">Create Waterspout</button>
-    <span class="line"></span>
-    <label for="waterspout">Waterspout: </label>
-    <input type="range" id="waterspout" value="0.0" step="0.1" min="0.0" max="100.0">
-    <input type="text" id="waterspoutValue" readonly>
+    <div>
+        <label for="waterspout">Waterspout : </label>
+        <input type="range" id="waterspout" value="0.0" step="0.1" min="0.0" max="100.0">
+        <input type="text" id="waterspoutValue" readonly>
+    </div>
     <span class="line"></span>
     <button id="createSeaWall">Create SeaWall</button>
     <span class="line"></span>
-    <h2>Rainfall</h2>
-    <input type="range" id="rainfall" value="0.0" step="0.001" min="0.0" max="10.0">
-    <input type="text" id="rainfallValue" readonly>
+    <button id="clearWaterSource">ClearWaterSource</button>
+    <button id="clearWater">ClearWater</button>
     <span class="line"></span>
-    <label for="color">Water Color : </label>
-    <input type="color" id="color" value="#ff0000">
-</select>
-  </div>
+    <h2>Rainfall</h2>
+    <div>
+        <label for="rainfall">Rainfall : </label>
+        <input type="range" id="rainfall" value="0.0" step="0.001" min="0.0" max="10.0">
+        <input type="text" id="rainfallValue" readonly>
+    </div>
+    <div>
+        <label for="evaporation">Evaporation Rate : </label>
+        <input type="range" id="evaporation" value="0.0" step="0.0001" min="0.0" max="0.01">
+        <input type="text" id="evaporationValue" readonly>
+    </div>
+    <span class="line"></span>
+    <p id="totalWaterAmount">0</p>
+ </div>
 `
 
 const viewer = new Viewer("cesiumContainer", {
@@ -85,11 +142,11 @@ const viewer = new Viewer("cesiumContainer", {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.postProcessStages.fxaa.enabled = true;
 viewer.scene.globe.enableLighting = false;
-const shadowMap = viewer.shadowMap;
+/*const shadowMap = viewer.shadowMap;
 shadowMap.enabled = true;
 shadowMap.size = 1024 * 4;
 shadowMap.maximumDistance = 20000;
-shadowMap.darkness = 0.5;
+shadowMap.darkness = 0.5;*/
 
 const [lon, lat] = [126.968905, 37.447571];
 
@@ -138,38 +195,66 @@ const setDefaultValue = () => {
     document.querySelector('#cellSize').value = magoWaterSimulation.options.cellSize;
 
     document.querySelector('#color').value = magoWaterSimulation.options.waterColor.toCssHexString();
+
+    document.querySelector('#intensity').value = magoWaterSimulation.options.colorIntensity;
+    document.querySelector('#intensityValue').value = magoWaterSimulation.options.colorIntensity;
+
+    document.querySelector('#brightness').value = magoWaterSimulation.options.waterBrightness;
+    document.querySelector('#brightnessValue').value = magoWaterSimulation.options.waterBrightness;
+
+    document.querySelector('#evaporation').value = magoWaterSimulation.options.evaporationRate;
+    document.querySelector('#evaporationValue').value = magoWaterSimulation.options.evaporationRate;
+
+    document.querySelector('#interval').value = 1000 / magoWaterSimulation.options.interval;
+    document.querySelector('#intervalValue').value = 1000 / magoWaterSimulation.options.interval;
+
+    document.querySelector('#timeStep').value = magoWaterSimulation.options.timeStep;
+    document.querySelector('#timeStepValue').value = magoWaterSimulation.options.timeStep;
+
+    document.querySelector('#cushionFactor').value = magoWaterSimulation.options.cushionFactor;
+    document.querySelector('#cushionFactorValue').value = magoWaterSimulation.options.cushionFactor;
+
+    document.querySelector('#waterDensity').value = magoWaterSimulation.options.waterDensity;
+    document.querySelector('#waterDensityValue').value = magoWaterSimulation.options.waterDensity;
 }
 
 // event listeners
 document.querySelector('#start').addEventListener('click', () => {
     magoWaterSimulation.start();
 });
+
 document.querySelector('#stop').addEventListener('click', () => {
     magoWaterSimulation.stop();
 });
+
 document.querySelector('#clearWater').addEventListener('click', async () => {
     await magoWaterSimulation.initializeWater();
 });
+
 document.querySelector('#reload').addEventListener('click', async () => {
     await magoWaterSimulation.init(viewer);
     await magoWaterSimulation.initBase(options);
     magoWaterSimulation.start();
 });
+
 document.querySelector('#gridSize').addEventListener('change', async (event) => {
     const gridSize = event.target.value;
     options.gridSize = Number(gridSize);
     refreshRectangle();
 });
+
 document.querySelector('#cellSize').addEventListener('change', async (event) => {
     const cellSize = event.target.value;
     options.cellSize = Number(cellSize);
     refreshRectangle();
 });
+
 document.querySelector('#wireframe').addEventListener('click', () => {
     if (magoWaterSimulation.gridPrimitive) {
         magoWaterSimulation.gridPrimitive.debugWireframe = !magoWaterSimulation.gridPrimitive.debugWireframe;
     }
 });
+
 document.querySelector('#heightLegend').addEventListener('click', () => {
     magoWaterSimulation.options.heightPalette = !magoWaterSimulation.options.heightPalette;
 });
@@ -191,6 +276,52 @@ document.querySelector('#rainfall').addEventListener('input', (event) => {
     document.querySelector('#rainfallValue').value = value;
     magoWaterSimulation.options.rainMaxPrecipitation = value;
 });
+
+document.querySelector('#intensity').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#intensityValue').value = value;
+    magoWaterSimulation.options.colorIntensity = value;
+});
+
+document.querySelector('#brightness').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#brightnessValue').value = value;
+    magoWaterSimulation.options.waterBrightness = value;
+});
+
+document.querySelector('#evaporation').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#evaporationValue').value = value;
+    magoWaterSimulation.options.evaporationRate = value;
+});
+
+document.querySelector('#simulationConfine').addEventListener('click', () => {
+    magoWaterSimulation.options.simulationConfine = !magoWaterSimulation.options.simulationConfine;
+});
+
+document.querySelector('#waterSkirt').addEventListener('click', () => {
+    magoWaterSimulation.options.waterSkirt = !magoWaterSimulation.options.waterSkirt;
+});
+
+document.querySelector('#interval').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#intervalValue').value = value;
+    magoWaterSimulation.options.interval = 1000 / value;
+    magoWaterSimulation.startFrame();
+});
+
+document.querySelector('#timeStep').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#timeStepValue').value = value;
+    magoWaterSimulation.options.timeStep = value;
+});
+
+document.querySelector('#cushionFactor').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#cushionFactorValue').value = value;
+    magoWaterSimulation.options.cushionFactor = value;
+});
+
 
 const selectionStatus = {
     rectangle: undefined,
@@ -249,9 +380,9 @@ document.querySelector('#createWaterSource').addEventListener('click', () => {
                 selectionStatus.sourcePositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     cylinder: {
-                        length: 30.0 * options.cellSize,
-                        topRadius: 3.0 * options.cellSize,
-                        bottomRadius: 3.0 * options.cellSize,
+                        length: 30.0,
+                        topRadius: 3.0,
+                        bottomRadius: 3.0,
                         material: Cesium.Color.BLUE,
                     },
                 }));
@@ -292,9 +423,9 @@ document.querySelector('#createWaterspout').addEventListener('click', () => {
                 selectionStatus.sourceMinusPositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     cylinder: {
-                        length: 30.0 * options.cellSize,
-                        topRadius: 3.0 * options.cellSize,
-                        bottomRadius: 3.0 * options.cellSize,
+                        length: 30.0,
+                        topRadius: 3.0,
+                        bottomRadius: 3.0,
                         material: Cesium.Color.RED,
                     },
                 }))
@@ -376,5 +507,10 @@ document.querySelector('#simulationRectangle').addEventListener('click', () => {
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 });
+
+setInterval(() => {
+    const totalWaterAmount = magoWaterSimulation.info.totalWater;
+    document.querySelector('#totalWaterAmount').textContent = `Total Water Amount (t) : ${totalWaterAmount}`;
+}, 100);
 
 init();

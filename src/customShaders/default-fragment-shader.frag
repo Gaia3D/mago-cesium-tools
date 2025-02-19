@@ -50,6 +50,20 @@ float interpolateAlpha(float waterHeight) {
     return value;
 }
 
+
+/*float interpolateAlpha(float waterHeight) {
+    float minimum = 0.01;
+    float maximum = 0.4;
+    float intensity = u_color_intensity;
+
+    maximum = min(0.8, maximum * intensity);
+
+    float scaledValue = waterHeight / (u_max_height / 1000.0) * intensity;
+
+    float value = min(maximum, max(minimum, scaledValue));
+    return value;
+}*/
+
 //vec3 getNormalTexture(vec2 texCoord) {
 //    return texture(u_water_normal_texture, texCoord).xyz;
 //}
@@ -66,13 +80,10 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         }
         material.alpha = 0.75;
     } else {
-        //color = vec3(0.75, 1.25, 2.00) * u_water_brightness;
-        //color = vec3(0.75, 1.25, 4.00) * u_water_brightness;
-        //color = vec3(0.0, 0.5, 1.0) * u_water_brightness;
         color = v_water_color * u_water_brightness;
         material.alpha = interpolateAlpha(v_water_height);
         //color = color * (norTex * 0.5 + 0.5);
-        color = color;
+        //color = color;
         if (v_water_height != v_temp_water_height) {
             material.alpha = interpolateAlpha(0.0);
         }
