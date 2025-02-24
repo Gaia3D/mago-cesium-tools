@@ -18,11 +18,16 @@ document.querySelector('#app').innerHTML = `
     <div>
         <label for="gridSize">Grid Size : </label>
         <select id="gridSize">
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+            <option value="64">64</option>
             <option value="128">128</option>
             <option value="256">256</option>
             <option value="512">512</option>
             <option value="1024">1024</option>
-            <!--<option value="2048">2048</option>-->
+            <option value="2048">2048</option>
+            <option value="4096">4096</option>
         </select>
     </div>
     <div>
@@ -34,6 +39,11 @@ document.querySelector('#app').innerHTML = `
             <option value="8">8</option>
             <option value="16">16</option>
             <option value="32">32</option>
+            <option value="64">64</option>
+            <option value="128">128</option>
+            <!--<option value="256">256</option>
+            <option value="512">512</option>
+            <option value="1024">1024</option>-->
         </select>
     </div>
     <span class="line"></span>
@@ -64,6 +74,10 @@ document.querySelector('#app').innerHTML = `
     </div>
     <span class="line"></span>
     <h3>Visualization</h3>
+    <div>
+        <label for="saveImage">Save Image : </label>
+        <button id="saveImage">Save Image</button>
+    </div>
     <div>
         <button id="wireframe">Wireframe</button>
         <button id="heightLegend">Height Legend</button>
@@ -139,9 +153,10 @@ const viewer = new Viewer("cesiumContainer", {
     baseLayer : false,
     shouldAnimate: true,
 });
-viewer.scene.globe.depthTestAgainstTerrain = true;
+//viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.postProcessStages.fxaa.enabled = true;
 viewer.scene.globe.enableLighting = false;
+viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 /*const shadowMap = viewer.shadowMap;
 shadowMap.enabled = true;
 shadowMap.size = 1024 * 4;
@@ -233,6 +248,7 @@ document.querySelector('#clearWater').addEventListener('click', async () => {
 
 document.querySelector('#reload').addEventListener('click', async () => {
     await magoWaterSimulation.init(viewer);
+    clearWaterSourceEntities();
     await magoWaterSimulation.initBase(options);
     magoWaterSimulation.start();
 });
@@ -247,6 +263,10 @@ document.querySelector('#cellSize').addEventListener('change', async (event) => 
     const cellSize = event.target.value;
     options.cellSize = Number(cellSize);
     refreshRectangle();
+});
+
+document.querySelector('#saveImage').addEventListener('click', () => {
+    magoWaterSimulation.saveWaterMapImage();
 });
 
 document.querySelector('#wireframe').addEventListener('click', () => {
@@ -331,7 +351,7 @@ const selectionStatus = {
     handler: undefined,
 }
 
-document.querySelector('#clearWaterSource').addEventListener('click', () => {
+const clearWaterSourceEntities = () => {
     if (selectionStatus.sourcePositions.length > 0) {
         selectionStatus.sourcePositions.forEach((entity) => {
             viewer.entities.remove(entity);
@@ -350,6 +370,10 @@ document.querySelector('#clearWaterSource').addEventListener('click', () => {
         });
         selectionStatus.seaWallPositions = [];
     }
+}
+
+document.querySelector('#clearWaterSource').addEventListener('click', () => {
+    clearWaterSourceEntities();
     magoWaterSimulation.clearWaterSourcePositions();
     magoWaterSimulation.clearWaterMinusSourcePositions();
     magoWaterSimulation.clearSeaWallPositions();
@@ -460,7 +484,7 @@ document.querySelector('#createSeaWall').addEventListener('click', () => {
                 selectionStatus.seaWallPositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     box: {
-                        dimensions: new Cesium.Cartesian3(9.0 * options.cellSize, 9.0 * options.cellSize, 40.0 * options.cellSize),
+                        dimensions: new Cesium.Cartesian3(9.0 * options.cellSize, 9.0 * options.cellSize, magoWaterSimulation.options.waterSeawallHeight * 2),
                         material: Cesium.Color.DARKGRAY.withAlpha(0.75),
                         /*outline: true,*/
                     }

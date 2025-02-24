@@ -107,6 +107,30 @@ export class WaterSimulator {
         return totalWater;
     }
 
+    saveUint8ArrayAsPNG(uint8Array, width, height, fileName = "output.png") {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        
+        const imageData = new ImageData(new Uint8ClampedArray(uint8Array), width, height);
+        ctx.putImageData(imageData, 0, 0);
+
+        canvas.toBlob((blob) => {
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }, "image/png");
+    }
+
+
     async calculateSimulation() {
         //const canvas = document.getElementById("webgl-canvas");
         const gl = this.initWebGL();
@@ -423,7 +447,7 @@ export class WaterSimulator {
             fluxShaderInfo.seaWallTexture = seaWallTexture;
         } else {
             const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
-            let sampleHeight = this.options.waterSeawallHeight / (this.options.cellSize * this.options.cellSize);
+            let sampleHeight = this.options.waterSeawallHeight;
             let values= this.pack(sampleHeight / this.options.maxHeight);
 
             /* water minus source */

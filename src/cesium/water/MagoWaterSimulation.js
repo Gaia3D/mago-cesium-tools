@@ -42,6 +42,7 @@ export class MagoWaterSimulation {
         this.intervalObject = undefined;
 
         this.info = {
+            status: 'off',
             totalWater: 0,
         }
 
@@ -76,7 +77,7 @@ export class MagoWaterSimulation {
             waterMinusSourceArea : 2,
 
             /* seawall */
-            waterSeawallHeight : 20.0,
+            waterSeawallHeight : 50.0,
             waterSeawallPositions : [],
             waterSeawallArea : 4,
 
@@ -118,6 +119,7 @@ export class MagoWaterSimulation {
         this.terrainTextureUniform = undefined;
         this.buildingHeightArray = [];
         this.intervalObject = undefined;
+        this.info.status = 'init';
     }
 
     /**
@@ -176,7 +178,7 @@ export class MagoWaterSimulation {
     }
 
     calcExtent(options) {
-        const gridSize = !options.gridSize ? 128 : options.gridSize;
+        const gridSize = !options.gridSize ? 8 : options.gridSize;
         const cellSize = !options.cellSize ? 1 : options.cellSize;
 
         //const extent = new Extent(0, 0, 0, 0);
@@ -194,21 +196,29 @@ export class MagoWaterSimulation {
 
     async initBase(options) {
         console.log('[MCT][WATER] initBase');
+        this.info.status = 'loading';
+        this.clearWaterSourcePositions();
+        this.clearWaterMinusSourcePositions();
+        this.clearSeaWallPositions();
+
         await this.initWaterSimulation(options);
         await this.initializeWater();
         await this.initializeTerrain();
         //this.initWaterSource();
         this.renderFrame(true);
+        this.info.status = 'ready';
     }
 
     async start() {
         await this.startFrame();
+        this.info.status = 'running';
     }
 
     stop() {
         if (this.intervalObject) {
             clearInterval(this.intervalObject);
         }
+        this.info.status = 'stopped';
     }
 
     /*initWaterSource() {
@@ -289,7 +299,7 @@ export class MagoWaterSimulation {
             this.options.cellSize = options.cellSize < 1 ? 1 : options.cellSize;
         }
         if (options.gridSize) {
-            this.options.gridSize = options.gridSize < 128 ? 128 : options.gridSize;
+            this.options.gridSize = options.gridSize < 8 ? 8 : options.gridSize;
         }
         if (options.interval) {
             this.options.interval = options.interval;
@@ -310,7 +320,7 @@ export class MagoWaterSimulation {
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
 
         const gltf = await Cesium.Model.fromGltfAsync({
-            url: `/src/assets/${gridSize}x${gridSize}.gltf`,
+            url: `/src/assets/${gridSize}x${gridSize}.glb`,
             //url: grid,
             modelMatrix: transform,
             enableDebugWireframe: true,
@@ -322,7 +332,6 @@ export class MagoWaterSimulation {
 
         const vertexShaderText = await this.customShaderLoader.getShaderSource('default-vertex-shader.vert');
         const fragmentShaderText = await this.customShaderLoader.getShaderSource('default-fragment-shader.frag');
-
         this.waterTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
         this.waterTextureUniform = new Cesium.TextureUniform({
             typedArray: this.waterTextureArray,
@@ -448,6 +457,11 @@ export class MagoWaterSimulation {
         }, this.options.interval);
     }
 
+    saveWaterMapImage() {
+        const simulationInfo = this.waterSimulator.simulationInfo;
+        this.waterSimulator.saveUint8ArrayAsPNG(simulationInfo.waterUint8Array, this.options.gridSize, this.options.gridSize);
+    }
+
     renderFrame(isFirstFrame) {
         if (!this.customShader) {
             return;
@@ -519,7 +533,9 @@ export class MagoWaterSimulation {
                     positions.push(position);
                 }
             }
-            const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+            const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions, false);
+            //const updatedPositions = await Cesium.sampleTerrain(terrainProvider, 13, positions, false);
+
 
             const terrainOffset = 1;
             for (let i = 0; i < gridSize; i++) {
