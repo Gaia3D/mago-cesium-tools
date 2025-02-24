@@ -194,6 +194,7 @@ const init = async() => {
     //magoWaterSimulation.init(viewer);
     await magoWaterSimulation.initBase(options);
     magoWaterSimulation.start();
+    magoWaterSimulation.addRandomSourcePosition();
 }
 
 const setDefaultValue = () => {

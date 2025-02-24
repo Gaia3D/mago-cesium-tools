@@ -1,7 +1,36 @@
-import {ShaderLoader} from "../ShaderLoader.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: water/MagoWaterSimulation.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: water/MagoWaterSimulation.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {ShaderLoader} from "../ShaderLoader.js";
 import {WaterSimulator} from "./WaterSimulator.js";
 import * as Cesium from "cesium";
 import {Extent} from "../Extent.js";
+
 
 /**
  * MagoWaterSimulation is a class that creates a water simulation on a globe.
@@ -195,7 +224,7 @@ export class MagoWaterSimulation {
     /**
      * Initializes the water simulation with the given options.
      * @param options
-     * @returns {Promise<void>}
+     * @returns {Promise&lt;void>}
      */
     async initBase(options) {
         console.log('[MCT][WATER] initBase');
@@ -214,7 +243,7 @@ export class MagoWaterSimulation {
 
     /**
      * Starts the water simulation.
-     * @returns {Promise<void>}
+     * @returns {Promise&lt;void>}
      */
     async start() {
         await this.startFrame();
@@ -329,10 +358,10 @@ export class MagoWaterSimulation {
         }
 
         if (options.cellSize) {
-            this.options.cellSize = options.cellSize < 1 ? 1 : options.cellSize;
+            this.options.cellSize = options.cellSize &lt; 1 ? 1 : options.cellSize;
         }
         if (options.gridSize) {
-            this.options.gridSize = options.gridSize < 8 ? 8 : options.gridSize;
+            this.options.gridSize = options.gridSize &lt; 8 ? 8 : options.gridSize;
         }
         if (options.interval) {
             this.options.interval = options.interval;
@@ -529,7 +558,7 @@ export class MagoWaterSimulation {
 
     /**
      * Initializes the water simulation.
-     * @returns {Promise<void>}
+     * @returns {Promise&lt;void>}
      */
     async initializeWater(){
         console.log('[MCT][WATER] initializeWater');
@@ -551,9 +580,9 @@ export class MagoWaterSimulation {
 
         if (terrainProvider instanceof Cesium.EllipsoidTerrainProvider) {
             /*const terrainHeight = 0;
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
-                    if (j > gridSize / 3 && i > gridSize / 3) {
+            for (let i = 0; i &lt; gridSize; i++) {
+                for (let j = 0; j &lt; gridSize; j++) {
+                    if (j > gridSize / 3 &amp;&amp; i > gridSize / 3) {
                         this.terrainMap[this.findIndex(j, i)] = j / 4;
                     }
                 }
@@ -562,8 +591,8 @@ export class MagoWaterSimulation {
             const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon, minLat);
             const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
             let positions = [];
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
+            for (let i = 0; i &lt; gridSize; i++) {
+                for (let j = 0; j &lt; gridSize; j++) {
                     let realGridSize = gridSize * cellSize;
                     let realj = j * cellSize;
                     let reali = i * cellSize;
@@ -578,8 +607,8 @@ export class MagoWaterSimulation {
 
 
             const terrainOffset = 1;
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
+            for (let i = 0; i &lt; gridSize; i++) {
+                for (let j = 0; j &lt; gridSize; j++) {
 
                     this.terrainMap[this.findIndex(j, i)] = updatedPositions[this.findIndex(j, i)].height + terrainOffset;
                 }
@@ -588,8 +617,8 @@ export class MagoWaterSimulation {
 
         if (this.buildingHeightArray.length > 0) {
             const buildingHeightArray = this.buildingHeightArray;
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
+            for (let i = 0; i &lt; gridSize; i++) {
+                for (let j = 0; j &lt; gridSize; j++) {
                     const gridIndex = this.findIndex(j, i);
                     this.terrainMap[gridIndex] += buildingHeightArray[gridIndex];
                 }
@@ -624,16 +653,16 @@ export class MagoWaterSimulation {
 
         const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon, minLat);
         const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
-        for (let i = 0; i < gridSize - 1; i++) {
-            for (let j = 0; j < gridSize - 1; j++) {
+        for (let i = 0; i &lt; gridSize - 1; i++) {
+            for (let j = 0; j &lt; gridSize - 1; j++) {
                 let realj = j * cellSize;
                 let reali = i * cellSize;
                 let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
                 let nextGridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - (reali - cellSize), (realj - cellSize), 0));
 
-                let inLon = gridPosition.lon <= lon && nextGridPosition.lon >= lon;
-                let inLat = gridPosition.lat >= lat && nextGridPosition.lat <= lat;
-                if (inLon && inLat) {
+                let inLon = gridPosition.lon &lt;= lon &amp;&amp; nextGridPosition.lon >= lon;
+                let inLat = gridPosition.lat >= lat &amp;&amp; nextGridPosition.lat &lt;= lat;
+                if (inLon &amp;&amp; inLat) {
                     const index = this.findIndex(j, i);
                     console.log('[MCT][WATER] findCellFromDegree', index);
                     return index;
@@ -652,7 +681,7 @@ export class MagoWaterSimulation {
         const gridSize = this.options.gridSize;
         const arraySize = gridSize * gridSize * 4;
         const mapArray = new Uint8Array(arraySize);
-        for (let i = 0; i < arraySize; i += 4) {
+        for (let i = 0; i &lt; arraySize; i += 4) {
             const valueR = map[i / 4];
             const rgba = this.waterSimulator.pack(valueR / maxValue);
             mapArray[i] = rgba[0] * 255;
@@ -662,4 +691,26 @@ export class MagoWaterSimulation {
         }
         return mapArray;
     }
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoPostRender.html">MagoPostRender</a></li><li><a href="MagoSimulation.html">MagoSimulation</a></li><li><a href="MagoViewer.html">MagoViewer</a></li><li><a href="MagoWaterSimulation.html">MagoWaterSimulation</a></li><li><a href="OutlineRender.html">OutlineRender</a></li><li><a href="ShaderLoader.html">ShaderLoader</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Feb 24 2025 18:27:41 GMT+0900 (대한민국 표준시)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
