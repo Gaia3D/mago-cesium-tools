@@ -1,8 +1,5 @@
 import * as Cesium from 'cesium';
-import grid from '../assets/128x128.gltf';
 import tree from '../assets/lowpoly-tree.glb';
-
-const modelUrl = new URL(grid, import.meta.url).href;
 
 /**
  * MagoSimulation is a class that creates a simulation of a 3D model.

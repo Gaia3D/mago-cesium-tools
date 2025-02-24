@@ -320,7 +320,7 @@ export class MagoWaterSimulation {
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
 
         const gltf = await Cesium.Model.fromGltfAsync({
-            url: `/src/assets/${gridSize}x${gridSize}.glb`,
+            url: `/src/assets/grid/${gridSize}x${gridSize}.glb`,
             //url: grid,
             modelMatrix: transform,
             enableDebugWireframe: true,

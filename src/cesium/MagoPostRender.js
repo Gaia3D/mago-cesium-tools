@@ -1,8 +1,5 @@
-import grid from '../assets/128x128.gltf';
 import {OutlineRender} from "./OutlineRender.js";
 import {ScreenSpaceOcclusion} from "./ScreenSpaceOcclusion.js";
-
-const modelUrl = new URL(grid, import.meta.url).href;
 
 /**
  * MagoPostRender is a class that creates a post-renderer to render edges of 3D models.
