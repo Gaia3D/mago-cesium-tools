@@ -3,7 +3,7 @@
 ## Overview
 mago-cesium-tools is a collection of tools based on `CesiumJS`.  
 It encapsulates some of the features of `CesiumJS` to make it easier to use,  
-It includes various rendering features such as water simulation, SSAO, Edge, and more.  
+It includes various rendering features such as `WaterSimulation`, `SSAO`, `Edge`, and more.  
 
 ### Description
 `vite` project
