@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite';
 import cesium from 'vite-plugin-cesium';
+import glsl from 'vite-plugin-glsl';
 import * as path from "node:path";
+
 export default defineConfig({
     plugins: [
         cesium({
             rebuildCesium: true
-        }
+        }, glsl()
     )],
     test: {
         globals: true,
@@ -27,5 +29,5 @@ export default defineConfig({
             },
         }
     },
-    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vert, **/*.frag'],
+    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vert', '**/*.frag', '**/*.glsl'],
 });

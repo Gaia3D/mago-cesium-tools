@@ -1,3 +1,8 @@
+const customVertexShaders = import.meta.glob('/src/customShaders/*.vert', { as: 'raw' });
+const customFragmentShaders = import.meta.glob('/src/customShaders/*.frag', { as: 'raw' });
+const vertexShaders =  import.meta.glob('/src/shaders/*.vert', { as: 'raw' });
+const fragmentShaders = import.meta.glob('/src/shaders/*.frag', { as: 'raw' });
+
 /**
  * ShaderLoader class
  */
@@ -16,7 +21,7 @@ export class ShaderLoader {
      * @param url
      * @returns {Promise<string|void|any>}
      */
-    async getShaderSource(url) {
+    /*async getShaderSource(url) {
         if (this.shaderMap.has(url)) {
             return await this.shaderMap.get(url);
         }
@@ -28,6 +33,27 @@ export class ShaderLoader {
 
         this.shaderMap.set(url, shader);
         return shader;
+    }*/
+    async getShaderSource(url) {
+        if (this.shaderMap.has(url)) {
+            return await this.shaderMap.get(url);
+        }
+
+        let fullUrl = this.parentPath + "/" + url;
+        let shaderImport;
+        if (customVertexShaders[fullUrl]) {
+            shaderImport = await customVertexShaders[fullUrl]();
+        } else if (customFragmentShaders[fullUrl]) {
+            shaderImport = await customFragmentShaders[fullUrl]();
+        } else if (vertexShaders[fullUrl]) {
+            shaderImport = await vertexShaders[fullUrl]();
+        } else if (fragmentShaders[fullUrl]) {
+            shaderImport = await fragmentShaders[fullUrl]();
+        } else {
+            throw new Error(`Shader file ${fullUrl} not found`);
+        }
+        this.shaderMap.set(url, shaderImport);
+        return shaderImport;
     }
 
     /**

@@ -29,6 +29,7 @@
   "devDependencies": {
     "jsdoc": "^4.0.4",
     "vite": "^6.1.0",
+    "vite-plugin-glsl": "^1.3.1",
     "vitest": "^3.0.5"
   },
   "peerDependencies": {
