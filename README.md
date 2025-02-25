@@ -33,8 +33,7 @@ import { MagoViewer } from 'mago-cesium-tools'
 
 const viewer = new Viewer('cesiumContainer');
 const magoViewer = new MagoViewer(viewer);
-magoViewer.init();
-magoViewer.addRandomPoints(1000);
+magoViewer.test();
 ```
 
 ## Development

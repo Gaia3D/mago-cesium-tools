@@ -28,12 +28,31 @@
         <article>
             <pre class="prettyprint source linenums"><code>import {ShaderLoader} from "../ShaderLoader.js";
 import {WaterSimulator} from "./WaterSimulator.js";
+import {MagoWaterSimulationOptions} from "./MagoWaterSimulationOptions.js";
 import * as Cesium from "cesium";
 import {Extent} from "../Extent.js";
 
+import grid64 from '/src/assets/grid/64x64.glb';
+import grid128 from '/src/assets/grid/128x128.glb';
+import grid256 from '/src/assets/grid/256x256.glb';
+import grid512 from '/src/assets/grid/512x512.glb';
+import grid1024 from '/src/assets/grid/1024x1024.glb';
 
 /**
  * MagoWaterSimulation is a class that creates a water simulation on a globe.
+ * @class
+ * @param {Cesium.Viewer} viewer - Cesium Viewer instance
+ * @example
+ * const options = {
+ *    lon: 126.978388,
+ *    lat: 37.566610,
+ *    cellSize: 1,
+ *    gridSize: 512,
+ * }
+ * const magoWaterSimulation = new MagoWaterSimulation(viewer);
+ * magoWaterSimulation.initBase(options);
+ * magoWaterSimulation.start();
+ * magoWaterSimulation.addRandomSourcePosition();
  */
 export class MagoWaterSimulation {
 
@@ -44,8 +63,22 @@ export class MagoWaterSimulation {
     constructor (viewer) {
         console.log('[MCT][WATER] constructor');
 
+        /**
+         * Cesium Viewer instance
+         * @type {Cesium.Viewer}
+         */
         this.viewer = undefined;
+
+        /**
+         * Custom shader loader
+         * @type {ShaderLoader}
+         */
         this.customShaderLoader = undefined;
+
+        /**
+         * Water Simulator
+         * @type {WaterSimulator}
+         */
         this.waterSimulator = undefined;
 
         //this.extent = {minLon: 0, minLat: 0, maxLon: 0, maxLat: 0};
@@ -76,9 +109,11 @@ export class MagoWaterSimulation {
 
         /**
          * Default options for the water simulation.
-         * @type {{waterColor: module:cesium.Color, cellSize: number, gridSize: number, maxHeight: number, maxFlux: number, interval: number, gravity: number, timeStep: number, waterDensity: number, cushionFactor: number, evaporationRate: number, rainAmount: number, rainMaxPrecipitation: number, waterSourceAmount: number, waterSourcePositions: *[], waterSourceArea: number, waterMinusSourceAmount: number, waterMinusSourcePositions: *[], waterMinusSourceArea: number, waterSeawallHeight: number, waterSeawallPositions: *[], waterSeawallArea: number, heightPalette: boolean, waterSkirt: boolean, simulationConfine: boolean, colorIntensity: number, waterBrightness: number}}
+         * @type MagoWaterSimulationOptions
          */
-        this.options = {
+        this.options = new MagoWaterSimulationOptions();
+
+        /*{
             waterColor : new Cesium.Color(0.25, 0.75, 1.0),
 
             cellSize : 1,
@@ -92,23 +127,23 @@ export class MagoWaterSimulation {
             cushionFactor : 0.998,
             evaporationRate : 0.0001,
 
-            /* rain */
+            /!* rain *!/
             rainAmount : 1, // percent
             rainMaxPrecipitation : 0.00,
 
-            /* water source */
+            /!* water source *!/
             waterSourceAmount : 5,
             //waterSourcePosition : -1,
             waterSourcePositions : [],
             waterSourceArea : 1,
 
-            /* water minus source */
+            /!* water minus source *!/
             waterMinusSourceAmount : 5,
             //waterMinusSourcePosition : -1,
             waterMinusSourcePositions : [],
             waterMinusSourceArea : 2,
 
-            /* seawall */
+            /!* seawall *!/
             waterSeawallHeight : 50.0,
             waterSeawallPositions : [],
             waterSeawallArea : 4,
@@ -118,7 +153,7 @@ export class MagoWaterSimulation {
             simulationConfine : false,
             colorIntensity : 1.0,
             waterBrightness : 0.5,
-        }
+        }*/
         this.init(viewer);
     }
 
@@ -154,11 +189,13 @@ export class MagoWaterSimulation {
         this.info.status = 'init';
     }
 
-    createRectangle(extent) {
+    /**
+     * Creates a rectangle on the globe.
+     * @param extent
+     * @returns {Entity}
+     */
+    createRectangle(extent = this.extent) {
         console.log('[MCT][WATER] createRectangle');
-        if (!extent) {
-            extent = this.extent;
-        }
         const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
         return this.viewer.entities.add({
             rectangle: {
@@ -368,21 +405,45 @@ export class MagoWaterSimulation {
         }
     }
 
+    getGridUrl(gridSize) {
+        let grid;
+        if (gridSize === 64) {
+            grid = grid64;
+        } else if (gridSize === 128) {
+            grid = grid128;
+        } else if (gridSize === 256) {
+            grid = grid256;
+        } else if (gridSize === 512) {
+            grid = grid512;
+        } else if (gridSize === 1024) {
+            grid = grid1024;
+        } else {
+            throw new Error(`[MCT][WATER] ${gridSize}x${gridSize}.glb grid file is not found`);
+        }
+        return grid;
+    }
+
     async initWaterSimulation(options) {
         this.initOptions(options);
         const gridSize = this.options.gridSize;
         const cellSize = this.options.cellSize;
 
         this.interval = this.options.interval;
-        let extent = this.calcExtent(options);
-        this.extent = extent;
+        this.extent = this.calcExtent(options);
         const center = Cesium.Cartesian3.fromDegrees(options.lon, options.lat);
         const scaleVector = new Cesium.Cartesian3(cellSize, cellSize, 1.0);
         let transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
 
+        let gridModelUrl;
+        if (options.gridUrl) {
+            gridModelUrl = options.gridUrl;
+        } else {
+            gridModelUrl = this.getGridUrl(gridSize);
+        }
+
         const gltf = await Cesium.Model.fromGltfAsync({
-            url: `/src/assets/grid/${gridSize}x${gridSize}.glb`,
+            url: gridModelUrl,
             //url: grid,
             modelMatrix: transform,
             enableDebugWireframe: true,
@@ -701,13 +762,13 @@ export class MagoWaterSimulation {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoPostRender.html">MagoPostRender</a></li><li><a href="MagoSimulation.html">MagoSimulation</a></li><li><a href="MagoViewer.html">MagoViewer</a></li><li><a href="MagoWaterSimulation.html">MagoWaterSimulation</a></li><li><a href="OutlineRender.html">OutlineRender</a></li><li><a href="ShaderLoader.html">ShaderLoader</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoViewer.html">MagoViewer</a></li><li><a href="MagoWaterSimulation.html">MagoWaterSimulation</a></li><li><a href="MagoWaterSimulationOptions.html">MagoWaterSimulationOptions</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Feb 24 2025 18:27:41 GMT+0900 (대한민국 표준시)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Feb 25 2025 16:41:00 GMT+0900 (대한민국 표준시)
 </footer>
 
 <script> prettyPrint(); </script>

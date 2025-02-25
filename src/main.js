@@ -2,9 +2,10 @@ import './css/css-init.css'
 import './css/custom.css'
 import {Viewer} from "cesium";
 import {MagoViewer} from "./cesium/MagoViewer.js";
-import {MagoSimulation} from "./cesium/MagoSimulation.js";
 import {MagoWaterSimulation} from "./cesium/water/MagoWaterSimulation.js";
 import * as Cesium from "cesium";
+import {MagoEdge} from "./cesium/MagoEdge.js";
+import {MagoSSAO} from "./cesium/MagoSSAO.js";
 
 document.querySelector('#app').innerHTML = `
   <div id="cesiumContainer"></div>
@@ -28,6 +29,7 @@ document.querySelector('#app').innerHTML = `
             <option value="1024">1024</option>
             <option value="2048">2048</option>
             <option value="4096">4096</option>
+            
         </select>
     </div>
     <div>
@@ -153,7 +155,7 @@ const viewer = new Viewer("cesiumContainer", {
     baseLayer : false,
     shouldAnimate: true,
 });
-//viewer.scene.globe.depthTestAgainstTerrain = true;
+viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.postProcessStages.fxaa.enabled = true;
 viewer.scene.globe.enableLighting = false;
 viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -164,7 +166,6 @@ shadowMap.maximumDistance = 20000;
 shadowMap.darkness = 0.5;*/
 
 const [lon, lat] = [126.968905, 37.447571];
-
 const options = {
     lon : lon,
     lat : lat,
@@ -175,23 +176,24 @@ const options = {
 const magoWaterSimulation = new MagoWaterSimulation(viewer);
 const init = async() => {
     const magoViewer = new MagoViewer(viewer);
-    magoViewer.init();
-    //magoViewer.addRandomPoints(1000,"#ffff00");
+    magoViewer.createVworldImageryLayer('Satellite', false, 'jpeg', 'BB89CEE2-0CBC-3378-A40B-468C4897B788');
+    magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
+    magoViewer.test();
+    magoViewer.initPosition(lon, lat, 1000.0);
 
-    //const magoPostRenderer = new MagoPostRender(viewer);
+    //const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/R02-bansong-all-obj-20250220/tileset.json", {})
+    //viewer.scene.primitives.add(tileset);
+
+    const edge = new MagoEdge(viewer);
+    const ssao = new MagoSSAO(viewer);
+    setTimeout(() => {
+        edge.on();
+        ssao.on();
+    }, 1000);
 
     setDefaultValue();
-
-    const magoSimulation = new MagoSimulation(viewer);
-    magoSimulation.flyTo(lon, lat, 1000);
-    magoSimulation.createAsset(lon, lat);
-    //await magoSimulation.setTerrain('http://localhost:9090/data/open-data-korea-terrain/');
-    await magoSimulation.setTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
-    magoSimulation.createVworldImageryLayer('Satellite', 'jpeg');
-
     refreshRectangle();
 
-    //magoWaterSimulation.init(viewer);
     await magoWaterSimulation.initBase(options);
     magoWaterSimulation.start();
     magoWaterSimulation.addRandomSourcePosition();

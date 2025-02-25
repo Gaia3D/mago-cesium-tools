@@ -20,6 +20,7 @@ export default defineConfig({
             fileName: (format) => `index.${format}.js`,
             formats: ['es', 'cjs']
         },
+        minify: false,
         rollupOptions: {
             external: ['cesium'],
             output: {

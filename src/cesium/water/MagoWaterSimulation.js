@@ -1,5 +1,6 @@
 import {ShaderLoader} from "../ShaderLoader.js";
 import {WaterSimulator} from "./WaterSimulator.js";
+import {MagoWaterSimulationOptions} from "./MagoWaterSimulationOptions.js";
 import * as Cesium from "cesium";
 import {Extent} from "../Extent.js";
 
@@ -9,10 +10,21 @@ import grid256 from '/src/assets/grid/256x256.glb';
 import grid512 from '/src/assets/grid/512x512.glb';
 import grid1024 from '/src/assets/grid/1024x1024.glb';
 
-//const grids = import.meta.glob('/src/assets/grid/*.glb', { as: 'raw' });
-
 /**
  * MagoWaterSimulation is a class that creates a water simulation on a globe.
+ * @class
+ * @param {Cesium.Viewer} viewer - Cesium Viewer instance
+ * @example
+ * const options = {
+ *    lon: 126.978388,
+ *    lat: 37.566610,
+ *    cellSize: 1,
+ *    gridSize: 512,
+ * }
+ * const magoWaterSimulation = new MagoWaterSimulation(viewer);
+ * magoWaterSimulation.initBase(options);
+ * magoWaterSimulation.start();
+ * magoWaterSimulation.addRandomSourcePosition();
  */
 export class MagoWaterSimulation {
 
@@ -23,8 +35,22 @@ export class MagoWaterSimulation {
     constructor (viewer) {
         console.log('[MCT][WATER] constructor');
 
+        /**
+         * Cesium Viewer instance
+         * @type {Cesium.Viewer}
+         */
         this.viewer = undefined;
+
+        /**
+         * Custom shader loader
+         * @type {ShaderLoader}
+         */
         this.customShaderLoader = undefined;
+
+        /**
+         * Water Simulator
+         * @type {WaterSimulator}
+         */
         this.waterSimulator = undefined;
 
         //this.extent = {minLon: 0, minLat: 0, maxLon: 0, maxLat: 0};
@@ -55,9 +81,11 @@ export class MagoWaterSimulation {
 
         /**
          * Default options for the water simulation.
-         * @type {{waterColor: module:cesium.Color, cellSize: number, gridSize: number, maxHeight: number, maxFlux: number, interval: number, gravity: number, timeStep: number, waterDensity: number, cushionFactor: number, evaporationRate: number, rainAmount: number, rainMaxPrecipitation: number, waterSourceAmount: number, waterSourcePositions: *[], waterSourceArea: number, waterMinusSourceAmount: number, waterMinusSourcePositions: *[], waterMinusSourceArea: number, waterSeawallHeight: number, waterSeawallPositions: *[], waterSeawallArea: number, heightPalette: boolean, waterSkirt: boolean, simulationConfine: boolean, colorIntensity: number, waterBrightness: number}}
+         * @type MagoWaterSimulationOptions
          */
-        this.options = {
+        this.options = new MagoWaterSimulationOptions();
+
+        /*{
             waterColor : new Cesium.Color(0.25, 0.75, 1.0),
 
             cellSize : 1,
@@ -71,23 +99,23 @@ export class MagoWaterSimulation {
             cushionFactor : 0.998,
             evaporationRate : 0.0001,
 
-            /* rain */
+            /!* rain *!/
             rainAmount : 1, // percent
             rainMaxPrecipitation : 0.00,
 
-            /* water source */
+            /!* water source *!/
             waterSourceAmount : 5,
             //waterSourcePosition : -1,
             waterSourcePositions : [],
             waterSourceArea : 1,
 
-            /* water minus source */
+            /!* water minus source *!/
             waterMinusSourceAmount : 5,
             //waterMinusSourcePosition : -1,
             waterMinusSourcePositions : [],
             waterMinusSourceArea : 2,
 
-            /* seawall */
+            /!* seawall *!/
             waterSeawallHeight : 50.0,
             waterSeawallPositions : [],
             waterSeawallArea : 4,
@@ -97,7 +125,7 @@ export class MagoWaterSimulation {
             simulationConfine : false,
             colorIntensity : 1.0,
             waterBrightness : 0.5,
-        }
+        }*/
         this.init(viewer);
     }
 
@@ -133,11 +161,13 @@ export class MagoWaterSimulation {
         this.info.status = 'init';
     }
 
-    createRectangle(extent) {
+    /**
+     * Creates a rectangle on the globe.
+     * @param extent
+     * @returns {Entity}
+     */
+    createRectangle(extent = this.extent) {
         console.log('[MCT][WATER] createRectangle');
-        if (!extent) {
-            extent = this.extent;
-        }
         const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
         return this.viewer.entities.add({
             rectangle: {

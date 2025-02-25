@@ -1,3 +1,15 @@
+/**
+ * Represents a 2D extent defined by its minimum and maximum coordinates.
+ * @alias Extent
+ * @constructor
+ * @param {Number} minX The minimum x coordinate.
+ * @param {Number} minY The minimum y coordinate.
+ * @param {Number} maxX The maximum x coordinate.
+ * @param {Number} maxY The maximum y coordinate.
+ * @ignore
+ * @example
+ * const extent = new Extent(0.0, 0.0, 1.0, 1.0);
+ */
 export class Extent {
     constructor(minX, minY, maxX, maxY) {
         this.minX = minX;

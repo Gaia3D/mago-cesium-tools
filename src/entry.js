@@ -1,5 +1,5 @@
 import { MagoViewer } from "./cesium/MagoViewer.js";
-import { MagoSimulation } from "./cesium/MagoSimulation.js";
 import { MagoWaterSimulation } from "./cesium/water/MagoWaterSimulation.js";
+import { MagoWaterSimulationOptions } from "./cesium/water/MagoWaterSimulationOptions.js";
 
-export { MagoViewer, MagoSimulation, MagoWaterSimulation };
+export { MagoViewer, MagoWaterSimulation, MagoWaterSimulationOptions };

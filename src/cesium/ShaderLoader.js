@@ -1,10 +1,15 @@
-const customVertexShaders = import.meta.glob('/src/customShaders/*.vert', { as: 'raw' });
-const customFragmentShaders = import.meta.glob('/src/customShaders/*.frag', { as: 'raw' });
-const vertexShaders =  import.meta.glob('/src/shaders/*.vert', { as: 'raw' });
-const fragmentShaders = import.meta.glob('/src/shaders/*.frag', { as: 'raw' });
+const customVertexShaders = import.meta.glob('/src/customShaders/*.vert', { query: '?raw', import: 'default' });
+const customFragmentShaders = import.meta.glob('/src/customShaders/*.frag', { query: '?raw', import: 'default' });
+const vertexShaders =  import.meta.glob('/src/shaders/*.vert', { query: '?raw', import: 'default' });
+const fragmentShaders = import.meta.glob('/src/shaders/*.frag', { query: '?raw', import: 'default' });
 
 /**
  * ShaderLoader class
+ * @ignore
+ * @class
+ * @example
+ * const shaderLoader = new ShaderLoader("/src/shaders");
+ * await shaderLoader.getShaderSource("depth-fragment-shader.frag");
  */
 export class ShaderLoader {
     /**
@@ -21,19 +26,6 @@ export class ShaderLoader {
      * @param url
      * @returns {Promise<string|void|any>}
      */
-    /*async getShaderSource(url) {
-        if (this.shaderMap.has(url)) {
-            return await this.shaderMap.get(url);
-        }
-
-        const fullUrl = this.parentPath + "/" + url;
-        let shader = await fetch(fullUrl)
-            .then(response => response.text())
-            .catch(error => console.error(error));
-
-        this.shaderMap.set(url, shader);
-        return shader;
-    }*/
     async getShaderSource(url) {
         if (this.shaderMap.has(url)) {
             return await this.shaderMap.get(url);
