@@ -1,7 +1,9 @@
 # 🛠️ mago-cesium-tools
 
 ## Overview
-mago-cesium-tools is a tool for creating a 3D map using `cesium`.
+mago-cesium-tools is a collection of tools based on `CesiumJS`.  
+It encapsulates some of the features of `CesiumJS` to make it easier to use,  
+It includes various rendering features such as water simulation, SSAO, Edge, and more.  
 
 ### Description
 `vite` project
