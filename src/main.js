@@ -18,9 +18,9 @@ document.querySelector('#app').innerHTML = `
     <div>
         <label for="gridSize">Grid Size : </label>
         <select id="gridSize">
-            <option value="8">8</option>
+            <!--<option value="8">8</option>
             <option value="16">16</option>
-            <option value="32">32</option>
+            <option value="32">32</option>-->
             <option value="64">64</option>
             <option value="128">128</option>
             <option value="256">256</option>

@@ -3,6 +3,14 @@ import {WaterSimulator} from "./WaterSimulator.js";
 import * as Cesium from "cesium";
 import {Extent} from "../Extent.js";
 
+import grid64 from '/src/assets/grid/64x64.glb';
+import grid128 from '/src/assets/grid/128x128.glb';
+import grid256 from '/src/assets/grid/256x256.glb';
+import grid512 from '/src/assets/grid/512x512.glb';
+import grid1024 from '/src/assets/grid/1024x1024.glb';
+
+//const grids = import.meta.glob('/src/assets/grid/*.glb', { as: 'raw' });
+
 /**
  * MagoWaterSimulation is a class that creates a water simulation on a globe.
  */
@@ -339,21 +347,45 @@ export class MagoWaterSimulation {
         }
     }
 
+    getGridUrl(gridSize) {
+        let grid;
+        if (gridSize === 64) {
+            grid = grid64;
+        } else if (gridSize === 128) {
+            grid = grid128;
+        } else if (gridSize === 256) {
+            grid = grid256;
+        } else if (gridSize === 512) {
+            grid = grid512;
+        } else if (gridSize === 1024) {
+            grid = grid1024;
+        } else {
+            throw new Error(`[MCT][WATER] ${gridSize}x${gridSize}.glb grid file is not found`);
+        }
+        return grid;
+    }
+
     async initWaterSimulation(options) {
         this.initOptions(options);
         const gridSize = this.options.gridSize;
         const cellSize = this.options.cellSize;
 
         this.interval = this.options.interval;
-        let extent = this.calcExtent(options);
-        this.extent = extent;
+        this.extent = this.calcExtent(options);
         const center = Cesium.Cartesian3.fromDegrees(options.lon, options.lat);
         const scaleVector = new Cesium.Cartesian3(cellSize, cellSize, 1.0);
         let transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
 
+        let gridModelUrl;
+        if (options.gridUrl) {
+            gridModelUrl = options.gridUrl;
+        } else {
+            gridModelUrl = this.getGridUrl(gridSize);
+        }
+
         const gltf = await Cesium.Model.fromGltfAsync({
-            url: `/src/assets/grid/${gridSize}x${gridSize}.glb`,
+            url: gridModelUrl,
             //url: grid,
             modelMatrix: transform,
             enableDebugWireframe: true,
