@@ -7,8 +7,8 @@ import {Extent} from "../Extent.js";
 import grid64 from '/src/assets/grid/64x64.glb';
 import grid128 from '/src/assets/grid/128x128.glb';
 import grid256 from '/src/assets/grid/256x256.glb';
-import grid512 from '/src/assets/grid/512x512.glb';
-import grid1024 from '/src/assets/grid/1024x1024.glb';
+/*import grid512 from '/src/assets/grid/512x512.glb';
+import grid1024 from '/src/assets/grid/1024x1024.glb';*/
 
 /**
  * MagoWaterSimulation is a class that creates a water simulation on a globe.
@@ -84,48 +84,6 @@ export class MagoWaterSimulation {
          * @type MagoWaterSimulationOptions
          */
         this.options = new MagoWaterSimulationOptions();
-
-        /*{
-            waterColor : new Cesium.Color(0.25, 0.75, 1.0),
-
-            cellSize : 1,
-            gridSize : 512,
-            maxHeight : 10000.0,
-            maxFlux : 10000.,
-            interval : 1000 / 60,
-            gravity : 9.80665,
-            timeStep : 0.1,
-            waterDensity : 998.0,
-            cushionFactor : 0.998,
-            evaporationRate : 0.0001,
-
-            /!* rain *!/
-            rainAmount : 1, // percent
-            rainMaxPrecipitation : 0.00,
-
-            /!* water source *!/
-            waterSourceAmount : 5,
-            //waterSourcePosition : -1,
-            waterSourcePositions : [],
-            waterSourceArea : 1,
-
-            /!* water minus source *!/
-            waterMinusSourceAmount : 5,
-            //waterMinusSourcePosition : -1,
-            waterMinusSourcePositions : [],
-            waterMinusSourceArea : 2,
-
-            /!* seawall *!/
-            waterSeawallHeight : 50.0,
-            waterSeawallPositions : [],
-            waterSeawallArea : 4,
-
-            heightPalette : false,
-            waterSkirt : true,
-            simulationConfine : false,
-            colorIntensity : 1.0,
-            waterBrightness : 0.5,
-        }*/
         this.init(viewer);
     }
 
@@ -385,11 +343,11 @@ export class MagoWaterSimulation {
             grid = grid128;
         } else if (gridSize === 256) {
             grid = grid256;
-        } else if (gridSize === 512) {
+        } /*else if (gridSize === 512) {
             grid = grid512;
         } else if (gridSize === 1024) {
             grid = grid1024;
-        } else {
+        }*/ else {
             throw new Error(`[MCT][WATER] ${gridSize}x${gridSize}.glb grid file is not found`);
         }
         return grid;

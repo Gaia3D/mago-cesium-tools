@@ -23,7 +23,7 @@ export class MagoWaterSimulationOptions {
          * @type {number}
          * @default 512
          */
-        this.gridSize = 512;
+        this.gridSize = 256;
 
         /**
          * Max height
