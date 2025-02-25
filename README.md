@@ -57,4 +57,4 @@ npm run build
 ```
 
 ## License
-MIT License
+Mozilla Public License Version 2.0
