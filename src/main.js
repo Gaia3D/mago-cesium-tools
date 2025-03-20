@@ -6,6 +6,7 @@ import {MagoWaterSimulation} from "./cesium/water/MagoWaterSimulation.js";
 import * as Cesium from "cesium";
 import {MagoEdge} from "./cesium/MagoEdge.js";
 import {MagoSSAO} from "./cesium/MagoSSAO.js";
+import grid512 from '/src/assets/grid/512x512.glb';
 
 document.querySelector('#app').innerHTML = `
   <div id="cesiumContainer"></div>
@@ -171,6 +172,7 @@ const options = {
     lat : lat,
     gridSize : 512,
     cellSize : 1.0,
+    gridUrl : grid512,
 };
 
 const magoWaterSimulation = new MagoWaterSimulation(viewer);
