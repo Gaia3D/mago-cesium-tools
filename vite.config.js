@@ -31,4 +31,9 @@ export default defineConfig({
         }
     },
     assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vert', '**/*.frag', '**/*.glsl'],
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'src'),
+        },
+    },
 });

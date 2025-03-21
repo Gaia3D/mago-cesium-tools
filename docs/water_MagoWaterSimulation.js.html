@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: water/MagoWaterSimulation.js</title>
+    <title>JSDoc: Source: water/MagoFluid.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,18 +17,18 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: water/MagoWaterSimulation.js</h1>
-
-    
+    <h1 class="page-title">Source: water/MagoFluid.js</h1>
 
 
 
-    
+
+
+
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import {ShaderLoader} from "../ShaderLoader.js";
-import {WaterSimulator} from "./WaterSimulator.js";
-import {MagoWaterSimulationOptions} from "./MagoWaterSimulationOptions.js";
+import {FluidEngine} from "./FluidEngine.js";
+import {MagoFluidOptions} from "./MagoFluidOptions.js";
 import * as Cesium from "cesium";
 import {Extent} from "../Extent.js";
 
@@ -39,7 +39,7 @@ import grid256 from '/src/assets/grid/256x256.glb';
 import grid1024 from '/src/assets/grid/1024x1024.glb';*/
 
 /**
- * MagoWaterSimulation is a class that creates a water simulation on a globe.
+ * MagoFluid is a class that creates a water simulation on a globe.
  * @class
  * @param {Cesium.Viewer} viewer - Cesium Viewer instance
  * @example
@@ -49,19 +49,19 @@ import grid1024 from '/src/assets/grid/1024x1024.glb';*/
  *    cellSize: 1,
  *    gridSize: 512,
  * }
- * const magoWaterSimulation = new MagoWaterSimulation(viewer);
+ * const magoWaterSimulation = new MagoFluid(viewer);
  * magoWaterSimulation.initBase(options);
  * magoWaterSimulation.start();
  * magoWaterSimulation.addRandomSourcePosition();
  */
-export class MagoWaterSimulation {
+export class MagoFluid {
 
     /**
-     * Constructor for MagoWaterSimulation class
+     * Constructor for MagoFluid class
      * @param viewer Cesium Viewer instance
      */
     constructor (viewer) {
-        console.log('[MCT][WATER] constructor');
+        console.log('[MCT][FLUID] constructor');
 
         /**
          * Cesium Viewer instance
@@ -77,7 +77,7 @@ export class MagoWaterSimulation {
 
         /**
          * Water Simulator
-         * @type {WaterSimulator}
+         * @type {FluidEngine}
          */
         this.waterSimulator = undefined;
 
@@ -109,9 +109,9 @@ export class MagoWaterSimulation {
 
         /**
          * Default options for the water simulation.
-         * @type MagoWaterSimulationOptions
+         * @type MagoFluidOptions
          */
-        this.options = new MagoWaterSimulationOptions();
+        this.options = new MagoFluidOptions();
         this.init(viewer);
     }
 
@@ -120,9 +120,9 @@ export class MagoWaterSimulation {
      * @param viewer
      */
     init(viewer) {
-        console.log('[MCT][WATER] init');
+        console.log('[MCT][FLUID] init');
         this.viewer = viewer;
-        this.waterSimulator = new WaterSimulator(this.options);
+        this.waterSimulator = new FluidEngine(this.options);
         this.customShaderLoader = new ShaderLoader("/src/customShaders");
 
         if (this.gridPrimitive) {
@@ -153,7 +153,7 @@ export class MagoWaterSimulation {
      * @returns {Entity}
      */
     createRectangle(extent = this.extent) {
-        console.log('[MCT][WATER] createRectangle');
+        console.log('[MCT][FLUID] createRectangle');
         const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
         return this.viewer.entities.add({
             rectangle: {
@@ -222,7 +222,7 @@ export class MagoWaterSimulation {
      * @returns {Promise&lt;void>}
      */
     async initBase(options) {
-        console.log('[MCT][WATER] initBase');
+        console.log('[MCT][FLUID] initBase');
         this.info.status = 'loading';
         this.clearWaterSourcePositions();
         this.clearWaterMinusSourcePositions();
@@ -258,13 +258,13 @@ export class MagoWaterSimulation {
     /*initWaterSource() {
         const gridSize = this.options.gridSize;
         let cellPosition = ((gridSize * (gridSize / 2)) + (gridSize / 2)) * 4;
-        console.log('[MCT][WATER] setWaterSourcePosition', cellPosition);
+        console.log('[MCT][FLUID] setWaterSourcePosition', cellPosition);
         this.options.waterSourcePosition = cellPosition;
     }*/
 
     /*setWaterSourcePosition(lon, lat) {
         let cellPosition = this.findCellFromDegree(lon, lat);
-        console.log('[MCT][WATER] setWaterSourcePosition', cellPosition);
+        console.log('[MCT][FLUID] setWaterSourcePosition', cellPosition);
         this.options.waterSourcePosition = cellPosition;
     }*/
 
@@ -300,7 +300,7 @@ export class MagoWaterSimulation {
         let centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterSourcePositions.push(cellPosition * 4);
-        console.log('[MCT][WATER] setWaterSourcePosition', cellPosition * 4);
+        console.log('[MCT][FLUID] setWaterSourcePosition', cellPosition * 4);
         return centerPosition;
     }
 
@@ -315,7 +315,7 @@ export class MagoWaterSimulation {
         let centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterMinusSourcePositions.push(cellPosition * 4);
-        console.log('[MCT][WATER] setWaterMinusSourcePosition', cellPosition * 4);
+        console.log('[MCT][FLUID] setWaterMinusSourcePosition', cellPosition * 4);
         return centerPosition;
     }
 
@@ -330,7 +330,7 @@ export class MagoWaterSimulation {
         let centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterSeawallPositions.push(cellPosition * 4);
-        console.log('[MCT][WATER] setWaterSeawallPosition', cellPosition * 4);
+        console.log('[MCT][FLUID] setWaterSeawallPosition', cellPosition * 4);
         return centerPosition;
     }
 
@@ -342,7 +342,7 @@ export class MagoWaterSimulation {
         const max = gridSize * gridSize;
 
         const randomSourceCell = Math.floor(Math.random() * max) * 4;
-        console.log('[MCT][WATER] setWaterSourcePosition', randomSourceCell);
+        console.log('[MCT][FLUID] setWaterSourcePosition', randomSourceCell);
         this.options.waterSourcePositions.push(randomSourceCell);
         //this.options.waterSourceAmount = Math.floor(Math.random() * 10);
     }
@@ -376,7 +376,7 @@ export class MagoWaterSimulation {
         } else if (gridSize === 1024) {
             grid = grid1024;
         }*/ else {
-            throw new Error(`[MCT][WATER] ${gridSize}x${gridSize}.glb grid file is not found`);
+            throw new Error(`[MCT][FLUID] ${gridSize}x${gridSize}.glb grid file is not found`);
         }
         return grid;
     }
@@ -524,7 +524,7 @@ export class MagoWaterSimulation {
     }
 
     startFrame() {
-        console.log('[MCT][WATER] startWaterSimulation');
+        console.log('[MCT][FLUID] startWaterSimulation');
         let stepCount = 0;
 
         if (this.intervalObject) {
@@ -567,7 +567,7 @@ export class MagoWaterSimulation {
         this.customShader.setUniform('u_water_color', this.options.waterColor);
 
         if (isFirstFrame) {
-            console.log('[MCT][WATER] render first frame');
+            console.log('[MCT][FLUID] render first frame');
             this.terrainTextureUniform.typedArray = this.convertMapToArray(this.terrainMap, this.options.maxHeight);
             this.waterSimulator.setTerrainTexture(this.terrainTextureUniform.typedArray);
             this.customShader.setUniform('u_terrain', this.terrainTextureUniform);
@@ -580,14 +580,14 @@ export class MagoWaterSimulation {
      * @returns {Promise&lt;void>}
      */
     async initializeWater(){
-        console.log('[MCT][WATER] initializeWater');
+        console.log('[MCT][FLUID] initializeWater');
         const gridSize = this.options.gridSize;
         this.waterMap = new Array(gridSize * gridSize).fill(0);
         await this.waterSimulator.resetWaterTexture();
     }
 
     async initializeTerrain() {
-        console.log('[MCT][WATER] initializeTerrain');
+        console.log('[MCT][FLUID] initializeTerrain');
         const gridSize = this.options.gridSize;
         let cellSize = this.options.cellSize;
         this.terrainMap = new Array(gridSize * gridSize).fill(0);
@@ -656,7 +656,7 @@ export class MagoWaterSimulation {
         const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
         let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
 
-        console.log('[MCT][WATER] calcCellCenterPosition', gridPosition);
+        console.log('[MCT][FLUID] calcCellCenterPosition', gridPosition);
 
         return gridPosition;
     }
@@ -683,7 +683,7 @@ export class MagoWaterSimulation {
                 let inLat = gridPosition.lat >= lat &amp;&amp; nextGridPosition.lat &lt;= lat;
                 if (inLon &amp;&amp; inLat) {
                     const index = this.findIndex(j, i);
-                    console.log('[MCT][WATER] findCellFromDegree', index);
+                    console.log('[MCT][FLUID] findCellFromDegree', index);
                     return index;
                 }
             }
@@ -720,7 +720,7 @@ export class MagoWaterSimulation {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoViewer.html">MagoViewer</a></li><li><a href="MagoWaterSimulation.html">MagoWaterSimulation</a></li><li><a href="MagoWaterSimulationOptions.html">MagoWaterSimulationOptions</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoViewer.html">MagoViewer</a></li><li><a href="MagoWaterSimulation.html">MagoFluid</a></li><li><a href="MagoWaterSimulationOptions.html">MagoFluidOptions</a></li></ul>
 </nav>
 
 <br class="clear">

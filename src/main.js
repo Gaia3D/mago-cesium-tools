@@ -1,17 +1,17 @@
 import './css/css-init.css'
 import './css/custom.css'
 import {Viewer} from "cesium";
-import {MagoViewer} from "./cesium/MagoViewer.js";
-import {MagoWaterSimulation} from "./cesium/water/MagoWaterSimulation.js";
+import {MagoViewer} from "./modules/MagoViewer.js";
+import {MagoFluid} from "./modules/fluid/MagoFluid.js";
 import * as Cesium from "cesium";
-import {MagoEdge} from "./cesium/MagoEdge.js";
-import {MagoSSAO} from "./cesium/MagoSSAO.js";
-import grid512 from '/src/assets/grid/512x512.glb';
+import {MagoEdge} from "./modules/render/MagoEdge.js";
+import {MagoSSAO} from "./modules/render/MagoSSAO.js";
+import {MagoWind} from "@/modules/wind/MagoWind.js";
 
 document.querySelector('#app').innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago3D Water Simulation</h1>
+    <h1>Mago Cesium Tools</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <h3>Initialization</h3>
@@ -30,7 +30,6 @@ document.querySelector('#app').innerHTML = `
             <option value="1024">1024</option>
             <option value="2048">2048</option>
             <option value="4096">4096</option>
-            
         </select>
     </div>
     <div>
@@ -172,90 +171,130 @@ const options = {
     lat : lat,
     gridSize : 512,
     cellSize : 1.0,
-    gridUrl : grid512,
 };
 
-const magoWaterSimulation = new MagoWaterSimulation(viewer);
+const fluid = new MagoFluid(viewer);
 const init = async() => {
     const magoViewer = new MagoViewer(viewer);
-    magoViewer.createVworldImageryLayer('Satellite', false, 'jpeg', 'BB89CEE2-0CBC-3378-A40B-468C4897B788');
-    magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
-    magoViewer.test();
+    await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
+    await magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
     magoViewer.initPosition(lon, lat, 1000.0);
-
-    //const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/R02-bansong-all-obj-20250220/tileset.json", {})
-    //viewer.scene.primitives.add(tileset);
-
-    const edge = new MagoEdge(viewer);
-    const ssao = new MagoSSAO(viewer);
-    setTimeout(() => {
-        edge.on();
-        ssao.on();
-    }, 1000);
 
     setDefaultValue();
     refreshRectangle();
 
-    await magoWaterSimulation.initBase(options);
-    magoWaterSimulation.start();
-    magoWaterSimulation.addRandomSourcePosition();
+    await fluid.initBase(options);
+    fluid.start();
+    fluid.addRandomSourcePosition();
+
+    // test data
+    const dimension = [601, 351] //[5, 5];
+    const boundary = [
+        [95, 20],
+        [155, 20],
+        [155, 55],
+        [95, 55]
+    ];
+    const testlevels = [30, 50];
+    //const testlevels = [30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 850, 900, 925];
+    const testData = await Promise.all(testlevels.map(async (level) => {
+        const res = await fetch(`/wind/${level}`)
+        const json = await res.text();
+        const obj = JSON.parse(json);
+        return obj
+    }))
+
+    const levels = testData.map(obj => obj.altitudesOfLevel[1] * 100) // [30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 850, 900, 925].map(v => v * 100 * 32);//new Array(20).fill().map((e, i) => (i + 2) * 400000)
+    const uvws = {
+        u: levels.map((level, i) => {
+            return testData[i].U1;
+        }),
+        v: levels.map((level, i) => {
+            return testData[i].V1;
+        }),
+        w: levels.map((level, i) => {
+            return testData[i].W1;
+        }),
+    }
+
+    const windOptions = {
+        dimension: dimension,       // grid 격자 수 [x,y]
+        levels: levels,             // grid 고도 [ (altitude of grid[0]), ... ]
+        uvws: uvws,                 // 각 grid의 uvw [ { u:[...], v:[...], w:[...] }, ... ]
+        boundary: boundary,         // grid의 lonlat 바운더리 [ [lon, lat](leftlow), (rightlow), (righthigh), (lefthigh) ]
+        textureSize: 512,           // 파티클 수 = (textureSize * textureSize)
+        speedFactor: 500.0,        // 파티클 속도 계수
+        renderingType: 'triangle',  // 렌더링 타입 ('point', 'line', 'triangle' 중 하나)
+        point: {
+            pointSize: 2,
+        },
+        triangle: {
+            // 렌더링 타입 'triangle'의 옵션
+            lineWidth: 1000,
+        }
+    }
+    const wind = new MagoWind(viewer);
+    await wind.init(windOptions);
+    const windPrimitives = await wind.getPrimitiveCollection();
+    console.log(windPrimitives)
+    viewer.scene.primitives.add(windPrimitives);
 }
 
 const setDefaultValue = () => {
-    document.querySelector('#water').value = magoWaterSimulation.options.waterSourceAmount;
-    document.querySelector('#waterValue').value = magoWaterSimulation.options.waterSourceAmount;
+    document.querySelector('#water').value = fluid.options.waterSourceAmount;
+    document.querySelector('#waterValue').value = fluid.options.waterSourceAmount;
 
-    document.querySelector('#waterspout').value = magoWaterSimulation.options.waterMinusSourceAmount;
-    document.querySelector('#waterspoutValue').value = magoWaterSimulation.options.waterMinusSourceAmount;
+    document.querySelector('#waterspout').value = fluid.options.waterMinusSourceAmount;
+    document.querySelector('#waterspoutValue').value = fluid.options.waterMinusSourceAmount;
 
-    document.querySelector('#rainfall').value = magoWaterSimulation.options.rainMaxPrecipitation;
-    document.querySelector('#rainfallValue').value = magoWaterSimulation.options.rainMaxPrecipitation;
+    document.querySelector('#rainfall').value = fluid.options.rainMaxPrecipitation;
+    document.querySelector('#rainfallValue').value = fluid.options.rainMaxPrecipitation;
 
-    document.querySelector('#gridSize').value = magoWaterSimulation.options.gridSize;
-    document.querySelector('#cellSize').value = magoWaterSimulation.options.cellSize;
+    document.querySelector('#gridSize').value = fluid.options.gridSize;
+    document.querySelector('#cellSize').value = fluid.options.cellSize;
 
-    document.querySelector('#color').value = magoWaterSimulation.options.waterColor.toCssHexString();
+    document.querySelector('#color').value = fluid.options.waterColor.toCssHexString();
 
-    document.querySelector('#intensity').value = magoWaterSimulation.options.colorIntensity;
-    document.querySelector('#intensityValue').value = magoWaterSimulation.options.colorIntensity;
+    document.querySelector('#intensity').value = fluid.options.colorIntensity;
+    document.querySelector('#intensityValue').value = fluid.options.colorIntensity;
 
-    document.querySelector('#brightness').value = magoWaterSimulation.options.waterBrightness;
-    document.querySelector('#brightnessValue').value = magoWaterSimulation.options.waterBrightness;
+    document.querySelector('#brightness').value = fluid.options.waterBrightness;
+    document.querySelector('#brightnessValue').value = fluid.options.waterBrightness;
 
-    document.querySelector('#evaporation').value = magoWaterSimulation.options.evaporationRate;
-    document.querySelector('#evaporationValue').value = magoWaterSimulation.options.evaporationRate;
+    document.querySelector('#evaporation').value = fluid.options.evaporationRate;
+    document.querySelector('#evaporationValue').value = fluid.options.evaporationRate;
 
-    document.querySelector('#interval').value = 1000 / magoWaterSimulation.options.interval;
-    document.querySelector('#intervalValue').value = 1000 / magoWaterSimulation.options.interval;
+    document.querySelector('#interval').value = 1000 / fluid.options.interval;
+    document.querySelector('#intervalValue').value = 1000 / fluid.options.interval;
 
-    document.querySelector('#timeStep').value = magoWaterSimulation.options.timeStep;
-    document.querySelector('#timeStepValue').value = magoWaterSimulation.options.timeStep;
+    document.querySelector('#timeStep').value = fluid.options.timeStep;
+    document.querySelector('#timeStepValue').value = fluid.options.timeStep;
 
-    document.querySelector('#cushionFactor').value = magoWaterSimulation.options.cushionFactor;
-    document.querySelector('#cushionFactorValue').value = magoWaterSimulation.options.cushionFactor;
+    document.querySelector('#cushionFactor').value = fluid.options.cushionFactor;
+    document.querySelector('#cushionFactorValue').value = fluid.options.cushionFactor;
 
-    document.querySelector('#waterDensity').value = magoWaterSimulation.options.waterDensity;
-    document.querySelector('#waterDensityValue').value = magoWaterSimulation.options.waterDensity;
+    document.querySelector('#waterDensity').value = fluid.options.waterDensity;
+    document.querySelector('#waterDensityValue').value = fluid.options.waterDensity;
 }
 
 // event listeners
 document.querySelector('#start').addEventListener('click', () => {
-    magoWaterSimulation.start();
+    fluid.start();
 });
 
 document.querySelector('#stop').addEventListener('click', () => {
-    magoWaterSimulation.stop();
+    fluid.stop();
 });
 
 document.querySelector('#clearWater').addEventListener('click', async () => {
-    await magoWaterSimulation.initializeWater();
+    await fluid.initializeWater();
 });
 
 document.querySelector('#reload').addEventListener('click', async () => {
-    await magoWaterSimulation.init(viewer);
+    await fluid.init(viewer);
     clearWaterSourceEntities();
-    await magoWaterSimulation.initBase(options);
-    magoWaterSimulation.start();
+    await fluid.initBase(options);
+    fluid.start();
 });
 
 document.querySelector('#gridSize').addEventListener('change', async (event) => {
@@ -271,80 +310,80 @@ document.querySelector('#cellSize').addEventListener('change', async (event) => 
 });
 
 document.querySelector('#saveImage').addEventListener('click', () => {
-    magoWaterSimulation.saveWaterMapImage();
+    fluid.saveWaterMapImage();
 });
 
 document.querySelector('#wireframe').addEventListener('click', () => {
-    if (magoWaterSimulation.gridPrimitive) {
-        magoWaterSimulation.gridPrimitive.debugWireframe = !magoWaterSimulation.gridPrimitive.debugWireframe;
+    if (fluid.gridPrimitive) {
+        fluid.gridPrimitive.debugWireframe = !fluid.gridPrimitive.debugWireframe;
     }
 });
 
 document.querySelector('#heightLegend').addEventListener('click', () => {
-    magoWaterSimulation.options.heightPalette = !magoWaterSimulation.options.heightPalette;
+    fluid.options.heightPalette = !fluid.options.heightPalette;
 });
 
 document.querySelector('#water').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#waterValue').value = value;
-    magoWaterSimulation.options.waterSourceAmount = value;
+    fluid.options.waterSourceAmount = value;
 });
 
 document.querySelector('#waterspout').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#waterspoutValue').value = value;
-    magoWaterSimulation.options.waterMinusSourceAmount = value;
+    fluid.options.waterMinusSourceAmount = value;
 });
 
 document.querySelector('#rainfall').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#rainfallValue').value = value;
-    magoWaterSimulation.options.rainMaxPrecipitation = value;
+    fluid.options.rainMaxPrecipitation = value;
 });
 
 document.querySelector('#intensity').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#intensityValue').value = value;
-    magoWaterSimulation.options.colorIntensity = value;
+    fluid.options.colorIntensity = value;
 });
 
 document.querySelector('#brightness').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#brightnessValue').value = value;
-    magoWaterSimulation.options.waterBrightness = value;
+    fluid.options.waterBrightness = value;
 });
 
 document.querySelector('#evaporation').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#evaporationValue').value = value;
-    magoWaterSimulation.options.evaporationRate = value;
+    fluid.options.evaporationRate = value;
 });
 
 document.querySelector('#simulationConfine').addEventListener('click', () => {
-    magoWaterSimulation.options.simulationConfine = !magoWaterSimulation.options.simulationConfine;
+    fluid.options.simulationConfine = !fluid.options.simulationConfine;
 });
 
 document.querySelector('#waterSkirt').addEventListener('click', () => {
-    magoWaterSimulation.options.waterSkirt = !magoWaterSimulation.options.waterSkirt;
+    fluid.options.waterSkirt = !fluid.options.waterSkirt;
 });
 
 document.querySelector('#interval').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#intervalValue').value = value;
-    magoWaterSimulation.options.interval = 1000 / value;
-    magoWaterSimulation.startFrame();
+    fluid.options.interval = 1000 / value;
+    fluid.startFrame();
 });
 
 document.querySelector('#timeStep').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#timeStepValue').value = value;
-    magoWaterSimulation.options.timeStep = value;
+    fluid.options.timeStep = value;
 });
 
 document.querySelector('#cushionFactor').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#cushionFactorValue').value = value;
-    magoWaterSimulation.options.cushionFactor = value;
+    fluid.options.cushionFactor = value;
 });
 
 
@@ -379,9 +418,9 @@ const clearWaterSourceEntities = () => {
 
 document.querySelector('#clearWaterSource').addEventListener('click', () => {
     clearWaterSourceEntities();
-    magoWaterSimulation.clearWaterSourcePositions();
-    magoWaterSimulation.clearWaterMinusSourcePositions();
-    magoWaterSimulation.clearSeaWallPositions();
+    fluid.clearWaterSourcePositions();
+    fluid.clearWaterMinusSourcePositions();
+    fluid.clearSeaWallPositions();
 });
 
 document.querySelector('#createWaterSource').addEventListener('click', () => {
@@ -405,7 +444,7 @@ document.querySelector('#createWaterSource').addEventListener('click', () => {
 
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
-                const center = magoWaterSimulation.addWaterSourcePosition(lon, lat);
+                const center = fluid.addWaterSourcePosition(lon, lat);
                 selectionStatus.sourcePositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     cylinder: {
@@ -423,7 +462,7 @@ document.querySelector('#createWaterSource').addEventListener('click', () => {
 document.querySelector("#color").addEventListener('change', (event) => {
     const color = event.target.value;
     const waterColor = Cesium.Color.fromCssColorString(color);
-    magoWaterSimulation.options.waterColor = waterColor;
+    fluid.options.waterColor = waterColor;
 });
 
 document.querySelector('#createWaterspout').addEventListener('click', () => {
@@ -448,7 +487,7 @@ document.querySelector('#createWaterspout').addEventListener('click', () => {
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
 
-                const center = magoWaterSimulation.addWaterMinusSourcePosition(lon, lat);
+                const center = fluid.addWaterMinusSourcePosition(lon, lat);
                 selectionStatus.sourceMinusPositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     cylinder: {
@@ -484,12 +523,12 @@ document.querySelector('#createSeaWall').addEventListener('click', () => {
 
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
-                const center = magoWaterSimulation.addSeaWallPosition(lon, lat);
+                const center = fluid.addSeaWallPosition(lon, lat);
 
                 selectionStatus.seaWallPositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     box: {
-                        dimensions: new Cesium.Cartesian3(9.0 * options.cellSize, 9.0 * options.cellSize, magoWaterSimulation.options.waterSeawallHeight * 2),
+                        dimensions: new Cesium.Cartesian3(9.0 * options.cellSize, 9.0 * options.cellSize, fluid.options.waterSeawallHeight * 2),
                         material: Cesium.Color.DARKGRAY.withAlpha(0.75),
                         /*outline: true,*/
                     }
@@ -500,11 +539,11 @@ document.querySelector('#createSeaWall').addEventListener('click', () => {
 });
 
 const refreshRectangle = () => {
-    const extent = magoWaterSimulation.calcExtent(options);
+    const extent = fluid.calcExtent(options);
     if (selectionStatus.rectangle) {
         viewer.entities.remove(selectionStatus.rectangle);
     }
-    const rectangle = magoWaterSimulation.createRectangle(extent);
+    const rectangle = fluid.createRectangle(extent);
     selectionStatus.rectangle = rectangle;
 }
 
@@ -538,7 +577,7 @@ document.querySelector('#simulationRectangle').addEventListener('click', () => {
 });
 
 setInterval(() => {
-    const totalWaterAmount = magoWaterSimulation.info.totalWater;
+    const totalWaterAmount = fluid.info.totalWater;
     document.querySelector('#totalWaterAmount').textContent = `Total Water Amount (t) : ${totalWaterAmount}`;
 }, 100);
 
