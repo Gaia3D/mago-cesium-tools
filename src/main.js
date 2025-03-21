@@ -238,6 +238,13 @@ const init = async() => {
     const windPrimitives = await wind.getPrimitiveCollection();
     console.log(windPrimitives)
     viewer.scene.primitives.add(windPrimitives);
+
+    /*const magoEdge = new MagoEdge(viewer);
+    const magoSsao = new MagoSSAO(viewer);
+    setTimeout(() => {
+        magoEdge.on();
+        magoSsao.on();
+    }, 1000);*/
 }
 
 const setDefaultValue = () => {

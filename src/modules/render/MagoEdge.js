@@ -28,9 +28,7 @@ export class MagoEdge {
      */
     async init() {
         /* DepthTexture 생성 */
-
         const depthFragmentShader = await this.customShaderLoader.getShaderSource("depth-fragment-shader.frag");
-        console.log(depthFragmentShader);
         const depthProcess = new Cesium.PostProcessStage({
             fragmentShader: depthFragmentShader,
             inputPreviousStageTexture: true,
