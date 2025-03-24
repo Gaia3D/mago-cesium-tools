@@ -479,7 +479,7 @@ export class MagoFluid {
             },
             vertexShaderText: vertexShaderText,
             fragmentShaderText: fragmentShaderText,
-            lightingModel: Cesium.LightingModel.UNLIT,
+            //lightingModel: Cesium.LightingModel.UNLIT,
             mode: Cesium.CustomShaderMode.MODIFY_MATERIAL,
             translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
         });
