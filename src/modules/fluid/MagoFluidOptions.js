@@ -198,5 +198,11 @@ export class MagoFluidOptions {
          * @default 0.5
          */
         this.waterBrightness = 0.5;
+
+        /**
+         * Water contrast
+         * @type {number}
+         */
+        this.maxOpacity = 0.8;
     }
 }

@@ -41,8 +41,9 @@ float interpolateAlpha(float waterHeight) {
     float minimum = 0.01;
     float maximum = 0.5;
     float intensity = u_color_intensity;
+    float maximumOpacity = u_max_opacity;
 
-    maximum = min(0.8, maximum * intensity);
+    maximum = min(maximumOpacity, maximum * intensity);
 
     float scaledValue = waterHeight / (u_max_height / 1000.0) * intensity;
 

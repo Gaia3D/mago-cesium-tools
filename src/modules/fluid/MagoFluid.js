@@ -452,6 +452,9 @@ export class MagoFluid {
                 }, u_color_intensity: {
                     type: Cesium.UniformType.FLOAT,
                     value: this.options.colorIntensity
+                }, u_max_opacity: {
+                    type: Cesium.UniformType.FLOAT,
+                    value: this.options.maxOpacity
                 }, u_water_brightness: {
                     type: Cesium.UniformType.FLOAT,
                     value: this.options.waterBrightness
@@ -526,6 +529,7 @@ export class MagoFluid {
         this.customShader.setUniform('u_water', this.waterTextureUniform);
         this.customShader.setUniform('u_flux', this.fluxTextureUniform);
         this.customShader.setUniform('u_color_intensity', this.options.colorIntensity);
+        this.customShader.setUniform('u_max_opacity', this.options.maxOpacity);
         this.customShader.setUniform('u_water_skirt', this.options.waterSkirt);
         this.customShader.setUniform('u_water_brightness', this.options.waterBrightness);
         this.customShader.setUniform('u_height_palette', this.options.heightPalette);
