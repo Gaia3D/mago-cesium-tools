@@ -95,13 +95,18 @@ document.querySelector('#app').innerHTML = `
     <!-- intensity -->
     <div>
         <label for="intensity">Intensity : </label>
-        <input type="range" id="intensity" value="1.0" step="0.1" min="0.1" max="2.0">
+        <input type="range" id="intensity" value="1.0" step="0.1" min="0.1" max="30.0">
         <input type="text" id="intensityValue" readonly>
     </div>
     <div>
         <label for="brightness">Brightness : </label>
         <input type="range" id="brightness" value="1.0" step="0.1" min="0.1" max="2.0">
         <input type="text" id="brightnessValue" readonly>
+    </div>
+    <div>
+        <label for="maxOpacity">Max Opacity : </label>
+        <input type="range" id="maxOpacity" value="0.8" step="0.01" min="0.0" max="1.0">
+        <input type="text" id="maxOpacityValue" readonly>
     </div>
     <span class="line"></span>
     <h3>Water Source</h3>
@@ -169,7 +174,7 @@ const [lon, lat] = [126.968905, 37.447571];
 const options = {
     lon : lon,
     lat : lat,
-    gridSize : 512,
+    gridSize : 256,
     cellSize : 1.0,
 };
 
@@ -268,6 +273,9 @@ const setDefaultValue = () => {
     document.querySelector('#brightness').value = fluid.options.waterBrightness;
     document.querySelector('#brightnessValue').value = fluid.options.waterBrightness;
 
+    document.querySelector('#maxOpacity').value = fluid.options.maxOpacity;
+    document.querySelector('#maxOpacityValue').value = fluid.options.maxOpacity;
+
     document.querySelector('#evaporation').value = fluid.options.evaporationRate;
     document.querySelector('#evaporationValue').value = fluid.options.evaporationRate;
 
@@ -358,6 +366,12 @@ document.querySelector('#brightness').addEventListener('input', (event) => {
     const value = event.target.value;
     document.querySelector('#brightnessValue').value = value;
     fluid.options.waterBrightness = value;
+});
+
+document.querySelector('#maxOpacity').addEventListener('input', (event) => {
+    const value = event.target.value;
+    document.querySelector('#maxOpacityValue').value = value;
+    fluid.options.maxOpacity = value;
 });
 
 document.querySelector('#evaporation').addEventListener('input', (event) => {
