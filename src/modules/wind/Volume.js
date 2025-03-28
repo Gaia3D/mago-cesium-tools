@@ -27,10 +27,9 @@ export class Volume {
 
     /**
      * vertex mixing
-     * @param {Array<Number>} a 
-     * @param {Array<Number>} b 
-     * @param {Number} t 
-     * @returns 
+     * @param {Array<Number>} a
+     * @param {Array<Number>} b
+     * @param {Number} t
      */
     _mix(a, b, t) {
         return [
