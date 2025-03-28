@@ -65,7 +65,7 @@ export class FluidEngine {
     initWebGL() {
         let canvas = this.simulationInfo.canvas;
         if (!canvas) {
-            canvas = document.createElement("canvas");
+            canvas = document.createElement("canvas", { preserveDrawingBuffer: true });
             canvas.width = this.options.gridSize;
             canvas.height = this.options.gridSize;
             this.simulationInfo.canvas = canvas;
@@ -87,6 +87,7 @@ export class FluidEngine {
         }
 
         this.simulationInfo.gl = gl;
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         return this.simulationInfo.gl;
     }
 
@@ -108,27 +109,82 @@ export class FluidEngine {
         return totalWater;
     }
 
-    saveUint8ArrayAsPNG(uint8Array, width, height, fileName = "output.png") {
-        const canvas = document.createElement("canvas");
+    flipImageDataHorizontally(imageData) {
+        const { width, height, data } = imageData;
+        const halfWidth = width / 2;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < halfWidth; x++) {
+                const leftIndex = (y * width + x) * 4;
+                const rightIndex = (y * width + (width - x - 1)) * 4;
+
+                // RGBA 값 교환
+                for (let i = 0; i < 4; i++) {
+                    [data[leftIndex + i], data[rightIndex + i]] = [data[rightIndex + i], data[leftIndex + i]];
+                }
+            }
+        }
+    }
+
+    flipImageDataVertically(imageData) {
+        const { width, height, data } = imageData;
+        const halfHeight = height / 2;
+        for (let y = 0; y < halfHeight; y++) {
+            for (let x = 0; x < width; x++) {
+                const topIndex = (y * width + x) * 4;
+                const bottomIndex = ((height - y - 1) * width + x) * 4;
+
+                // RGBA 값 교환
+                for (let i = 0; i < 4; i++) {
+                    [data[topIndex + i], data[bottomIndex + i]] = [data[bottomIndex + i], data[topIndex + i]];
+                }
+            }
+        }
+    }
+
+    saveUint8ArrayAsPNG(zip, uint8Array, width, height, fileName = "output.bmp") {
+        /*const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", {willReadFrequently: true});
 
-        const imageData = new ImageData(new Uint8ClampedArray(uint8Array), width, height);
-        ctx.putImageData(imageData, 0, 0);
+        //const clampedArray = new Uint8Array(uint8Array);
 
-        canvas.toBlob((blob) => {
-            if (blob) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+
+        const imageData = ctx.createImageData(width, height);
+
+        // WebGL은 좌표계가 (0,0)이 왼쪽 아래라서 뒤집어줘야 함
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const webGLIndex = ((height - y - 1) * width + x) * 4;
+                const canvasIndex = (y * width + x) * 4;
+
+                imageData.data[canvasIndex] = uint8Array[webGLIndex];     // R
+                imageData.data[canvasIndex + 1] = uint8Array[webGLIndex + 1]; // G
+                imageData.data[canvasIndex + 2] = uint8Array[webGLIndex + 2]; // B
+                imageData.data[canvasIndex + 3] = uint8Array[webGLIndex + 3]; // A
             }
-        }, "image/png");
+        }
+
+        //const imageData = new ImageData(uint8Array, width, height);
+        //this.flipImageDataVertically(imageData);
+
+        ctx.putImageData(imageData, 0, 0);*/
+
+
+        //console.log(uint8Array)
+
+        console.log("save..");
+
+        const blob = new Blob([uint8Array], { type: 'application/octet-stream' });
+        zip.file(fileName, blob);
+
+
+
+        /*await canvas.toBlob((blob) => {
+            if (blob) {
+                zip.file(fileName, blob);
+            }
+        }, "image/bmp");*/
     }
 
 
@@ -167,7 +223,7 @@ export class FluidEngine {
             //renderParticles(particlesShaderProgram);
             //GL.bindFramebuffer(GL.FRAMEBUFFER, null);
 
-            this.calcTotalWater();
+            //this.calcTotalWater();
 
             return this.simulationInfo.waterUint8Array;
         }

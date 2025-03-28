@@ -51,6 +51,8 @@ vec2 clampTexcoord(in vec2 texCoord) {
     return texCoordUp;
 }
 
+float maxTimeStep = 0.1;
+
 void main() {
     float cellSize = uCellSize;
     float gridSize = uGridSize;
@@ -60,10 +62,18 @@ void main() {
     float gravity = uGravity;
     float waterDensity = uWaterDensity;
     float timeStep = uTimeStep;
+    if (timeStep > maxTimeStep) {
+        timeStep = maxTimeStep;
+    }
     float cushionFactor = uCushionFactor;
 
     float cellArea = cellSize * cellSize;
     float timeStepPerCellArea = timeStep / cellArea;
+
+    float maxTimeStep = 0.1;
+    if (timeStepPerCellArea > maxTimeStep) {
+        timeStepPerCellArea = maxTimeStep;
+    }
 
     vec2 textureCoordinate = vTexCoordinate;
 

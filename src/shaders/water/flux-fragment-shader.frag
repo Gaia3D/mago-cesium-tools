@@ -38,6 +38,8 @@ float unpackDepth(const in vec4 rgba_depth) {
     return dot(rgba_depth, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
 }
 
+float maxTimeStep = 0.1;
+
 void main() {
     float cellSize = uCellSize;
     float gridSize = uGridSize;
@@ -47,6 +49,9 @@ void main() {
     float gravity = uGravity;
     float waterDensity = uWaterDensity;
     float timeStep = uTimeStep;
+    if (timeStep > maxTimeStep) {
+        timeStep = maxTimeStep;
+    }
     float cushionFactor = uCushionFactor;
 
     float cellArea = cellSize * cellSize;
@@ -175,6 +180,13 @@ void main() {
     float newFluxLeftValue = (timeStep * accelLeft * cellArea);
     float newFluxRightValue = (timeStep * accelRight * cellArea);
 
+    /**float maxFluxFactor = cellArea * 0.1;
+    newFluxUpValue = min(newFluxUpValue, maxFluxFactor);
+    newFluxDownValue = min(newFluxDownValue, maxFluxFactor);
+    newFluxLeftValue = min(newFluxLeftValue, maxFluxFactor);
+    newFluxRightValue = min(newFluxRightValue, maxFluxFactor);*/
+
+
     float outFluxUp = (fluxUpValue + newFluxUpValue) * cushionFactor;
     float outFluxDown = (fluxDownValue + newFluxDownValue) * cushionFactor;
     float outFluxLeft = (fluxLeftValue + newFluxLeftValue) * cushionFactor;
@@ -209,6 +221,8 @@ void main() {
     waterValue = waterValue + sourceValue - minusSourceValue - evaporation;
     if (waterValue < 0.0) {
         waterValue = 0.0;
+    } else if (waterValue > maxHeight) {
+        waterValue = maxHeight;
     }
 
     // fragColor

@@ -9,6 +9,9 @@ export default defineConfig({
             rebuildCesium: true
         }, glsl()
     )],
+    server: {
+        host: true,
+    },
     test: {
         globals: true,
         environment: 'jsdom',

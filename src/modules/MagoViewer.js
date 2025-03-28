@@ -166,8 +166,10 @@ export class MagoViewer {
             url: `https://xdworld.vworld.kr/2d/${type}/service/{TileMatrix}/{TileCol}/{TileRow}.${extension}`,
             layer: 'Base',
             style: 'default',
+            //minimumLevel: 1,
             maximumLevel: maxLevel,
-            tileMatrixSetID: 'default028mm'
+            tileMatrixSetID: 'EPSG:3857',
+            credit: new Cesium.Credit('VWorld Korea'),
         }
         const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
