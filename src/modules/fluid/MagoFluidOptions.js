@@ -120,7 +120,7 @@ export class MagoFluidOptions {
          * @type {number}
          * @default 1
          */
-        this.waterSourceArea = 1;
+        this.waterSourceArea = 2;
 
         /**
          * Water minus source amount

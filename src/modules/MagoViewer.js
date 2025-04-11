@@ -77,46 +77,60 @@ export class MagoViewer {
      * @param lon {number} longitude degrees
      * @param lat {number} latitude degrees
      * @param cssColor {String} CSS color string "#ff0000"
+     * @param entitiesCollection
      * @returns {void}
      * @example
      * magoViewer.addPoint(126.978388, 37.566610, "#ff0000")
      */
-    addPoint(lon, lat, cssColor = "#ffcc00") {
-        this.viewer.entities.add(
-            new Entity({
-                position: Cartesian3.fromDegrees(lon, lat),
-                point: {
-                    pixelSize: 3,
-                    color: Color.fromCssColorString(cssColor)
-                }
-            })
-        );
+    addPoint(lon, lat, cssColor = "#ffcc00", entitiesCollection = null) {
+        const entity = new Entity({
+            position: Cartesian3.fromDegrees(lon, lat),
+            point: {
+                pixelSize: 3,
+                color: Color.fromCssColorString(cssColor),
+                //distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0, 1000000.0)
+            },
+            billboard: {
+                image: "/src/assets/img.png",
+                width: 16,
+                height: 16,
+                distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0, 1000.0)
+            },
+        });
+
+        if (entitiesCollection) {
+            entitiesCollection.add(entity);
+        } else {
+            this.viewer.entities.add(entity);
+        }
     }
 
     /**
      * Adds a point to the globe.
      * @param cssColor {String} CSS color string "#ff0000"
+     * @param entitiesCollection
      * @returns {void}
      * @example
      * magoViewer.addPoint(126.978388, 37.566610, "#ff0000")
      */
-    addRandomPoint(cssColor = "#ff0000") {
+    addRandomPoint(cssColor = "#ff0000", entitiesCollection = null) {
         let randomX = (Math.random() * 360) - 180;
         let randomY = (Math.random() * 180) - 90;
-        this.addPoint(randomX, randomY, cssColor);
+        this.addPoint(randomX, randomY, cssColor, entitiesCollection);
     }
 
     /**
      * Samples random points on the globe.
      * @param count {number}
      * @param cssColor {string} CSS color string "#ff0000"
+     * @param entitiesCollection
      * @returns {void}
      * @example
      * magoViewer.addRandomPoints(1000, "#ffff00")
      */
-    addRandomPoints(count, cssColor = "#00ff00") {
+    addRandomPoints(count, cssColor = "#00ff00", entitiesCollection = null) {
         for (let i = 0; i < count; i++) {
-            this.addRandomPoint(cssColor);
+            this.addRandomPoint(cssColor, entitiesCollection);
         }
     }
 

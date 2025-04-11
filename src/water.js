@@ -464,7 +464,7 @@ document.querySelector('#createWaterSource').addEventListener('click', () => {
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
                 const center = fluid.addWaterSourcePosition(lon, lat);
-                selectionStatus.sourcePositions.push(viewer.entities.add({
+                /*selectionStatus.sourcePositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     cylinder: {
                         length: 30.0,
@@ -472,7 +472,7 @@ document.querySelector('#createWaterSource').addEventListener('click', () => {
                         bottomRadius: 3.0,
                         material: Cesium.Color.BLUE,
                     },
-                }));
+                }));*/
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }

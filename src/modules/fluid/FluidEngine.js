@@ -403,27 +403,6 @@ export class FluidEngine {
             let sampleHeight = this.options.waterSourceAmount / (this.options.cellSize * this.options.cellSize);
             let values= pack(sampleHeight / this.options.maxHeight);
 
-            //let gridSize = this.options.gridSize;
-            //let cellPosition = ((gridSize * (gridSize / 2)) + (gridSize / 2)) * 4;
-
-            /* water source */
-            /*let area = this.options.waterSourceArea;
-            let cellPosition = this.options.waterSourcePosition;
-            if (cellPosition >= 0) {
-                for (let i = 0; i < area; i++) {
-                    for (let j = 0; j < area; j++) {
-                        if (cellPosition > pixel.length + 3) {
-                            return;
-                        }
-                        let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
-                        pixel[cellIndex] = values[0] * 255;
-                        pixel[cellIndex + 1] = values[1] * 255;
-                        pixel[cellIndex + 2] = values[2] * 255;
-                        pixel[cellIndex + 3] = values[3] * 255;
-                    }
-                }
-            }*/
-
             /* water source */
             let area = this.options.waterSourceArea;
             let cellPositions = this.options.waterSourcePositions;
