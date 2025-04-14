@@ -4,6 +4,7 @@ import { defineConfig } from 'vite';
 import * as path from "node:path";
 
 export default defineConfig({
+    publicDir: false,
     plugins: [],
     server: {
         host: true,
