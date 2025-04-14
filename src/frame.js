@@ -2,12 +2,7 @@ import './css/css-init.css'
 import './css/custom.css'
 import {Viewer} from "cesium";
 import {MagoViewer} from "./modules/MagoViewer.js";
-import {MagoFluid} from "./modules/fluid/MagoFluid.js";
 import * as Cesium from "cesium";
-import {MagoEdge} from "./modules/render/MagoEdge.js";
-import {MagoSSAO} from "./modules/render/MagoSSAO.js";
-import {MagoWind} from "@/modules/wind/MagoWind.js";
-import JSZip from "jszip";
 import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
 
 document.querySelector('#app').innerHTML = `
@@ -56,6 +51,9 @@ document.querySelector('#app').innerHTML = `
     <button id="timeSliderButton">Start</button>
  </div>
 `
+
+import "@cesium/engine/Source/Widget/CesiumWidget.css";
+window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
 
 const viewer = new Viewer("cesiumContainer", {
     geocoder: false,

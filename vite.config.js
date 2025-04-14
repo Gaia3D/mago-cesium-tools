@@ -1,14 +1,10 @@
 import { defineConfig } from 'vite';
-import cesium from 'vite-plugin-cesium';
-import glsl from 'vite-plugin-glsl';
+//import cesium from 'vite-plugin-cesium';
+//import glsl from 'vite-plugin-glsl';
 import * as path from "node:path";
 
 export default defineConfig({
-    plugins: [
-        cesium({
-            rebuildCesium: true
-        }, glsl()
-    )],
+    plugins: [],
     server: {
         host: true,
     },
@@ -25,7 +21,7 @@ export default defineConfig({
         },
         minify: false,
         rollupOptions: {
-            external: ['cesium'],
+            external: ["http", "https", "url", "zlib"],
             output: {
                 globals: {
                     cesium: 'Cesium',

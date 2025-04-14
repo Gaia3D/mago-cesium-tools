@@ -148,6 +148,9 @@ document.querySelector('#app').innerHTML = `
  </div>
 `
 
+import "@cesium/engine/Source/Widget/CesiumWidget.css";
+window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
+
 const viewer = new Viewer("cesiumContainer", {
     geocoder: false,
     baseLayerPicker: false,
