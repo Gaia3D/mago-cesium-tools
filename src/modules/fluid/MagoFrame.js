@@ -27,7 +27,7 @@ export class MagoFrame {
      * Constructor for MagoFluid class
      * @param viewer Cesium Viewer instance
      */
-    constructor (viewer) {
+    constructor (viewer, baseUrl = '/') {
         console.log('[MCT][FRAME] constructor');
 
         /**
@@ -35,6 +35,12 @@ export class MagoFrame {
          * @type {Cesium.Viewer}
          */
         this.viewer = undefined;
+
+        /**
+         * Base URL for loading resources
+         * @type {string}
+         */
+        this.baseUrl = baseUrl.replace(/\/$/, '');
 
         /**
          * Custom shader loader
@@ -169,7 +175,6 @@ export class MagoFrame {
     calcExtent(options) {
         const gridSize = !options.gridSize ? 8 : options.gridSize;
         const cellSize = !options.cellSize ? 1 : options.cellSize;
-
 
         const realGridSize = gridSize * cellSize;
         const center = Cesium.Cartesian3.fromDegrees(options.lon, options.lat);
@@ -357,11 +362,12 @@ export class MagoFrame {
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
         transform = Cesium.Matrix4.multiplyByTranslation(transform, new Cesium.Cartesian3(0, 0, heightOffset), new Cesium.Matrix4());
 
+        let baseUrl = this.baseUrl.replace(/\/$/, '');
         let gridModelUrl;
         if (options.gridUrl) {
             gridModelUrl = options.gridUrl;
         } else {
-            gridModelUrl = "/grid/" + await this.getGridUrl(gridSize);
+            gridModelUrl = baseUrl + "/grid/" + await this.getGridUrl(gridSize);
         }
 
         const gltf = await Cesium.Model.fromGltfAsync({
@@ -537,6 +543,28 @@ export class MagoFrame {
         }
     }
 
+    /**
+     * Preloads the specified number of frames.
+     * @param count
+     * @param callback
+     * @returns {Promise<void>}
+     */
+    async preload(count, callback) {
+        console.log('[MCT][FRAME] preload frames', count);
+        for (let i = 0; i < count; i++) {
+            console.log('[MCT][FRAME] preload : ', i);
+            const url = `${this.baseUrl}/sample/${i}.bin`;
+            const frame = {
+                status: 'loading',
+                data: undefined
+            }
+            this.frameData[url] = frame;
+            frame.data = await this.loadBinFromUrl(url);
+            frame.status = 'loaded';
+            callback(count, i);
+        }
+    }
+
     async renderFrame(isFirstFrame) {
         if (!this.customShader) {
             return;
@@ -561,10 +589,11 @@ export class MagoFrame {
                     return;
                 }
 
+                let binUrl = `${this.baseUrl}/sample/${this.frameNumber}.bin`;
                 let bin;
-                if (this.frameData[this.frameUrl]) {
+                if (this.frameData[binUrl]) {
                     //console.log('[MCT][FRAME] load frame data from cache', this.frameUrl);
-                    const frame = this.frameData[this.frameUrl];
+                    const frame = this.frameData[binUrl];
                     if (frame.status === 'loaded') {
                         bin = frame.data;
                     }
@@ -575,10 +604,10 @@ export class MagoFrame {
                         status: 'loading',
                         data: undefined
                     }
-                    this.frameData[this.frameUrl] = frame
+                    this.frameData[binUrl] = frame
 
                     this.frameStatus = 'loading';
-                    frame.data = await this.loadBinFromUrl(this.frameUrl);
+                    frame.data = await this.loadBinFromUrl(binUrl);
                     frame.status = 'loaded';
                     bin = frame.data;
                     this.frameStatus = 'loaded';

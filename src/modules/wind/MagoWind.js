@@ -43,9 +43,18 @@ export class MagoWind {
      * Creates an instance of MagoWind.
      * @param viewer
      */
-    constructor(viewer) {
+    constructor(viewer, baseUrl = '/') {
         console.log('[MCT][WIND] constructor');
+
+        /**
+         * Cesium Viewer instance
+         */
         this.viewer = viewer;
+        /**
+         * Base URL for loading resources
+         * @type {string}
+         */
+        this.baseUrl = baseUrl.replace(/\/$/, '');
         this.context = viewer.scene.context;
         this.shaderLoader = new ShaderLoader("/src/customShaders/wind");
     }

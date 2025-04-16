@@ -45,7 +45,8 @@ document.querySelector('#app').innerHTML = `
  </div>
  <div id="timeSliderWrap">
     <div id="timeSlider">
-        <input type="range" id="timeSliderInput" value="0" step="1" min="0" max="60">
+        <input type="range" id="timeSliderInput" value="0" step="1" min="0" max="360">
+        <span id="timeSliderBufferingBar" class="bufferingBar"></span>
     </div>
     <input type="text" id="timeSliderValue" readonly>
     <button id="timeSliderButton">Start</button>
@@ -53,6 +54,10 @@ document.querySelector('#app').innerHTML = `
 `
 
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
+import {MeasureHeight} from "@/modules/measure/MeasureHeight.js";
+import {MeasureDistance} from "@/modules/measure/MeasureDistance.js";
+import {MeasureAngle} from "@/modules/measure/MeasureAngle.js";
+import {MeasureArea} from "@/modules/measure/MeasureArea.js";
 window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
 
 const viewer = new Viewer("cesiumContainer", {
@@ -127,6 +132,9 @@ const init = async() => {
     fluid.terrainUrl = `sample/terrain.bin`;
 
 
+    fluid.preload(end, setBufferBar);
+
+
     document.querySelector('#timeSliderInput').max = end;
 }
 
@@ -199,6 +207,12 @@ const setFrame = (count) => {
     document.querySelector('#timeSliderValue').value = `${count}/${max}`;
 };
 
+const setBufferBar = (max, value) => {
+    const bufferingBar = document.querySelector('#timeSliderBufferingBar');
+    const percent = (value / max) * 100;
+    bufferingBar.style.width = `${percent}%`;
+}
+
 document.querySelector('#timeSliderInput').addEventListener('input', (event) => {
     animationStatus.isStart = false;
     clearInterval(animationStatus.interval);
@@ -241,7 +255,7 @@ document.querySelector('#timeSliderButton').addEventListener('click', (event) =>
             fluid.frameNumber = count;
             animationStatus.recentFrame = count;*/
             count++;
-        }, 1000);
+        }, 100);
         event.target.innerText = 'Stop';
     }
     animationStatus.isStart = !animationStatus.isStart;

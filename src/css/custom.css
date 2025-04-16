@@ -20,6 +20,15 @@
     overflow: hidden;
 }
 
+.cesium-viewer {
+    height: 100%;
+    width: 100%;
+}
+.cesium-viewer-cesiumWidgetContainer {
+    height: 100%;
+    width: 100%;
+}
+
 #timeSliderWrap {
     position: absolute;
     left: 50%;
@@ -38,6 +47,18 @@
 
 #timeSlider {
     height: 25px;
+    position: relative;
+}
+
+span.bufferingBar {
+    width: 0;
+    height: 14px;
+    position: absolute;
+    background-color: #0075ff4a;
+    left: 0;
+    top: 2px;
+    z-index: -10;
+    border-radius: 10px;
 }
 
 #timeSliderWrap * {

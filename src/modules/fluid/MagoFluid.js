@@ -26,8 +26,9 @@ export class MagoFluid {
     /**
      * Constructor for MagoFluid class
      * @param viewer Cesium Viewer instance
+     * @param baseUrl
      */
-    constructor (viewer) {
+    constructor(viewer, baseUrl = '/') {
         console.log('[MCT][FLUID] constructor');
 
         /**
@@ -35,6 +36,12 @@ export class MagoFluid {
          * @type {Cesium.Viewer}
          */
         this.viewer = undefined;
+
+        /**
+         * Base URL for loading resources
+         * @type {string}
+         */
+        this.baseUrl = baseUrl.replace(/\/$/, '');
 
         /**
          * Custom shader loader
@@ -82,6 +89,7 @@ export class MagoFluid {
     /**
      * Initializes the viewer to render points on a globe.
      * @param viewer
+     * @param baseUrl
      */
     init(viewer) {
         console.log('[MCT][FLUID] init');
@@ -166,7 +174,6 @@ export class MagoFluid {
     calcExtent(options) {
         const gridSize = !options.gridSize ? 8 : options.gridSize;
         const cellSize = !options.cellSize ? 1 : options.cellSize;
-
 
         const realGridSize = gridSize * cellSize;
         const center = Cesium.Cartesian3.fromDegrees(options.lon, options.lat);
@@ -354,11 +361,12 @@ export class MagoFluid {
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
         transform = Cesium.Matrix4.multiplyByTranslation(transform, new Cesium.Cartesian3(0, 0, heightOffset), new Cesium.Matrix4());
 
+        let baseUrl = this.baseUrl.replace(/\/$/, '');
         let gridModelUrl;
         if (options.gridUrl) {
             gridModelUrl = options.gridUrl;
         } else {
-            gridModelUrl = "/grid/" + await this.getGridUrl(gridSize);
+            gridModelUrl = baseUrl + "/grid/" + await this.getGridUrl(gridSize);
         }
 
         const gltf = await Cesium.Model.fromGltfAsync({
