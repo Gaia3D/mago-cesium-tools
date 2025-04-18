@@ -1,19 +1,15 @@
 import * as Cesium from "cesium";
 
 export class MeasureMultiDistance {
-    constructor(viewer) {
+    constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
         this.handler = new Cesium.ScreenSpaceEventHandler();
-        this.color = Cesium.Color.LIGHTGRAY;
-
+        this.color = options.color || Cesium.Color.LIGHTGRAY;
+        this.clampToGround = options.clampToGround || false;
         this.status = false;
-
-        this.pickedObject = undefined;
         this.cartesians = undefined;
         this.endCartesian = undefined;
-
-        //this.polygonEntity = undefined;
         this.polylineEntity = undefined;
         this.pointEntities = [];
     }
@@ -59,6 +55,16 @@ export class MeasureMultiDistance {
                 pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
             }
 
+            // prevent adding the same point
+            if (this.cartesians.length > 0) {
+                const lastCartesian = this.cartesians[this.cartesians.length - 1];
+                console.log(lastCartesian, pickedEllipsoidPosition);
+                if (Cesium.Cartesian3.equals(lastCartesian, pickedEllipsoidPosition)) {
+                    console.log("same point");
+                    return;
+                }
+            }
+
             this.cartesians.push(pickedEllipsoidPosition);
             this.endCartesian = pickedEllipsoidPosition;
 
@@ -71,6 +77,32 @@ export class MeasureMultiDistance {
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
                 }
             });
+
+            if (this.pointEntities.length > 0) {
+                const lastCartesian = this.cartesians[this.cartesians.length - 2];
+                const list = [lastCartesian, pickedEllipsoidPosition];
+                const distance = this.calculateDistance(list);
+
+                const center = Cesium.Cartesian3.add(lastCartesian, pickedEllipsoidPosition, new Cesium.Cartesian3());
+                Cesium.Cartesian3.multiplyByScalar(center, 0.5, center);
+
+                const labelEntity = viewer.entities.add({
+                    position: center,
+                    label: {
+                        show: true,
+                        showBackground: false,
+                        font: "14px monospace",
+                        fillColor: this.color,
+                        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                        verticalOrigin: Cesium.VerticalOrigin.TOP,
+                        pixelOffset: new Cesium.Cartesian2(0, -20),
+                        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                        text: `${distance}`,
+                    },
+                });
+                this.pointEntities.push(labelEntity);
+            }
+
             this.pointEntities.push(pointEntity);
 
             if (this.cartesians.length <= 1) {
@@ -83,26 +115,15 @@ export class MeasureMultiDistance {
                             return cartesianPositions;
                         }, false),
                         width: 3,
-                        depthFailMaterial: this.color,
                         material : this.color.withAlpha(0.8),
-                        clampToGround : false
+                        depthFailMaterial: this.color,
+                        clampToGround : this.clampToGround
                     },
                 });
-
-                /*this.polygonEntity = viewer.entities.add({
-                    polygon: {
-                        hierarchy: new Cesium.CallbackProperty(() => {
-                            const cartesianPositions = this.cartesians.slice();
-                            cartesianPositions.push(this.endCartesian);
-                            return new Cesium.PolygonHierarchy(cartesianPositions);
-                        }, false),
-                        material: this.color.withAlpha(0.5),
-                    }
-                });*/
             }
         }
 
-        const mouseMoveHandler = (moveEvent) => {
+        const mouseMoveHandler = async (moveEvent) => {
             if (!this.status) {
                 return;
             }
@@ -144,7 +165,6 @@ export class MeasureMultiDistance {
             this.cartesians.push(pickedEllipsoidPosition);
 
             const distance = this.calculateDistance(this.cartesians);
-
             const pointEntity = viewer.entities.add({
                 position: pickedEllipsoidPosition,
                 point: {
@@ -165,7 +185,7 @@ export class MeasureMultiDistance {
                     // outlineColor: Cesium.Color.DARKGRAY,
                     // outlineWidth: 2,
                     // style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                    text: `${distance}`,
+                    text: `(${distance})`,
                 },
             });
             this.pointEntities.push(pointEntity);

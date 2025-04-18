@@ -1,23 +1,18 @@
 import * as Cesium from "cesium";
 
 export class DrawArea {
-    constructor(viewer) {
+    constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
         this.handler = new Cesium.ScreenSpaceEventHandler();
-        this.color = Cesium.Color.LIGHTGRAY;
-
+        this.color = options.color || Cesium.Color.LIGHTGRAY;
+        this.clampToGround = options.clampToGround || false;
         this.status = false;
-
-        this.pickedObject = undefined;
         this.cartesians = undefined;
         this.endCartesian = undefined;
-
         this.polygonEntity = undefined;
         this.polylineEntity = undefined;
         this.pointEntities = [];
-
-        this.recentPositions = [];
     }
 
     /**
@@ -94,7 +89,7 @@ export class DrawArea {
                         width: 3,
                         depthFailMaterial: this.color,
                         material : this.color.withAlpha(0.8),
-                        clampToGround : true
+                        clampToGround : this.clampToGround
                     },
                 });
 
@@ -106,6 +101,7 @@ export class DrawArea {
                             return new Cesium.PolygonHierarchy(cartesianPositions);
                         }, false),
                         material: this.color.withAlpha(0.5),
+                        perPositionHeight: !this.clampToGround
                     }
                 });
             }

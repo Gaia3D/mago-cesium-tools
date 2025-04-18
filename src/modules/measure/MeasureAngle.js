@@ -9,18 +9,15 @@ import * as Cesium from "cesium";
  * measureAngle.on();
  */
 export class MeasureAngle {
-    constructor(viewer) {
+    constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
         this.handler = new Cesium.ScreenSpaceEventHandler();
         this.color = Cesium.Color.LIGHTGRAY;
-
         this.status = false;
-
         this.startCartesian = undefined;
         this.upCartesian = undefined;
         this.endCartesian = undefined;
-
         this.startEntity = undefined;
         this.endEntity = undefined;
         this.lineEntity = undefined;
@@ -78,13 +75,41 @@ export class MeasureAngle {
                     color: this.color,
                     pixelSize: 4,
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                }
+                },
+                label: {
+                    showBackground: false,
+                    font: "14px monospace",
+                    horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                    verticalOrigin: Cesium.VerticalOrigin.TOP,
+                    pixelOffset: new Cesium.Cartesian2(0, -20),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    text: new Cesium.CallbackProperty(() => {
+                        if (this.startCartesian == this.endCartesian || this.startCartesian == this.upCartesian) {
+                            return `0.0 °`;
+                        }
+
+                        let vector1 = Cesium.Cartesian3.subtract(this.startCartesian, this.endCartesian, new Cesium.Cartesian3());
+                        if (Cesium.Cartesian3.equals(vector1, new Cesium.Cartesian3())) {
+                            return `0.0 °`;
+                        }
+                        vector1 = Cesium.Cartesian3.normalize(vector1, new Cesium.Cartesian3());
+                        let vector2 = Cesium.Cartesian3.subtract(this.upCartesian, this.endCartesian, new Cesium.Cartesian3());
+                        if (Cesium.Cartesian3.equals(vector2, new Cesium.Cartesian3())) {
+                            return `0.0 °`;
+                        }
+                        vector2 = Cesium.Cartesian3.normalize(vector2, new Cesium.Cartesian3());
+
+                        const angle = Cesium.Cartesian3.angleBetween(vector1, vector2);
+                        const angleDeg = (90 - Cesium.Math.toDegrees(angle)).toFixed(3);
+                        return `${angleDeg} °`;
+                    }, false)
+                },
             });
 
             this.lineEntity = viewer.entities.add({
                 polyline: {
                     positions: new Cesium.CallbackProperty(() => {
-                        return [this.startCartesian, this.endCartesian];
+                        return [this.endCartesian, this.startCartesian];
                     }, false),
                     width: 1,
                     depthFailMaterial: this.color,
@@ -93,18 +118,13 @@ export class MeasureAngle {
                         dashLength: 10.0,
                         dashPattern: 255,
                     }),
-                    /*material: new Cesium.PolylineDashMaterialProperty({
-                      color: color,
-                      dashLength: 16.0,
-                      dashPattern: 255,
-                    }),*/
                 },
             });
 
-            this.horizontalLineEntity = viewer.entities.add({
+            this.verticalLineEntity = viewer.entities.add({
                 polyline: {
                     positions: new Cesium.CallbackProperty(() => {
-                        return [this.upCartesian, this.endCartesian];
+                        return [this.upCartesian, this.startCartesian];
                     }, false),
                     width: 3,
                     depthFailMaterial: this.color,
@@ -112,10 +132,10 @@ export class MeasureAngle {
                 },
             });
 
-            this.verticalLineEntity = viewer.entities.add({
+            this.horizontalLineEntity = viewer.entities.add({
                 polyline: {
                     positions: new Cesium.CallbackProperty(() => {
-                        return [this.startCartesian, this.upCartesian];
+                        return [this.upCartesian, this.endCartesian];
                     }, false),
                     width: 3,
                     depthFailMaterial: this.color,
@@ -182,7 +202,19 @@ export class MeasureAngle {
             }
 
             const startCartographic = Cesium.Cartographic.fromCartesian(this.startCartesian);
-            const calcUpCartesian = Cesium.Cartesian3.fromRadians(startCartographic.longitude, startCartographic.latitude, height);
+            this.highThanUp = (startCartographic.height > height) ? true : false;
+
+
+            let calcUpCartesian;
+            if (this.highThanUp) {
+                const endCartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
+                calcUpCartesian = Cesium.Cartesian3.fromRadians(endCartographic.longitude, endCartographic.latitude, startCartographic.height);
+            } else {
+                calcUpCartesian = Cesium.Cartesian3.fromRadians(startCartographic.longitude, startCartographic.latitude, height);
+            }
+
+            //const endCartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
+            //calcUpCartesian = Cesium.Cartesian3.fromRadians(endCartographic.longitude, endCartographic.latitude, startCartographic.height);
 
             // fix height to 1.0m
             //const manHeight = 0.5;

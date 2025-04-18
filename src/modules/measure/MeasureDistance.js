@@ -1,18 +1,15 @@
 import * as Cesium from "cesium";
 
 export class MeasureDistance {
-    constructor(viewer) {
+    constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
         this.handler = new Cesium.ScreenSpaceEventHandler();
-        this.color = Cesium.Color.LIGHTGRAY;
-
+        this.color = options.color || Cesium.Color.LIGHTGRAY;
+        this.clampToGround = options.clampToGround || false;
         this.status = false;
-
-        //this.pickedObject = undefined;
         this.startCartesian = undefined;
         this.endCartesian = undefined;
-
         this.startEntity = undefined;
         this.endEntity = undefined;
         this.lineEntity = undefined;
@@ -78,13 +75,16 @@ export class MeasureDistance {
                     }, false),
                     width: 3,
                     material: this.color.withAlpha(0.8),
+                    clampToGround : this.clampToGround
                 },
             });
 
             this.endEntity = viewer.entities.add({
                 /* @ts-expect-error */
                 position: new Cesium.CallbackProperty(() => {
-                    return this.endCartesian;
+                    const center = Cesium.Cartesian3.add(this.startCartesian, this.endCartesian, new Cesium.Cartesian3());
+                    Cesium.Cartesian3.multiplyByScalar(center, 0.5, center);
+                    return center;
                 }, false),
                 label: {
                     showBackground: false,
@@ -106,7 +106,6 @@ export class MeasureDistance {
                     }, false)
                 },
             });
-
         }
 
         const mouseMoveHandler = (moveEvent) => {

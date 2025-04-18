@@ -1,22 +1,17 @@
 import * as Cesium from "cesium";
 
 export class MeasureHeight {
-    constructor(viewer) {
+    constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
         this.handler = new Cesium.ScreenSpaceEventHandler();
-        this.color = Cesium.Color.LIGHTGRAY;
-
+        this.color = options.color || Cesium.Color.LIGHTGRAY;
         this.status = false;
-        this.plane = undefined;
-
         this.startHeight = undefined;
         this.startCartographic = undefined;
         this.startCartesian = undefined;
-
         this.endHeight = undefined;
         this.endCartesian = undefined;
-
         this.startEntity = undefined;
         this.endEntity = undefined;
         this.lineEntity = undefined;

@@ -18,7 +18,16 @@ document.querySelector('#app').innerHTML = `
     <button id="measure-angle">Angle</button>
     <button id="measure-area">Area</button>
     <span class="line"></span>
+    <h3>Draw Tools (Clamped)</h3>
+    <button id="draw-area-clamped">Draw Area</button>
+    <button id="draw-line-clamped">Draw Line</button>
+    <span class="line"></span>
+    <h3>Draw Tools</h3>
     <button id="draw-area">Draw Area</button>
+    <button id="draw-line">Draw Line</button>
+    <span class="line"></span>
+    <button id="toggle-depth-test">Terrain Depth-Test</button>
+    
  </div>
 `
 
@@ -27,8 +36,9 @@ import {MeasureHeight} from "@/modules/measure/MeasureHeight.js";
 import {MeasureDistance} from "@/modules/measure/MeasureDistance.js";
 import {MeasureAngle} from "@/modules/measure/MeasureAngle.js";
 import {MeasureArea} from "@/modules/measure/MeasureArea.js";
-import {DrawArea} from "@/modules/measure/DrawArea.js";
+import {DrawArea} from "@/modules/draw/DrawArea.js";
 import {MeasureMultiDistance} from "@/modules/measure/MeasureMultiDistance.js";
+import {DrawLineString} from "@/modules/draw/DrawLineString.js";
 window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
 
 const viewer = new Viewer("cesiumContainer", {
@@ -57,7 +67,11 @@ const measureDistance = new MeasureDistance(viewer);
 const measureMultiDistance = new MeasureMultiDistance(viewer);
 const measureHeight = new MeasureHeight(viewer);
 const measureAngle = new MeasureAngle(viewer);
-const drawArea = new DrawArea(viewer);
+
+const drawArea = new DrawArea(viewer, {color: Cesium.Color.VIOLET});
+const drawLineString = new DrawLineString(viewer, {color: Cesium.Color.VIOLET});
+const drawAreaClamped = new DrawArea(viewer, {clampToGround: true, color: Cesium.Color.RED});
+const drawLineStringClamped = new DrawLineString(viewer, {clampToGround: true, color: Cesium.Color.RED});
 
 const init = async() => {
     const magoViewer = new MagoViewer(viewer);
@@ -69,10 +83,28 @@ const init = async() => {
     magoViewer.initPosition(lon, lat, 1000.0);
 
     setDefaultValue();
+    if (!viewer.scene.clampToHeightSupported) {
+        window.alert("This browser does not support clampToHeightMostDetailed.");
+    }
 }
 
+// Set default value for polylines and polygons
 const setDefaultValue = () => {
+    // Disable depth test for polylines
+    let oldPolylineUpdate = Cesium.PolylineCollection.prototype.update;
+    Cesium.PolylineCollection.prototype.update = function(frameState) {
+        let oldMorphTime = frameState.morphTime;
+        frameState.morphTime = 0.0;
+        oldPolylineUpdate.call(this, frameState);
+        frameState.morphTime = oldMorphTime;
+    };
 
+    // Disable depth test for polygons
+    let oldPrimitiveUpdate = Cesium.Primitive.prototype.update;
+    Cesium.Primitive.prototype.update = function (frameState) {
+        this.appearance._renderState.depthTest.enabled = false;
+        oldPrimitiveUpdate.call(this, frameState);
+    };
 }
 
 const offAll = () => {
@@ -81,6 +113,9 @@ const offAll = () => {
     measureMultiDistance.off();
     measureHeight.off();
     measureAngle.off();
+    drawAreaClamped.off();
+    drawLineStringClamped.off();
+    drawLineString.off();
     drawArea.off();
 }
 
@@ -112,6 +147,26 @@ document.querySelector('#measure-area').addEventListener('click', () => {
 document.querySelector('#draw-area').addEventListener('click', () => {
     offAll();
     drawArea.on();
+});
+
+document.querySelector('#draw-line').addEventListener('click', () => {
+    offAll();
+    drawLineString.on();
+});
+
+document.querySelector('#draw-area-clamped').addEventListener('click', () => {
+    offAll();
+    drawAreaClamped.on();
+});
+
+document.querySelector('#draw-line-clamped').addEventListener('click', () => {
+    offAll();
+    drawLineStringClamped.on();
+});
+
+document.querySelector('#toggle-depth-test').addEventListener('click', () => {
+    const depthTest = viewer.scene.globe.depthTestAgainstTerrain;
+    viewer.scene.globe.depthTestAgainstTerrain = !depthTest;
 });
 
 init();

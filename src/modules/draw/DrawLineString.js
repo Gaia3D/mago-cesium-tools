@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 
-export class MeasureArea {
+export class DrawLineString {
     constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
@@ -10,7 +10,6 @@ export class MeasureArea {
         this.status = false;
         this.cartesians = undefined;
         this.endCartesian = undefined;
-        this.polygonEntity = undefined;
         this.polylineEntity = undefined;
         this.pointEntities = [];
     }
@@ -76,29 +75,19 @@ export class MeasureArea {
                         positions: new Cesium.CallbackProperty(() => {
                             const cartesianPositions = this.cartesians.slice();
                             cartesianPositions.push(this.endCartesian);
-                            cartesianPositions.push(this.cartesians[0]);
+                            //cartesianPositions.push(this.cartesians[0]);
                             return cartesianPositions;
                         }, false),
                         width: 3,
-                        depthFailMaterial: this.color,
                         material : this.color.withAlpha(0.8),
+                        depthFailMaterial: this.color,
                         clampToGround : this.clampToGround
+                        //disableDepthTestDistance: Number.POSITIVE_INFINITY,
                     },
-                });
-
-                this.polygonEntity = viewer.entities.add({
-                    polygon: {
-                        hierarchy: new Cesium.CallbackProperty(() => {
-                            const cartesianPositions = this.cartesians.slice();
-                            cartesianPositions.push(this.endCartesian);
-                            return new Cesium.PolygonHierarchy(cartesianPositions);
-                        }, false),
-                        material: this.color.withAlpha(0.5),
-                        perPositionHeight: !this.clampToGround
-                    }
                 });
             }
         }
+
 
         const mouseMoveHandler = (moveEvent) => {
             if (!this.status) {
@@ -140,9 +129,6 @@ export class MeasureArea {
             }
 
             this.cartesians.push(pickedEllipsoidPosition);
-
-            const area = this.calculateArea(this.cartesians);
-
             const pointEntity = viewer.entities.add({
                 position: pickedEllipsoidPosition,
                 point: {
@@ -150,17 +136,6 @@ export class MeasureArea {
                     color: this.color,
                     pixelSize: 4,
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                },
-                label: {
-                    //show: true,
-                    showBackground: false,
-                    font: "14px monospace",
-                    fillColor: this.color,
-                    horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                    verticalOrigin: Cesium.VerticalOrigin.TOP,
-                    pixelOffset: new Cesium.Cartesian2(0, -20),
-                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                    text: `${area}`,
                 },
             });
             this.pointEntities.push(pointEntity);
@@ -197,12 +172,10 @@ export class MeasureArea {
 
     clearEntities = () => {
         this.viewer.entities.remove(this.polylineEntity);
-        this.viewer.entities.remove(this.polygonEntity);
         this.pointEntities.forEach(entity => {
             this.viewer.entities.remove(entity);
         });
         this.polylineEntity = undefined
-        this.polygonEntity = undefined;
         this.pointEntities = [];
         this.cartesians = [];
         this.endCartesian = undefined;
@@ -212,28 +185,5 @@ export class MeasureArea {
         this.cartesians = [];
         this.endCartesian = undefined;
     }
-
-    calculateArea = (cartesians) => {
-        const positions = cartesians;
-        const indices  = Cesium.PolygonPipeline.triangulate(positions, []);
-        let area = 0;
-        for (let i = 0; i < indices.length; i += 3) {
-            const vector1 = positions[indices[i]];
-            const vector2 = positions[indices[i+1]];
-            const vector3 = positions[indices[i+2]];
-            const vectorC = Cesium.Cartesian3.subtract(vector2, vector1, new Cesium.Cartesian3());
-            const vectorD = Cesium.Cartesian3.subtract(vector3, vector1, new Cesium.Cartesian3());
-            const areaVector = Cesium.Cartesian3.cross(vectorC, vectorD, new Cesium.Cartesian3());
-            area += Cesium.Cartesian3.magnitude(areaVector) / 2.0;
-        }
-
-        if (area > 1000000) {
-            area = area / 1000000;
-            return area.toFixed(3) + ' ㎢';
-        } else {
-            return area.toFixed(3) + ' ㎡';
-        }
-    }
-
 }
 
