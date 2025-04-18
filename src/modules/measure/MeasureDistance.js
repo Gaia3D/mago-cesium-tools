@@ -1,6 +1,21 @@
 import * as Cesium from "cesium";
 
-export class MeasureDistance {
+/**
+ * MeasureAngle class for measuring distances in a Cesium viewer.
+ * This class provides methods to enable and disable the measurement tool,
+ * as well as to calculate the distance between points.
+ * @class MeasureDistance
+ * @param {Cesium.Viewer} viewer - The Cesium viewer instance.
+ * @param {Object} [options] - Options for the measurement tool.
+ * @param {Cesium.Color} [options.color] - The color of the measurement line and points.
+ * @param {boolean} [options.clampToGround] - Whether to clamp the measurement to the ground.
+ * @example
+ * const measureDistance = new MeasureDistance(viewer, { color: Cesium.Color.RED });
+ * measureDistance.on();
+ * // To disable the measurement tool and clear entities:
+ * measureDistance.off();
+ */
+ export class MeasureDistance {
     constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
@@ -134,6 +149,7 @@ export class MeasureDistance {
         }
 
         handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
         handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
@@ -149,6 +165,7 @@ export class MeasureDistance {
         const handler = this.handler;
         if (handler) {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         }
     }

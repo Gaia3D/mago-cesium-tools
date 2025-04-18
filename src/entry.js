@@ -1,4 +1,4 @@
-import { MagoViewer } from "./modules/MagoViewer.js";
+import { MagoTools } from "./modules/MagoTools.js";
 import { MagoFrame } from "./modules/fluid/MagoFrame.js";
 import { MagoFluid } from "./modules/fluid/MagoFluid.js";
 import { MagoFluidOptions } from "./modules/fluid/MagoFluidOptions.js";
@@ -8,15 +8,29 @@ import { MagoWind } from "./modules/wind/MagoWind.js";
 
 import { MeasureHeight } from "./modules/measure/MeasureHeight.js";
 import { MeasureDistance } from "./modules/measure/MeasureDistance.js";
+import { MeasureMultiDistance } from "./modules/measure/MeasureMultiDistance.js";
 import { MeasureAngle } from "./modules/measure/MeasureAngle.js";
 import { MeasureArea } from "./modules/measure/MeasureArea.js";
 
+import { DrawPolygon } from "./modules/draw/DrawPolygon.js";
+import { DrawLineString } from "./modules/draw/DrawLineString.js";
+
 export {
-    MagoViewer,
+    MagoTools,
     MagoFrame,
     MagoFluid,
     MagoFluidOptions,
     MagoWind,
+
     MagoSSAO,
-    MagoEdge
+    MagoEdge,
+
+    MeasureHeight,
+    MeasureDistance,
+    MeasureMultiDistance,
+    MeasureAngle,
+    MeasureArea,
+
+    DrawPolygon,
+    DrawLineString
 };

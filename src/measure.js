@@ -1,7 +1,7 @@
 import './css/css-init.css'
 import './css/custom.css'
 import {Viewer} from "cesium";
-import {MagoViewer} from "./modules/MagoViewer.js";
+import {MagoTools} from "./modules/MagoTools.js";
 import * as Cesium from "cesium";
 import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
 
@@ -36,7 +36,7 @@ import {MeasureHeight} from "@/modules/measure/MeasureHeight.js";
 import {MeasureDistance} from "@/modules/measure/MeasureDistance.js";
 import {MeasureAngle} from "@/modules/measure/MeasureAngle.js";
 import {MeasureArea} from "@/modules/measure/MeasureArea.js";
-import {DrawArea} from "@/modules/draw/DrawArea.js";
+import {DrawPolygon} from "@/modules/draw/DrawPolygon.js";
 import {MeasureMultiDistance} from "@/modules/measure/MeasureMultiDistance.js";
 import {DrawLineString} from "@/modules/draw/DrawLineString.js";
 window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
@@ -68,13 +68,13 @@ const measureMultiDistance = new MeasureMultiDistance(viewer);
 const measureHeight = new MeasureHeight(viewer);
 const measureAngle = new MeasureAngle(viewer);
 
-const drawArea = new DrawArea(viewer, {color: Cesium.Color.VIOLET});
+const drawPolygon = new DrawPolygon(viewer, {color: Cesium.Color.VIOLET});
 const drawLineString = new DrawLineString(viewer, {color: Cesium.Color.VIOLET});
-const drawAreaClamped = new DrawArea(viewer, {clampToGround: true, color: Cesium.Color.RED});
+const drawPolygonClamped = new DrawPolygon(viewer, {clampToGround: true, color: Cesium.Color.RED});
 const drawLineStringClamped = new DrawLineString(viewer, {clampToGround: true, color: Cesium.Color.RED});
 
 const init = async() => {
-    const magoViewer = new MagoViewer(viewer);
+    const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
     await magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
     const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
@@ -113,10 +113,10 @@ const offAll = () => {
     measureMultiDistance.off();
     measureHeight.off();
     measureAngle.off();
-    drawAreaClamped.off();
+    drawPolygonClamped.off();
     drawLineStringClamped.off();
     drawLineString.off();
-    drawArea.off();
+    drawPolygon.off();
 }
 
 document.querySelector('#measure-distance').addEventListener('click', () => {
@@ -146,7 +146,7 @@ document.querySelector('#measure-area').addEventListener('click', () => {
 
 document.querySelector('#draw-area').addEventListener('click', () => {
     offAll();
-    drawArea.on();
+    drawPolygon.on();
 });
 
 document.querySelector('#draw-line').addEventListener('click', () => {
@@ -156,7 +156,7 @@ document.querySelector('#draw-line').addEventListener('click', () => {
 
 document.querySelector('#draw-area-clamped').addEventListener('click', () => {
     offAll();
-    drawAreaClamped.on();
+    drawPolygonClamped.on();
 });
 
 document.querySelector('#draw-line-clamped').addEventListener('click', () => {

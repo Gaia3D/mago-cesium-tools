@@ -1,7 +1,7 @@
 import './css/css-init.css'
 import './css/custom.css'
 import {Viewer} from "cesium";
-import {MagoViewer} from "./modules/MagoViewer.js";
+import {MagoTools} from "./modules/MagoTools.js";
 import * as Cesium from "cesium";
 import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
 
@@ -96,7 +96,7 @@ const timeInfo = {
 const fluid = new MagoFrame(viewer);
 
 const init = async() => {
-    const magoViewer = new MagoViewer(viewer);
+    const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
     await magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
 

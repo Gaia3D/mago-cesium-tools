@@ -1,5 +1,16 @@
 import * as Cesium from "cesium";
 
+/**
+ * MeasureAngle class for measuring area in a Cesium viewer.
+ * @class MeasureArea
+ * @param {Cesium.Viewer} viewer - The Cesium viewer instance.
+ * @param {Object} [options] - Optional parameters for the measurement.
+ * @example
+ * const measureArea = new MeasureArea(viewer, { color: Cesium.Color.RED });
+ * measureArea.on();
+ * // To disable the measurement tool and clear entities:
+ * measureArea.off();
+ */
 export class MeasureArea {
     constructor(viewer, options = {}) {
         this.viewer = viewer;
