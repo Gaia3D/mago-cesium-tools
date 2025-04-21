@@ -184,7 +184,7 @@ export class MagoTools {
             //minimumLevel: 1,
             maximumLevel: maxLevel,
             tileMatrixSetID: 'EPSG:3857',
-            credit: new Cesium.Credit('VWorld Korea'),
+            credit: new Cesium.Credit('Vworld Korea'),
         }
         const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {

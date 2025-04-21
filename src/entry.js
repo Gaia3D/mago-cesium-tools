@@ -1,5 +1,5 @@
 import { MagoTools } from "./modules/MagoTools.js";
-import { VWolrd } from "./modules/VWorld.js";
+import { Vworld } from "./modules/Vworld.js";
 
 import { MagoFrame } from "./modules/fluid/MagoFrame.js";
 import { MagoFluid } from "./modules/fluid/MagoFluid.js";
@@ -21,7 +21,7 @@ import { DrawLineString } from "./modules/draw/DrawLineString.js";
 
 export {
     MagoTools,
-    VWolrd,
+    Vworld,
 
     MagoFrame,
     MagoFluid,

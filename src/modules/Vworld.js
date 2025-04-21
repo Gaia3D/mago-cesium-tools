@@ -1,6 +1,5 @@
-import { Viewer, Entity, Cartesian3, Color } from "cesium";
-import * as Cesium from 'cesium'
-import tree from "../assets/lowpoly-tree.glb";
+import * as Cesium from "cesium";
+import {Viewer} from "cesium";
 
 /**
  * MagoTools is a class that creates a viewer to render points on a globe.
@@ -10,7 +9,7 @@ import tree from "../assets/lowpoly-tree.glb";
  * const magoTools = new MagoTools(viewer);
  * magoTools.test();
  */
-export class VWorld {
+export class Vworld {
     constructor(viewer) {
         this.viewer = viewer;
         this.token = "CC24573F-5861-34E4-B1BF-56DA9D6CD8BC";
@@ -30,16 +29,14 @@ export class VWorld {
         const options = {
             url: `https://xdworld.vworld.kr/2d/${type}/service/{TileMatrix}/{TileCol}/{TileRow}.${extension}`,
             layer: 'Base',
-            style: 'default',
-            //minimumLevel: 1,
+            style: 'default', //minimumLevel: 1,
             maximumLevel: maxLevel,
             tileMatrixSetID: 'EPSG:3857',
-            credit: new Cesium.Credit('VWorld Korea'),
+            credit: new Cesium.Credit('Vworld Korea'),
         }
         const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
-            show: true,
-            minimumTerrainLevel: minLevel
+            show: true, minimumTerrainLevel: minLevel
         });
 
         const layers = this.viewer.scene.imageryLayers
@@ -70,8 +67,7 @@ export class VWorld {
         }
         const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
-            show: true,
-            minimumTerrainLevel: minLevel
+            show: true, minimumTerrainLevel: minLevel
         });
 
         const layers = this.viewer.scene.imageryLayers
@@ -87,8 +83,7 @@ export class VWorld {
             }
             const hybridImageryProvider = new Cesium.WebMapTileServiceImageryProvider(hybridOptions)
             const hybridImageryLayer = new Cesium.ImageryLayer(hybridImageryProvider, {
-                show: true,
-                minimumTerrainLevel: minLevel
+                show: true, minimumTerrainLevel: minLevel
             });
             layers.add(hybridImageryLayer)
         }
@@ -104,10 +99,7 @@ export class VWorld {
     async getAddressCoord(address, type) {
         const response = await this.getAddressCoordProxy(address, type);
         const responseResult = {
-            address: undefined,
-            lon: undefined,
-            lat: undefined,
-            error: false,
+            address: undefined, lon: undefined, lat: undefined, error: false,
         }
 
         try {

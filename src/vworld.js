@@ -30,7 +30,7 @@ import {MeasureArea} from "@/modules/measure/MeasureArea.js";
 import {DrawPolygon} from "@/modules/draw/DrawPolygon.js";
 import {MeasureMultiDistance} from "@/modules/measure/MeasureMultiDistance.js";
 import {DrawLineString} from "@/modules/draw/DrawLineString.js";
-import {VWorld} from "@/modules/VWorld.js";
+import {Vworld} from "@/modules/Vworld.js";
 window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
 
 const viewer = new Viewer("cesiumContainer", {
@@ -55,7 +55,7 @@ viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEF
 const [lon, lat] = [126.968905, 37.447571];
 
 const magoViewer = new MagoTools(viewer);
-const vworld = new VWorld(viewer);
+const vworld = new Vworld(viewer);
 
 const init = async() => {
     await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
