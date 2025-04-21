@@ -1,7 +1,7 @@
 import * as Cesium from "cesium";
 
 /**
- * MeasureAngle class for measuring distances in a Cesium viewer.
+ * MeasureDistance class for measuring distances in a Cesium viewer.
  * This class provides methods to enable and disable the measurement tool,
  * as well as to calculate the distance between points.
  * @class MeasureDistance
@@ -154,7 +154,7 @@ import * as Cesium from "cesium";
     }
 
     /**
-     * Disables the angle measurement tool and clears the entities.
+     * Disables the measurement tool and clears the entities.
      * @function
      * @returns {void}
      */

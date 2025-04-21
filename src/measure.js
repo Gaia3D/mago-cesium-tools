@@ -12,13 +12,16 @@ document.querySelector('#app').innerHTML = `
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <h3>Measure Tools</h3>
+    <button id="measure-point">Point</button>
     <button id="measure-distance">Distance</button>
     <button id="measure-multi-distance">Multi Distance</button>
+    <span class="line"></span>
     <button id="measure-height">Height</button>
     <button id="measure-angle">Angle</button>
     <button id="measure-area">Area</button>
     <span class="line"></span>
     <h3>Draw Tools (Clamped)</h3>
+    <button id="draw-point-clamped">Point</button>
     <button id="draw-area-clamped">Draw Area</button>
     <button id="draw-line-clamped">Draw Line</button>
     <span class="line"></span>
@@ -39,6 +42,8 @@ import {MeasureArea} from "@/modules/measure/MeasureArea.js";
 import {DrawPolygon} from "@/modules/draw/DrawPolygon.js";
 import {MeasureMultiDistance} from "@/modules/measure/MeasureMultiDistance.js";
 import {DrawLineString} from "@/modules/draw/DrawLineString.js";
+import {MeasurePosition} from "@/modules/measure/MeasurePosition.js";
+import {DrawPoint} from "@/modules/draw/DrawPoint.js";
 window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
 
 const viewer = new Viewer("cesiumContainer", {
@@ -62,12 +67,14 @@ viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEF
 
 const [lon, lat] = [126.968905, 37.447571];
 
+const measurePoint = new MeasurePosition(viewer);
 const measureArea = new MeasureArea(viewer);
 const measureDistance = new MeasureDistance(viewer);
 const measureMultiDistance = new MeasureMultiDistance(viewer);
 const measureHeight = new MeasureHeight(viewer);
 const measureAngle = new MeasureAngle(viewer);
 
+const drawPoint = new DrawPoint(viewer, {color: Cesium.Color.DARKORANGE});
 const drawPolygon = new DrawPolygon(viewer, {color: Cesium.Color.VIOLET});
 const drawLineString = new DrawLineString(viewer, {color: Cesium.Color.VIOLET});
 const drawPolygonClamped = new DrawPolygon(viewer, {clampToGround: true, color: Cesium.Color.RED});
@@ -76,7 +83,7 @@ const drawLineStringClamped = new DrawLineString(viewer, {clampToGround: true, c
 const init = async() => {
     const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
-    await magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
+    await magoViewer.changeTerrain('http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/');
     const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
     viewer.scene.primitives.add(tileset);
 
@@ -108,16 +115,23 @@ const setDefaultValue = () => {
 }
 
 const offAll = () => {
+    measurePoint.off();
     measureArea.off();
     measureDistance.off();
     measureMultiDistance.off();
     measureHeight.off();
     measureAngle.off();
+    drawPoint.off();
     drawPolygonClamped.off();
     drawLineStringClamped.off();
     drawLineString.off();
     drawPolygon.off();
 }
+
+document.querySelector('#measure-point').addEventListener('click', () => {
+    offAll();
+    measurePoint.on();
+});
 
 document.querySelector('#measure-distance').addEventListener('click', () => {
     offAll();
@@ -142,6 +156,11 @@ document.querySelector('#measure-angle').addEventListener('click', () => {
 document.querySelector('#measure-area').addEventListener('click', () => {
     offAll();
     measureArea.on();
+});
+
+document.querySelector('#draw-point-clamped').addEventListener('click', () => {
+    offAll();
+    drawPoint.on();
 });
 
 document.querySelector('#draw-area').addEventListener('click', () => {

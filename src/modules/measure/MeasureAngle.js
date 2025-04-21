@@ -29,7 +29,7 @@ export class MeasureAngle {
     }
 
     /**
-     * Enables the angle measurement tool.
+     * Enables the measurement tool.
      * Click to start measuring, and click again to stop.
      * @function
      * @type {boolean} Continue - Whether to continue measuring after the first click.
@@ -234,7 +234,7 @@ export class MeasureAngle {
     }
 
     /**
-     * Disables the angle measurement tool and clears the entities.
+     * Disables the measurement tool and clears the entities.
      * @function
      * @returns {void}
      */

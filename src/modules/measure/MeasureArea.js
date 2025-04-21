@@ -1,7 +1,7 @@
 import * as Cesium from "cesium";
 
 /**
- * MeasureAngle class for measuring area in a Cesium viewer.
+ * MeasureArea class for measuring area in a Cesium viewer.
  * @class MeasureArea
  * @param {Cesium.Viewer} viewer - The Cesium viewer instance.
  * @param {Object} [options] - Optional parameters for the measurement.

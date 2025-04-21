@@ -51,7 +51,7 @@ const options = {
 const init = async() => {
     const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
-    await magoViewer.changeTerrain('http://175.197.92.213:10110/korea_5m_dem_4326_ms8/');
+    await magoViewer.changeTerrain('http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/');
 
     magoViewer.changeGlobeColor("#000000");
     magoViewer.initPosition(options.lon, options.lat, 3000000.0);

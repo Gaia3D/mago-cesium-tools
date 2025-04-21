@@ -57,18 +57,19 @@ export class MagoTools {
      * @param lon {number} longitude degrees
      * @param lat {number} latitude degrees
      * @param height {number} height meters
+     * @param duration {number} duration seconds
      * @returns {void}
      * @example
      * magoTools.flyTo(126.978388, 37.566610, 10000)
      */
-    flyTo(lon, lat, height) {
+    flyTo(lon, lat, height = 1000, duration = 0) {
         this.viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 1000.0),
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
             orientation: {
                 heading: Cesium.Math.toRadians(0.0),
                 pitch: Cesium.Math.toRadians(-90.0)
             },
-            duration: 0
+            duration: duration,
         })
     }
 

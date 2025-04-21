@@ -28,8 +28,7 @@ export class DrawLineString {
     }
 
     /**
-     * Enables the area measurement tool.
-     * Click to start measuring, and click again drawing the polygon.
+     * Enables the line string drawing tool.
      * Left click to add points, right click to finish.
      * @function
      * @type {boolean} Continue - Whether to continue measuring after the first click.
@@ -166,7 +165,7 @@ export class DrawLineString {
     }
 
     /**
-     * Disables the angle measurement tool and clears the entities.
+     * Disables the drawing tool and clears the entities.
      * @function
      * @returns {void}
      */
