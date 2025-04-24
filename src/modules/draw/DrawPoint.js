@@ -51,10 +51,7 @@ export class DrawPoint {
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
                 pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
             }
-
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,

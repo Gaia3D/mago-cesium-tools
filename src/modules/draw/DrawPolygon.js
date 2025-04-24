@@ -141,6 +141,9 @@ export class DrawPolygon {
         }
 
         const mouseRightClickHandler = (event) => {
+            if (!this.status) {
+                return;
+            }
             this.status = false;
 
             this.pickedObject = scene.pick(event.position);
@@ -159,8 +162,6 @@ export class DrawPolygon {
             }
 
             this.cartesians.push(pickedEllipsoidPosition);
-
-            const area = this.calculateArea(this.cartesians);
 
             const pointEntity = viewer.entities.add({
                 position: pickedEllipsoidPosition,
@@ -238,28 +239,5 @@ export class DrawPolygon {
         this.cartesians = [];
         this.endCartesian = undefined;
     }
-
-    calculateArea = (cartesians) => {
-        const positions = cartesians;
-        const indices  = Cesium.PolygonPipeline.triangulate(positions, []);
-        let area = 0;
-        for (let i = 0; i < indices.length; i += 3) {
-            const vector1 = positions[indices[i]];
-            const vector2 = positions[indices[i+1]];
-            const vector3 = positions[indices[i+2]];
-            const vectorC = Cesium.Cartesian3.subtract(vector2, vector1, new Cesium.Cartesian3());
-            const vectorD = Cesium.Cartesian3.subtract(vector3, vector1, new Cesium.Cartesian3());
-            const areaVector = Cesium.Cartesian3.cross(vectorC, vectorD, new Cesium.Cartesian3());
-            area += Cesium.Cartesian3.magnitude(areaVector) / 2.0;
-        }
-
-        if (area > 100000) {
-            area = area / 1000;
-            return area.toFixed(3) + ' ㎢';
-        } else {
-            return area.toFixed(3) + ' ㎡';
-        }
-    }
-
 }
 

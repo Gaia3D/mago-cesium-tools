@@ -133,6 +133,9 @@ export class MeasureArea {
         }
 
         const mouseRightClickHandler = (event) => {
+            if (!this.status) {
+                return;
+            }
             this.status = false;
 
             this.pickedObject = scene.pick(event.position);

@@ -3,7 +3,6 @@ import './css/custom.css'
 import {Viewer} from "cesium";
 import {MagoTools} from "./modules/MagoTools.js";
 import * as Cesium from "cesium";
-import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
 
 document.querySelector('#app').innerHTML = `
   <div id="cesiumContainer"></div>
@@ -24,13 +23,14 @@ document.querySelector('#app').innerHTML = `
     <button id="draw-point-clamped">Point</button>
     <button id="draw-area-clamped">Draw Area</button>
     <button id="draw-line-clamped">Draw Line</button>
+    <button id="draw-wall-clamped">Draw Wall</button>
     <span class="line"></span>
     <h3>Draw Tools</h3>
     <button id="draw-area">Draw Area</button>
     <button id="draw-line">Draw Line</button>
+    <button id="draw-wall">Draw Wall</button>
     <span class="line"></span>
     <button id="toggle-depth-test">Terrain Depth-Test</button>
-    
  </div>
 `
 
@@ -44,6 +44,7 @@ import {MeasureMultiDistance} from "@/modules/measure/MeasureMultiDistance.js";
 import {DrawLineString} from "@/modules/draw/DrawLineString.js";
 import {MeasurePosition} from "@/modules/measure/MeasurePosition.js";
 import {DrawPoint} from "@/modules/draw/DrawPoint.js";
+import {DrawWall} from "@/modules/draw/DrawWall.js";
 window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
 
 const viewer = new Viewer("cesiumContainer", {
@@ -74,11 +75,14 @@ const measureMultiDistance = new MeasureMultiDistance(viewer);
 const measureHeight = new MeasureHeight(viewer);
 const measureAngle = new MeasureAngle(viewer);
 
-const drawPoint = new DrawPoint(viewer, {color: Cesium.Color.DARKORANGE});
 const drawPolygon = new DrawPolygon(viewer, {color: Cesium.Color.VIOLET});
 const drawLineString = new DrawLineString(viewer, {color: Cesium.Color.VIOLET});
+const drawWall = new DrawWall(viewer, {clampToGround: false, color: Cesium.Color.RED});
+
+const drawPoint = new DrawPoint(viewer, {color: Cesium.Color.DARKORANGE});
 const drawPolygonClamped = new DrawPolygon(viewer, {clampToGround: true, color: Cesium.Color.RED});
 const drawLineStringClamped = new DrawLineString(viewer, {clampToGround: true, color: Cesium.Color.RED});
+const drawWallClamped = new DrawWall(viewer, {clampToGround: true, color: Cesium.Color.RED});
 
 const init = async() => {
     const magoViewer = new MagoTools(viewer);
@@ -126,6 +130,8 @@ const offAll = () => {
     drawLineStringClamped.off();
     drawLineString.off();
     drawPolygon.off();
+    drawWall.off();
+    drawWallClamped.off();
 }
 
 document.querySelector('#measure-point').addEventListener('click', () => {
@@ -158,11 +164,6 @@ document.querySelector('#measure-area').addEventListener('click', () => {
     measureArea.on();
 });
 
-document.querySelector('#draw-point-clamped').addEventListener('click', () => {
-    offAll();
-    drawPoint.on();
-});
-
 document.querySelector('#draw-area').addEventListener('click', () => {
     offAll();
     drawPolygon.on();
@@ -173,6 +174,16 @@ document.querySelector('#draw-line').addEventListener('click', () => {
     drawLineString.on();
 });
 
+document.querySelector('#draw-wall').addEventListener('click', () => {
+    offAll();
+    drawWall.on();
+});
+
+document.querySelector('#draw-point-clamped').addEventListener('click', () => {
+    offAll();
+    drawPoint.on();
+});
+
 document.querySelector('#draw-area-clamped').addEventListener('click', () => {
     offAll();
     drawPolygonClamped.on();
@@ -181,6 +192,11 @@ document.querySelector('#draw-area-clamped').addEventListener('click', () => {
 document.querySelector('#draw-line-clamped').addEventListener('click', () => {
     offAll();
     drawLineStringClamped.on();
+});
+
+document.querySelector('#draw-wall-clamped').addEventListener('click', () => {
+    offAll();
+    drawWallClamped.on();
 });
 
 document.querySelector('#toggle-depth-test').addEventListener('click', () => {

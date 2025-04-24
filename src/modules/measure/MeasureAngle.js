@@ -230,6 +230,7 @@ export class MeasureAngle {
         }
 
         handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
         handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
@@ -245,6 +246,7 @@ export class MeasureAngle {
         const handler = this.handler;
         if (handler) {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         }
     }
