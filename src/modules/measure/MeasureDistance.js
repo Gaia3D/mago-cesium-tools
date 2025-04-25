@@ -15,7 +15,7 @@ import * as Cesium from "cesium";
  * // To disable the measurement tool and clear entities:
  * measureDistance.off();
  */
- export class MeasureDistance {
+export class MeasureDistance {
     constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
@@ -51,25 +51,33 @@ import * as Cesium from "cesium";
                 return;
             }
 
-            //const pickedObject = scene.pick(event.position);
+            // const pickedObject = scene.pick(event.position);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
+                    scene.globe.ellipsoid,
                 );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
             // fix height to 1.0m
             const manHeight = 0.5;
-            const convertCartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-            pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(convertCartographic.longitude, convertCartographic.latitude, convertCartographic.height + manHeight);
+            const convertCartographic = Cesium.Cartographic.fromCartesian(
+                pickedEllipsoidPosition);
+            pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                convertCartographic.longitude, convertCartographic.latitude,
+                convertCartographic.height + manHeight);
 
             this.startCartesian = pickedEllipsoidPosition;
             this.endCartesian = pickedEllipsoidPosition;
@@ -80,7 +88,7 @@ import * as Cesium from "cesium";
                     color: this.color,
                     pixelSize: 4,
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                }
+                },
             });
 
             this.lineEntity = viewer.entities.add({
@@ -90,14 +98,15 @@ import * as Cesium from "cesium";
                     }, false),
                     width: 3,
                     material: this.color.withAlpha(0.8),
-                    clampToGround : this.clampToGround
+                    clampToGround: this.clampToGround,
                 },
             });
 
             this.endEntity = viewer.entities.add({
                 /* @ts-expect-error */
                 position: new Cesium.CallbackProperty(() => {
-                    const center = Cesium.Cartesian3.add(this.startCartesian, this.endCartesian, new Cesium.Cartesian3());
+                    const center = Cesium.Cartesian3.add(this.startCartesian,
+                        this.endCartesian, new Cesium.Cartesian3());
                     Cesium.Cartesian3.multiplyByScalar(center, 0.5, center);
                     return center;
                 }, false),
@@ -110,18 +119,20 @@ import * as Cesium from "cesium";
                     pixelOffset: new Cesium.Cartesian2(0, -20),
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
                     text: new Cesium.CallbackProperty(() => {
-                        let distance = Cesium.Cartesian3.distance(this.startCartesian, this.endCartesian);
+                        let distance = Cesium.Cartesian3.distance(
+                            this.startCartesian,
+                            this.endCartesian);
                         if (distance > 1000) {
                             distance = `${(distance / 1000).toFixed(3)}km`;
                         } else {
                             distance = `${distance.toFixed(3)}m`;
                         }
-                        //const distance = Cesium.Cartesian3.distance(this.startCartesian, this.endCartesian).toFixed(3);
+                        // const distance = Cesium.Cartesian3.distance(this.startCartesian, this.endCartesian).toFixed(3);
                         return `${distance}`;
-                    }, false)
+                    }, false),
                 },
             });
-        }
+        };
 
         const mouseMoveHandler = (moveEvent) => {
             if (!this.status) {
@@ -129,29 +140,40 @@ import * as Cesium from "cesium";
             }
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(moveEvent.endPosition);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    moveEvent.endPosition);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     moveEvent.endPosition,
-                    scene.globe.ellipsoid
+                    scene.globe.ellipsoid,
                 );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
             // fix height to 1.0m
             const manHeight = 0.5;
-            const convertCartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-            pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(convertCartographic.longitude, convertCartographic.latitude, convertCartographic.height + manHeight);
-            this.endCartesian = pickedEllipsoidPosition
-        }
+            const convertCartographic = Cesium.Cartographic.fromCartesian(
+                pickedEllipsoidPosition);
+            pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                convertCartographic.longitude, convertCartographic.latitude,
+                convertCartographic.height + manHeight);
+            this.endCartesian = pickedEllipsoidPosition;
+        };
 
-        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-        handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        handler.setInputAction(mouseMoveHandler,
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    };
 
     /**
      * Disables the measurement tool and clears the entities.
@@ -168,15 +190,15 @@ import * as Cesium from "cesium";
             handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         }
-    }
+    };
 
     clearEntities = () => {
         this.viewer.entities.remove(this.lineEntity);
         this.viewer.entities.remove(this.startEntity);
         this.viewer.entities.remove(this.endEntity);
-        this.lineEntity = undefined
+        this.lineEntity = undefined;
         this.startEntity = undefined;
         this.endEntity = undefined;
-    }
+    };
 }
 

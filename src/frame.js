@@ -1,11 +1,12 @@
-import './css/css-init.css'
-import './css/custom.css'
+import "./css/css-init.css";
+import "./css/custom.css";
+import * as Cesium from "cesium";
 import {Viewer} from "cesium";
 import {MagoTools} from "./modules/MagoTools.js";
-import * as Cesium from "cesium";
 import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
+import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
-document.querySelector('#app').innerHTML = `
+document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
     <h1>Mago Cesium Tools (Fluid Frame)</h1>
@@ -51,14 +52,9 @@ document.querySelector('#app').innerHTML = `
     <input type="text" id="timeSliderValue" readonly>
     <button id="timeSliderButton">Start</button>
  </div>
-`
+`;
 
-import "@cesium/engine/Source/Widget/CesiumWidget.css";
-import {MeasureHeight} from "@/modules/measure/MeasureHeight.js";
-import {MeasureDistance} from "@/modules/measure/MeasureDistance.js";
-import {MeasureAngle} from "@/modules/measure/MeasureAngle.js";
-import {MeasureArea} from "@/modules/measure/MeasureArea.js";
-window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
+window.CESIUM_BASE_URL = "/node_modules/cesium/Build/Cesium";
 
 const viewer = new Viewer("cesiumContainer", {
     geocoder: false,
@@ -71,7 +67,7 @@ const viewer = new Viewer("cesiumContainer", {
     navigationHelpButton: false,
     selectionIndicator: false,
     fullscreenButton: false,
-    baseLayer : false,
+    baseLayer: false,
     shouldAnimate: true,
 });
 viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -81,26 +77,21 @@ viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEF
 
 const [lon, lat] = [126.968905, 37.447571];
 const options = {
-    lon : lon,
-    lat : lat,
-    gridSize : 512,
-    cellSize : 1.0,
+    lon: lon, lat: lat, gridSize: 512, cellSize: 1.0,
 };
 
 const timeInfo = {
-    start: 0,
-    end: 100,
-    current: 0,
-}
+    start: 0, end: 100, current: 0,
+};
 
 const fluid = new MagoFrame(viewer);
 
-const init = async() => {
+const init = async () => {
     const magoViewer = new MagoTools(viewer);
-    await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
-    await magoViewer.changeTerrain('http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/');
+    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.changeTerrain("http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/");
 
-    const infoJson = await fetch('sample/info.json');
+    const infoJson = await fetch("/sample/info.json");
     const info = await infoJson.json();
     options.lon = info.lon;
     options.lat = info.lat;
@@ -112,74 +103,72 @@ const init = async() => {
     setDefaultValue();
     refreshRectangle();
 
-    //console.log(info)
+    // console.log(info)
 
-    //fluid
+    // fluid
 
-    //magoViewer.initPosition(info.lon, info.lat, 1000.0);
+    // magoViewer.initPosition(info.lon, info.lat, 1000.0);
     await fluid.initBase(options);
     fluid.start();
 
-    let interval = info.interval;
-    let start = 0;
-    let end = info.count;
-    let count = 0;
+    const interval = info.interval;
+    const start = 0;
+    const end = info.count;
+    const count = 0;
 
-    //fluid.currentFrame = 0;
+    // fluid.currentFrame = 0;
     fluid.frameNumber = 0;
-    fluid.frameUrl = `sample/0.bin`;
-    setFrame(0)
-    fluid.terrainUrl = `sample/terrain.bin`;
-
+    fluid.frameUrl = "sample/0.bin";
+    setFrame(0);
+    fluid.terrainUrl = "sample/terrain.bin";
 
     fluid.preload(end, setBufferBar);
 
-
-    document.querySelector('#timeSliderInput').max = end;
-}
+    document.querySelector("#timeSliderInput").max = end;
+};
 
 const setDefaultValue = () => {
-    document.querySelector('#color').value = fluid.options.waterColor.toCssHexString();
+    document.querySelector("#color").value = fluid.options.waterColor.toCssHexString();
 
-    document.querySelector('#intensity').value = fluid.options.colorIntensity;
-    document.querySelector('#intensityValue').value = fluid.options.colorIntensity;
+    document.querySelector("#intensity").value = fluid.options.colorIntensity;
+    document.querySelector("#intensityValue").value = fluid.options.colorIntensity;
 
-    document.querySelector('#brightness').value = fluid.options.waterBrightness;
-    document.querySelector('#brightnessValue').value = fluid.options.waterBrightness;
+    document.querySelector("#brightness").value = fluid.options.waterBrightness;
+    document.querySelector("#brightnessValue").value = fluid.options.waterBrightness;
 
-    document.querySelector('#maxOpacity').value = fluid.options.maxOpacity;
-    document.querySelector('#maxOpacityValue').value = fluid.options.maxOpacity;
-}
+    document.querySelector("#maxOpacity").value = fluid.options.maxOpacity;
+    document.querySelector("#maxOpacityValue").value = fluid.options.maxOpacity;
+};
 
-document.querySelector('#wireframe').addEventListener('click', () => {
+document.querySelector("#wireframe").addEventListener("click", () => {
     if (fluid.gridPrimitive) {
         fluid.gridPrimitive.debugWireframe = !fluid.gridPrimitive.debugWireframe;
     }
 });
 
-document.querySelector('#heightLegend').addEventListener('click', () => {
+document.querySelector("#heightLegend").addEventListener("click", () => {
     fluid.options.heightPalette = !fluid.options.heightPalette;
 });
 
-document.querySelector('#intensity').addEventListener('input', (event) => {
+document.querySelector("#intensity").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#intensityValue').value = value;
+    document.querySelector("#intensityValue").value = value;
     fluid.options.colorIntensity = value;
 });
 
-document.querySelector('#brightness').addEventListener('input', (event) => {
+document.querySelector("#brightness").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#brightnessValue').value = value;
+    document.querySelector("#brightnessValue").value = value;
     fluid.options.waterBrightness = value;
 });
 
-document.querySelector('#maxOpacity').addEventListener('input', (event) => {
+document.querySelector("#maxOpacity").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#maxOpacityValue').value = value;
+    document.querySelector("#maxOpacityValue").value = value;
     fluid.options.maxOpacity = value;
 });
 
-document.querySelector("#color").addEventListener('change', (event) => {
+document.querySelector("#color").addEventListener("change", (event) => {
     const color = event.target.value;
     const waterColor = Cesium.Color.fromCssColorString(color);
     fluid.options.waterColor = waterColor;
@@ -188,13 +177,11 @@ document.querySelector("#color").addEventListener('change', (event) => {
 const refreshRectangle = () => {
     const extent = fluid.calcExtent(options);
     const rectangle = fluid.createRectangle(extent);
-}
+};
 
 const animationStatus = {
-    recentFrame: 0,
-    isStart: false,
-    interval: undefined,
-}
+    recentFrame: 0, isStart: false, interval: undefined,
+};
 
 const setFrame = (count) => {
     const url = `sample/${count}.bin`;
@@ -202,63 +189,65 @@ const setFrame = (count) => {
     fluid.frameNumber = count;
     animationStatus.recentFrame = count;
 
-    const max = document.querySelector('#timeSliderInput').max;
-    document.querySelector('#timeSliderInput').value = count;
-    document.querySelector('#timeSliderValue').value = `${count}/${max}`;
+    const max = document.querySelector("#timeSliderInput").max;
+    document.querySelector("#timeSliderInput").value = count;
+    document.querySelector("#timeSliderValue").value = `${count}/${max}`;
 };
 
 const setBufferBar = (max, value) => {
-    const bufferingBar = document.querySelector('#timeSliderBufferingBar');
+    const bufferingBar = document.querySelector("#timeSliderBufferingBar");
     const percent = (value / max) * 100;
     bufferingBar.style.width = `${percent}%`;
-}
+};
 
-document.querySelector('#timeSliderInput').addEventListener('input', (event) => {
-    animationStatus.isStart = false;
-    clearInterval(animationStatus.interval);
-    animationStatus.interval = undefined;
-    document.querySelector('#timeSliderButton').innerText = 'Start';
-
-    console.log(event.target.value);
-    const value = parseInt(event.target.value);
-
-    setFrame(value);
-
-    /*const url = `sample/${value}.bin`;
-    //fluid.currentFrame = value;
-    fluid.frameNumber = value;
-    fluid.frameUrl = url;
-    animationStatus.recentFrame = value;*/
-
-    document.querySelector('#timeSliderValue').value = `${value}/${event.target.max}`;
-});
-
-document.querySelector('#timeSliderButton').addEventListener('click', (event) => {
-    if (animationStatus.isStart) {
+document.querySelector("#timeSliderInput").
+    addEventListener("input", (event) => {
+        animationStatus.isStart = false;
         clearInterval(animationStatus.interval);
         animationStatus.interval = undefined;
-        event.target.innerText = 'Start';
-    } else {
-        const max = document.querySelector('#timeSliderInput').max;
-        let count = animationStatus.recentFrame;
-        animationStatus.interval = setInterval(() => {
-            if (count > max) {
-                count = 0;
-            }
-            //document.querySelector('#timeSliderInput').value = count;
-            //document.querySelector('#timeSliderValue').value = `${count}/${max}`;
+        document.querySelector("#timeSliderButton").innerText = "Start";
 
-            setFrame(count);
+        console.log(event.target.value);
+        const value = parseInt(event.target.value);
 
-            /*const url = `sample/${count}.bin`;
-            fluid.frameUrl = url;
-            fluid.frameNumber = count;
-            animationStatus.recentFrame = count;*/
-            count++;
-        }, 100);
-        event.target.innerText = 'Stop';
-    }
-    animationStatus.isStart = !animationStatus.isStart;
-});
+        setFrame(value);
+
+        /* const url = `sample/${value}.bin`;
+        //fluid.currentFrame = value;
+        fluid.frameNumber = value;
+        fluid.frameUrl = url;
+        animationStatus.recentFrame = value;*/
+
+        document.querySelector("#timeSliderValue").value = `${value}/${event.target.max}`;
+    });
+
+document.querySelector("#timeSliderButton").
+    addEventListener("click", (event) => {
+        if (animationStatus.isStart) {
+            clearInterval(animationStatus.interval);
+            animationStatus.interval = undefined;
+            event.target.innerText = "Start";
+        } else {
+            const max = document.querySelector("#timeSliderInput").max;
+            let count = animationStatus.recentFrame;
+            animationStatus.interval = setInterval(() => {
+                if (count > max) {
+                    count = 0;
+                }
+                // document.querySelector('#timeSliderInput').value = count;
+                // document.querySelector('#timeSliderValue').value = `${count}/${max}`;
+
+                setFrame(count);
+
+                /* const url = `sample/${count}.bin`;
+                fluid.frameUrl = url;
+                fluid.frameNumber = count;
+                animationStatus.recentFrame = count;*/
+                count++;
+            }, 100);
+            event.target.innerText = "Stop";
+        }
+        animationStatus.isStart = !animationStatus.isStart;
+    });
 
 init();

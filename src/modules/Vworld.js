@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import {Viewer} from "cesium";
 
 /**
  * MagoTools is a class that creates a viewer to render points on a globe.
@@ -24,23 +23,24 @@ export class Vworld {
      * magoTools.createVworldImageryLayerWithoutToken('Satellite', true, 'jpeg')
      */
     createVworldImageryLayerWithoutToken(type, extension) {
-        const minLevel = 5
-        const maxLevel = 19
+        const minLevel = 5;
+        const maxLevel = 19;
         const options = {
             url: `https://xdworld.vworld.kr/2d/${type}/service/{TileMatrix}/{TileCol}/{TileRow}.${extension}`,
-            layer: 'Base',
-            style: 'default', //minimumLevel: 1,
+            layer: "Base",
+            style: "default",
             maximumLevel: maxLevel,
-            tileMatrixSetID: 'EPSG:3857',
-            credit: new Cesium.Credit('Vworld Korea'),
-        }
-        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
+            tileMatrixSetID: "EPSG:3857",
+            credit: new Cesium.Credit("Vworld Korea"),
+        };
+        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+            options);
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
-            show: true, minimumTerrainLevel: minLevel
+            show: true, minimumTerrainLevel: minLevel,
         });
 
-        const layers = this.viewer.scene.imageryLayers
-        layers.add(imageryLayer)
+        const layers = this.viewer.scene.imageryLayers;
+        layers.add(imageryLayer);
         return imageryLayer;
     }
 
@@ -54,38 +54,42 @@ export class Vworld {
      * magoTools.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
      */
     createVworldImageryLayer(type, hybrid, extension) {
-        const minLevel = 5
-        const maxLevel = 19
+        const minLevel = 5;
+        const maxLevel = 19;
 
-        const protocol = location.protocol === 'https:' ? 'https' : 'http'
+        const protocol = location.protocol === "https:" ? "https" : "http";
         const options = {
             url: `${protocol}://api.vworld.kr/req/wmts/1.0.0/${this.token}/${type}/{TileMatrix}/{TileRow}/{TileCol}.${extension}`,
-            layer: 'Base',
-            style: 'default',
+            layer: "Base",
+            style: "default",
             maximumLevel: maxLevel,
-            tileMatrixSetID: 'default028mm'
-        }
-        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
+            tileMatrixSetID: "default028mm",
+        };
+        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+            options);
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
-            show: true, minimumTerrainLevel: minLevel
+            show: true, minimumTerrainLevel: minLevel,
         });
 
-        const layers = this.viewer.scene.imageryLayers
-        layers.add(imageryLayer)
+        const layers = this.viewer.scene.imageryLayers;
+        layers.add(imageryLayer);
 
         if (hybrid) {
             const hybridOptions = {
                 url: `${protocol}://api.vworld.kr/req/wmts/1.0.0/${this.token}/Hybrid/{TileMatrix}/{TileRow}/{TileCol}.png`,
-                layer: 'Hybrid',
-                style: 'default',
+                layer: "Hybrid",
+                style: "default",
                 maximumLevel: maxLevel,
-                tileMatrixSetID: 'default028mm'
-            }
-            const hybridImageryProvider = new Cesium.WebMapTileServiceImageryProvider(hybridOptions)
-            const hybridImageryLayer = new Cesium.ImageryLayer(hybridImageryProvider, {
-                show: true, minimumTerrainLevel: minLevel
-            });
-            layers.add(hybridImageryLayer)
+                tileMatrixSetID: "default028mm",
+            };
+            const hybridImageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+                hybridOptions);
+            const hybridImageryLayer = new Cesium.ImageryLayer(
+                hybridImageryProvider,
+                {
+                    show: true, minimumTerrainLevel: minLevel,
+                });
+            layers.add(hybridImageryLayer);
         }
         return imageryLayer;
     }
@@ -100,7 +104,7 @@ export class Vworld {
         const response = await this.getAddressCoordProxy(address, type);
         const responseResult = {
             address: undefined, lon: undefined, lat: undefined, error: false,
-        }
+        };
 
         try {
             if (response) {
@@ -137,9 +141,10 @@ export class Vworld {
     getAddressCoordProxy(address, type = "ROAD") {
         return new Promise((resolve, reject) => {
             const script = document.createElement("script");
-            const callbackName = "jsonp_callback_" + Math.round(100000 * Math.random());
+            const callbackName = "jsonp_callback_" +
+                Math.round(100000 * Math.random());
 
-            window[callbackName] = function (data) {
+            window[callbackName] = function(data) {
                 delete window[callbackName];
                 document.body.removeChild(script);
 
@@ -162,7 +167,8 @@ export class Vworld {
                 callback: callbackName,
             });
 
-            script.src = "https://api.vworld.kr/req/address?" + params.toString();
+            script.src = "https://api.vworld.kr/req/address?" +
+                params.toString();
             script.onerror = () => {
                 delete window[callbackName];
                 document.body.removeChild(script);

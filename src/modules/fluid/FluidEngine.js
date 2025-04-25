@@ -27,7 +27,7 @@ export class FluidEngine {
             fluxDownOutputTexture: null,
             fluxRightOutputTexture: null,
             fluxLeftOutputTexture: null,
-        }
+        };
         this.waterVelocityShaderInfo = {
             shaderProgram: null,
             vertexShader: null,
@@ -35,14 +35,14 @@ export class FluidEngine {
             framebuffer: null,
             waterOutputTexture: null,
             velocityOutputTexture: null,
-        }
+        };
         this.waterHeightShaderInfo = {
             shaderProgram: null,
             vertexShader: null,
             fragmentShader: null,
             framebuffer: null,
             waterOutputTexture: null,
-        }
+        };
         this.particlesShaderInfo = {
             shaderProgram: null,
             vertexShader: null,
@@ -51,21 +51,24 @@ export class FluidEngine {
             particlesPositionTexture: null,
             particlesPositionOutputTexture: null,
             particleTexture: null,
-        }
+        };
+
+        // ton / m^3
         this.simulationInfo = {
             canvas: null,
             gl: null,
             extensionBuffers: null,
             waterUint8Array: null,
             fluxUint8Array: null,
-            totalWater: 0, // ton / m^3
-        }
+            totalWater: 0,
+        };
     }
 
     initWebGL() {
         let canvas = this.simulationInfo.canvas;
         if (!canvas) {
-            canvas = document.createElement("canvas", { preserveDrawingBuffer: true });
+            canvas = document.createElement("canvas",
+                {preserveDrawingBuffer: true});
             canvas.width = this.options.gridSize;
             canvas.height = this.options.gridSize;
             this.simulationInfo.canvas = canvas;
@@ -77,10 +80,13 @@ export class FluidEngine {
         }
 
         try {
-            gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-            let supportEXT = gl.getSupportedExtensions().indexOf("WEBGL_draw_buffers");
+            gl = canvas.getContext("webgl") ||
+                canvas.getContext("experimental-webgl");
+            const supportEXT = gl.getSupportedExtensions().
+                indexOf("WEBGL_draw_buffers");
             if (supportEXT > -1) {
-                this.simulationInfo.extensionBuffers = gl.getExtension("WEBGL_draw_buffers");
+                this.simulationInfo.extensionBuffers = gl.getExtension(
+                    "WEBGL_draw_buffers");
             }
         } catch (e) {
             console.error(e);
@@ -92,17 +98,18 @@ export class FluidEngine {
     }
 
     calcTotalWater() {
-        let gridSize = this.options.gridSize;
-        let waterUint8Array = this.simulationInfo.waterUint8Array;
+        const gridSize = this.options.gridSize;
+        const waterUint8Array = this.simulationInfo.waterUint8Array;
         let totalWater = 0;
-        let loop = gridSize * gridSize * 4;
+        const loop = gridSize * gridSize * 4;
         for (let i = 0; i < loop; i += 4) {
-            let r = waterUint8Array[i] / 255;
-            let g = waterUint8Array[i + 1] / 255;
-            let b = waterUint8Array[i + 2] / 255;
-            let a = waterUint8Array[i + 3] / 255;
-            let waterArray = [r, g, b, a];
-            totalWater += unpack(waterArray) * this.options.maxHeight * (this.options.cellSize * this.options.cellSize);
+            const r = waterUint8Array[i] / 255;
+            const g = waterUint8Array[i + 1] / 255;
+            const b = waterUint8Array[i + 2] / 255;
+            const a = waterUint8Array[i + 3] / 255;
+            const waterArray = [r, g, b, a];
+            totalWater += unpack(waterArray) * this.options.maxHeight *
+                (this.options.cellSize * this.options.cellSize);
         }
 
         this.simulationInfo.totalWater = Math.round(totalWater);
@@ -110,7 +117,7 @@ export class FluidEngine {
     }
 
     flipImageDataHorizontally(imageData) {
-        const { width, height, data } = imageData;
+        const {width, height, data} = imageData;
         const halfWidth = width / 2;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < halfWidth; x++) {
@@ -119,14 +126,16 @@ export class FluidEngine {
 
                 // RGBA 값 교환
                 for (let i = 0; i < 4; i++) {
-                    [data[leftIndex + i], data[rightIndex + i]] = [data[rightIndex + i], data[leftIndex + i]];
+                    [data[leftIndex + i], data[rightIndex + i]] = [
+                        data[rightIndex + i],
+                        data[leftIndex + i]];
                 }
             }
         }
     }
 
     flipImageDataVertically(imageData) {
-        const { width, height, data } = imageData;
+        const {width, height, data} = imageData;
         const halfHeight = height / 2;
         for (let y = 0; y < halfHeight; y++) {
             for (let x = 0; x < width; x++) {
@@ -135,14 +144,17 @@ export class FluidEngine {
 
                 // RGBA 값 교환
                 for (let i = 0; i < 4; i++) {
-                    [data[topIndex + i], data[bottomIndex + i]] = [data[bottomIndex + i], data[topIndex + i]];
+                    [data[topIndex + i], data[bottomIndex + i]] = [
+                        data[bottomIndex + i],
+                        data[topIndex + i]];
                 }
             }
         }
     }
 
-    saveUint8ArrayAsPNG(zip, uint8Array, width, height, fileName = "output.bmp") {
-        /*const canvas = document.createElement("canvas");
+    saveUint8ArrayAsPNG(
+        zip, uint8Array, width, height, fileName = "output.bmp") {
+        /* const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d", {willReadFrequently: true});
@@ -170,38 +182,36 @@ export class FluidEngine {
 
         ctx.putImageData(imageData, 0, 0);*/
 
-
-        //console.log(uint8Array)
+        // console.log(uint8Array)
 
         console.log("save..");
 
-        const blob = new Blob([uint8Array], { type: 'application/octet-stream' });
+        const blob = new Blob([uint8Array], {type: "application/octet-stream"});
         zip.file(fileName, blob);
 
-
-
-        /*await canvas.toBlob((blob) => {
+        /* await canvas.toBlob((blob) => {
             if (blob) {
                 zip.file(fileName, blob);
             }
         }, "image/bmp");*/
     }
 
-
     async calculateSimulation() {
-        //const canvas = document.getElementById("webgl-canvas");
+        // const canvas = document.getElementById("webgl-canvas");
         const gl = this.initWebGL();
         if (gl) {
             this.initTexture();
 
             if (!this.simulationInfo.waterUint8Array) {
-                let gridSize = this.options.gridSize;
-                this.simulationInfo.waterUint8Array = new Uint8Array(gridSize * gridSize * 4);
+                const gridSize = this.options.gridSize;
+                this.simulationInfo.waterUint8Array = new Uint8Array(
+                    gridSize * gridSize * 4);
             }
 
             if (!this.simulationInfo.fluxUint8Array) {
-                let gridSize = this.options.gridSize;
-                this.simulationInfo.fluxUint8Array = new Uint8Array(gridSize * gridSize * 4);
+                const gridSize = this.options.gridSize;
+                this.simulationInfo.fluxUint8Array = new Uint8Array(
+                    gridSize * gridSize * 4);
             }
 
             const fluxShaderProgram = await this.getFluxShaderProgram();
@@ -219,11 +229,11 @@ export class FluidEngine {
             this.renderWaterHeightFramebuffer(waterHeightShaderProgram);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-            //const particlesShaderProgram = await initParticleShaderProgram();
-            //renderParticles(particlesShaderProgram);
-            //GL.bindFramebuffer(GL.FRAMEBUFFER, null);
+            // const particlesShaderProgram = await initParticleShaderProgram();
+            // renderParticles(particlesShaderProgram);
+            // GL.bindFramebuffer(GL.FRAMEBUFFER, null);
 
-            //this.calcTotalWater();
+            // this.calcTotalWater();
 
             return this.simulationInfo.waterUint8Array;
         }
@@ -236,7 +246,8 @@ export class FluidEngine {
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            console.error("Shader compile error: " + gl.getShaderInfoLog(shader));
+            console.error(
+                "Shader compile error: " + gl.getShaderInfoLog(shader));
             gl.deleteShader(shader);
             return null;
         }
@@ -245,12 +256,16 @@ export class FluidEngine {
 
     async initFluxShaderProgram() {
 
-        const commonVertexShaderSource = await this.shaderLoader.getShaderSource("common-vertex-shader.vert");
-        const fluxFragmentShaderSource = await this.shaderLoader.getShaderSource("flux-fragment-shader.frag");
+        const commonVertexShaderSource = await this.shaderLoader.getShaderSource(
+            "common-vertex-shader.vert");
+        const fluxFragmentShaderSource = await this.shaderLoader.getShaderSource(
+            "flux-fragment-shader.frag");
 
         const gl = this.simulationInfo.gl;
-        const vertexShader = this.compileShader(gl, commonVertexShaderSource, gl.VERTEX_SHADER);
-        const fragmentShader = this.compileShader(gl, fluxFragmentShaderSource, gl.FRAGMENT_SHADER);
+        const vertexShader = this.compileShader(gl, commonVertexShaderSource,
+            gl.VERTEX_SHADER);
+        const fragmentShader = this.compileShader(gl, fluxFragmentShaderSource,
+            gl.FRAGMENT_SHADER);
         this.fluxShaderInfo.vertexShader = vertexShader;
         this.fluxShaderInfo.fragmentShader = fragmentShader;
 
@@ -263,19 +278,26 @@ export class FluidEngine {
         gl.useProgram(shaderProgram);
 
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            console.error("Shader program link error: " + gl.getProgramInfoLog(shaderProgram));
+            console.error(
+                "Shader program link error: " +
+                gl.getProgramInfoLog(shaderProgram));
             return null;
         }
         return shaderProgram;
     }
 
     async initWaterShaderProgram() {
-        const commonVertexShaderSource = await this.shaderLoader.getShaderSource("common-vertex-shader.vert");
-        const velocityFragmentShaderSource = await this.shaderLoader.getShaderSource("velocity-fragment-shader.frag");
+        const commonVertexShaderSource = await this.shaderLoader.getShaderSource(
+            "common-vertex-shader.vert");
+        const velocityFragmentShaderSource = await this.shaderLoader.getShaderSource(
+            "velocity-fragment-shader.frag");
 
         const gl = this.simulationInfo.gl;
-        const vertexShader = this.compileShader(gl, commonVertexShaderSource, gl.VERTEX_SHADER);
-        const fragmentShader = this.compileShader(gl, velocityFragmentShaderSource, gl.FRAGMENT_SHADER);
+        const vertexShader = this.compileShader(gl, commonVertexShaderSource,
+            gl.VERTEX_SHADER);
+        const fragmentShader = this.compileShader(gl,
+            velocityFragmentShaderSource,
+            gl.FRAGMENT_SHADER);
         this.waterVelocityShaderInfo.vertexShader = vertexShader;
         this.waterVelocityShaderInfo.fragmentShader = fragmentShader;
 
@@ -288,19 +310,25 @@ export class FluidEngine {
         gl.useProgram(shaderProgram);
 
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            console.error("Shader program link error: " + gl.getProgramInfoLog(shaderProgram));
+            console.error(
+                "Shader program link error: " +
+                gl.getProgramInfoLog(shaderProgram));
             return null;
         }
         return shaderProgram;
     }
 
     async initWaterHeightShaderProgram() {
-        const commonVertexShaderSource = await this.shaderLoader.getShaderSource("common-vertex-shader.vert");
-        const waterHeightFragmentShaderSource = await this.shaderLoader.getShaderSource("water-height-fragment-shader.frag");
+        const commonVertexShaderSource = await this.shaderLoader.getShaderSource(
+            "common-vertex-shader.vert");
+        const waterHeightFragmentShaderSource = await this.shaderLoader.getShaderSource(
+            "water-height-fragment-shader.frag");
 
         const gl = this.simulationInfo.gl;
-        const vertexShader = this.compileShader(gl, commonVertexShaderSource, gl.VERTEX_SHADER);
-        const fragmentShader = this.compileShader(gl, waterHeightFragmentShaderSource, gl.FRAGMENT_SHADER);
+        const vertexShader = this.compileShader(gl, commonVertexShaderSource,
+            gl.VERTEX_SHADER);
+        const fragmentShader = this.compileShader(gl,
+            waterHeightFragmentShaderSource, gl.FRAGMENT_SHADER);
         this.waterHeightShaderInfo.vertexShader = vertexShader;
         this.waterHeightShaderInfo.fragmentShader = fragmentShader;
 
@@ -313,19 +341,26 @@ export class FluidEngine {
         gl.useProgram(shaderProgram);
 
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            console.error("Shader program link error: " + gl.getProgramInfoLog(shaderProgram));
+            console.error(
+                "Shader program link error: " +
+                gl.getProgramInfoLog(shaderProgram));
             return null;
         }
         return shaderProgram;
     }
 
     async initParticleShaderProgram() {
-        const commonVertexShaderSource = await this.shaderLoader.getShaderSource("common-vertex-shader.vert");
-        const particlesFragmentShaderSource = await this.shaderLoader.getShaderSource("particles-fragment-shader.frag");
+        const commonVertexShaderSource = await this.shaderLoader.getShaderSource(
+            "common-vertex-shader.vert");
+        const particlesFragmentShaderSource = await this.shaderLoader.getShaderSource(
+            "particles-fragment-shader.frag");
 
         const gl = this.simulationInfo.gl;
-        const vertexShader = this.compileShader(gl, commonVertexShaderSource, gl.VERTEX_SHADER);
-        const fragmentShader = this.compileShader(gl, particlesFragmentShaderSource, gl.FRAGMENT_SHADER);
+        const vertexShader = this.compileShader(gl, commonVertexShaderSource,
+            gl.VERTEX_SHADER);
+        const fragmentShader = this.compileShader(gl,
+            particlesFragmentShaderSource,
+            gl.FRAGMENT_SHADER);
         this.particlesShaderInfo.vertexShader = vertexShader;
         this.particlesShaderInfo.fragmentShader = fragmentShader;
 
@@ -338,7 +373,9 @@ export class FluidEngine {
         gl.useProgram(shaderProgram);
 
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            console.error("Shader program link error: " + gl.getProgramInfoLog(shaderProgram));
+            console.error(
+                "Shader program link error: " +
+                gl.getProgramInfoLog(shaderProgram));
             return null;
         }
         return shaderProgram;
@@ -346,10 +383,11 @@ export class FluidEngine {
 
     resetWaterTexture() {
         const gl = this.simulationInfo.gl;
-        let waterTexture = this.fluxShaderInfo.waterTexture;
+        const waterTexture = this.fluxShaderInfo.waterTexture;
         if (waterTexture) {
             gl.bindTexture(gl.TEXTURE_2D, waterTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         }
     }
 
@@ -361,11 +399,14 @@ export class FluidEngine {
         if (!waterTexture) {
             waterTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, waterTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE);
             fluxShaderInfo.waterTexture = waterTexture;
         }
 
@@ -373,15 +414,19 @@ export class FluidEngine {
         if (!sourceTexture) {
             sourceTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE);
             fluxShaderInfo.sourceTexture = sourceTexture;
         } else {
-            const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
-            //const rainAmount = this.options.rainAmount / (this.options.cellSize * this.options.cellSize);
+            const pixel = new Uint8Array(
+                this.options.gridSize * this.options.gridSize * 4);
+            // const rainAmount = this.options.rainAmount / (this.options.cellSize * this.options.cellSize);
             const gridArea = this.options.gridSize * this.options.gridSize;
 
             const rainLoop = gridArea / 100 * this.options.rainAmount;
@@ -389,24 +434,27 @@ export class FluidEngine {
             const precipitation = this.options.rainMaxPrecipitation;
             const rainMaxPrecipitation = precipitation;
             for (let i = 0; i < rainLoop; i++) {
-                let randomGridIndex = Math.floor(Math.random() * this.options.gridSize * this.options.gridSize);
+                let randomGridIndex = Math.floor(
+                    Math.random() * this.options.gridSize *
+                    this.options.gridSize);
                 randomGridIndex = randomGridIndex * 4;
 
-                let random = Math.random() * rainMaxPrecipitation;
-                let packValue = pack(random / this.options.maxHeight);
+                const random = Math.random() * rainMaxPrecipitation;
+                const packValue = pack(random / this.options.maxHeight);
                 pixel[randomGridIndex] = packValue[0] * 255;
                 pixel[randomGridIndex + 1] = packValue[1] * 255;
                 pixel[randomGridIndex + 2] = packValue[2] * 255;
                 pixel[randomGridIndex + 3] = packValue[3] * 255;
             }
 
-            let sampleHeight = this.options.waterSourceAmount / (this.options.cellSize * this.options.cellSize);
-            let values= pack(sampleHeight / this.options.maxHeight);
+            const sampleHeight = this.options.waterSourceAmount /
+                (this.options.cellSize * this.options.cellSize);
+            const values = pack(sampleHeight / this.options.maxHeight);
 
             /* water source */
-            let area = this.options.waterSourceArea;
-            let cellPositions = this.options.waterSourcePositions;
-            for (let cellPosition of cellPositions) {
+            const area = this.options.waterSourceArea;
+            const cellPositions = this.options.waterSourcePositions;
+            for (const cellPosition of cellPositions) {
                 if (cellPosition >= 0) {
                     for (let i = -area; i <= area; i++) {
                         for (let j = -area; j <= area; j++) {
@@ -415,7 +463,8 @@ export class FluidEngine {
                             } else if (cellPosition < 0) {
                                 return;
                             }
-                            let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                            const cellIndex = cellPosition + (i * 4) +
+                                (j * 4 * this.options.gridSize);
                             pixel[cellIndex] = values[0] * 255;
                             pixel[cellIndex + 1] = values[1] * 255;
                             pixel[cellIndex + 2] = values[2] * 255;
@@ -426,28 +475,34 @@ export class FluidEngine {
             }
 
             gl.bindTexture(gl.TEXTURE_2D, sourceTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
         }
 
         let minusSourceTexture = fluxShaderInfo.minusSourceTexture;
         if (!minusSourceTexture) {
             minusSourceTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, minusSourceTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE);
             fluxShaderInfo.minusSourceTexture = minusSourceTexture;
         } else {
-            const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
-            let sampleHeight = this.options.waterMinusSourceAmount / (this.options.cellSize * this.options.cellSize);
-            let values= pack(sampleHeight / this.options.maxHeight);
+            const pixel = new Uint8Array(
+                this.options.gridSize * this.options.gridSize * 4);
+            const sampleHeight = this.options.waterMinusSourceAmount /
+                (this.options.cellSize * this.options.cellSize);
+            const values = pack(sampleHeight / this.options.maxHeight);
 
             /* water minus source */
-            let area = this.options.waterMinusSourceArea;
-            let cellPositions = this.options.waterMinusSourcePositions;
-            for (let cellPosition of cellPositions) {
+            const area = this.options.waterMinusSourceArea;
+            const cellPositions = this.options.waterMinusSourcePositions;
+            for (const cellPosition of cellPositions) {
                 if (cellPosition >= 0) {
                     for (let i = -area; i <= area; i++) {
                         for (let j = -area; j <= area; j++) {
@@ -456,7 +511,8 @@ export class FluidEngine {
                             } else if (cellPosition < 0) {
                                 return;
                             }
-                            let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                            const cellIndex = cellPosition + (i * 4) +
+                                (j * 4 * this.options.gridSize);
                             pixel[cellIndex] = values[0] * 255;
                             pixel[cellIndex + 1] = values[1] * 255;
                             pixel[cellIndex + 2] = values[2] * 255;
@@ -466,30 +522,34 @@ export class FluidEngine {
                 }
             }
 
-
             gl.bindTexture(gl.TEXTURE_2D, minusSourceTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
         }
 
         let seaWallTexture = fluxShaderInfo.seaWallTexture;
         if (!seaWallTexture) {
             seaWallTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, seaWallTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE);
             fluxShaderInfo.seaWallTexture = seaWallTexture;
         } else {
-            const pixel = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
-            let sampleHeight = this.options.waterSeawallHeight;
-            let values= pack(sampleHeight / this.options.maxHeight);
+            const pixel = new Uint8Array(
+                this.options.gridSize * this.options.gridSize * 4);
+            const sampleHeight = this.options.waterSeawallHeight;
+            const values = pack(sampleHeight / this.options.maxHeight);
 
             /* water minus source */
-            let area = this.options.waterSeawallArea;
-            let cellPositions = this.options.waterSeawallPositions;
-            for (let cellPosition of cellPositions) {
+            const area = this.options.waterSeawallArea;
+            const cellPositions = this.options.waterSeawallPositions;
+            for (const cellPosition of cellPositions) {
                 if (cellPosition >= 0) {
                     for (let i = -area; i <= area; i++) {
                         for (let j = -area; j <= area; j++) {
@@ -498,7 +558,8 @@ export class FluidEngine {
                             } else if (cellPosition < 0) {
                                 return;
                             }
-                            let cellIndex = cellPosition + (i * 4) + (j * 4 * this.options.gridSize);
+                            const cellIndex = cellPosition + (i * 4) +
+                                (j * 4 * this.options.gridSize);
                             pixel[cellIndex] = values[0] * 255;
                             pixel[cellIndex + 1] = values[1] * 255;
                             pixel[cellIndex + 2] = values[2] * 255;
@@ -509,28 +570,32 @@ export class FluidEngine {
             }
 
             gl.bindTexture(gl.TEXTURE_2D, seaWallTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
         }
-
 
         let terrainTexture = fluxShaderInfo.terrainTexture;
         if (!terrainTexture) {
             terrainTexture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, terrainTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+                this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE);
             fluxShaderInfo.terrainTexture = terrainTexture;
         }
     }
 
     setTerrainTexture(typedArray) {
         const gl = this.simulationInfo.gl;
-        let terrainTexture = this.fluxShaderInfo.terrainTexture;
+        const terrainTexture = this.fluxShaderInfo.terrainTexture;
         gl.bindTexture(gl.TEXTURE_2D, terrainTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, typedArray);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, typedArray);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -540,7 +605,7 @@ export class FluidEngine {
 
     initFluxFramebuffer() {
         const gl = this.simulationInfo.gl;
-        const extensionBuffers  = this.simulationInfo.extensionBuffers;
+        const extensionBuffers = this.simulationInfo.extensionBuffers;
         const fluxShaderInfo = this.fluxShaderInfo;
 
         let framebuffer = this.fluxShaderInfo.framebuffer;
@@ -553,54 +618,69 @@ export class FluidEngine {
         // 텍스처를 프레임버퍼의 색상 버퍼에 연결
         gl.viewport(0, 0, this.options.gridSize, this.options.gridSize);
 
-        let waterOutputTexture = gl.createTexture();
+        const waterOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, waterOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, waterOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D,
+            waterOutputTexture, 0);
         fluxShaderInfo.waterOutputTexture = waterOutputTexture;
 
-        let fluxUpOutputTexture = gl.createTexture();
+        const fluxUpOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, fluxUpOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, fluxUpOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D,
+            fluxUpOutputTexture, 0);
         fluxShaderInfo.fluxUpOutputTexture = fluxUpOutputTexture;
 
-        let fluxDownOutputTexture = gl.createTexture();
+        const fluxDownOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, fluxDownOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT2_WEBGL, gl.TEXTURE_2D, fluxDownOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT2_WEBGL, gl.TEXTURE_2D,
+            fluxDownOutputTexture, 0);
         fluxShaderInfo.fluxDownOutputTexture = fluxDownOutputTexture;
 
-        let fluxLeftOutputTexture = gl.createTexture();
+        const fluxLeftOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, fluxLeftOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT3_WEBGL, gl.TEXTURE_2D, fluxLeftOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT3_WEBGL, gl.TEXTURE_2D,
+            fluxLeftOutputTexture, 0);
         fluxShaderInfo.fluxLeftOutputTexture = fluxLeftOutputTexture;
 
-        let fluxRightOutputTexture = gl.createTexture();
+        const fluxRightOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, fluxRightOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT4_WEBGL, gl.TEXTURE_2D, fluxRightOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT4_WEBGL, gl.TEXTURE_2D,
+            fluxRightOutputTexture, 0);
         fluxShaderInfo.fluxRightOutputTexture = fluxRightOutputTexture;
 
         extensionBuffers.drawBuffersWEBGL([
@@ -630,24 +710,30 @@ export class FluidEngine {
         gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
         gl.viewport(0, 0, this.options.gridSize, this.options.gridSize);
 
-        let velocityOutputTexture = gl.createTexture();
+        const velocityOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, velocityOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, velocityOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D,
+            velocityOutputTexture, 0);
         waterVelocityShaderInfo.velocityOutputTexture = velocityOutputTexture;
 
-        let waterOutputTexture = gl.createTexture();
+        const waterOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, waterOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, waterOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D,
+            waterOutputTexture, 0);
         waterVelocityShaderInfo.waterOutputTexture = waterOutputTexture;
 
         extensionBuffers.drawBuffersWEBGL([
@@ -674,14 +760,17 @@ export class FluidEngine {
 
         gl.viewport(0, 0, this.options.gridSize, this.options.gridSize);
 
-        let waterOutputTexture = gl.createTexture();
+        const waterOutputTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, waterOutputTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize, this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.options.gridSize,
+            this.options.gridSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extensionBuffers.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, waterOutputTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+            extensionBuffers.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D,
+            waterOutputTexture, 0);
         this.waterHeightShaderInfo.waterOutputTexture = waterOutputTexture;
 
         extensionBuffers.drawBuffersWEBGL([
@@ -707,35 +796,60 @@ export class FluidEngine {
             0.0, 1.0,
             0.0, 1.0,
             1.0, 0.0,
-            1.0, 1.0
+            1.0, 1.0,
         ]);
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-        const aPosition = gl.getAttribLocation(shaderProgram, 'aPosition');
+        const aPosition = gl.getAttribLocation(shaderProgram, "aPosition");
         gl.enableVertexAttribArray(aPosition);
         gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
 
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCellSize", this.options.cellSize);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGridSize", this.options.gridSize);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxHeight", this.options.maxHeight);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxFlux", this.options.maxFlux);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGravity", this.options.gravity);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity", this.options.waterDensity);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep / Math.sqrt(this.options.cellSize));
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor", this.options.cushionFactor);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uEvaporationRate", this.options.evaporationRate);
-        this.shaderLoader.addIntegerUniform(gl, shaderProgram, "uSimulationConfine", this.options.simulationConfine);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture", fluxShaderInfo.waterTexture, 0);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uSourceTexture", fluxShaderInfo.sourceTexture, 1);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uTerrainTexture", fluxShaderInfo.terrainTexture, 2);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxUpTexture", fluxShaderInfo.fluxUpTexture, 3);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxDownTexture", fluxShaderInfo.fluxDownTexture, 4);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxLeftTexture", fluxShaderInfo.fluxLeftTexture, 5);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxRightTexture", fluxShaderInfo.fluxRightTexture, 6);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uMinusSourceTexture", fluxShaderInfo.minusSourceTexture, 7);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uSeaWallTexture", fluxShaderInfo.seaWallTexture, 8);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCellSize",
+            this.options.cellSize);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGridSize",
+            this.options.gridSize);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxHeight",
+            this.options.maxHeight);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxFlux",
+            this.options.maxFlux);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGravity",
+            this.options.gravity);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity",
+            this.options.waterDensity);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep",
+            this.options.timeStep / Math.sqrt(this.options.cellSize));
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor",
+            this.options.cushionFactor);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uEvaporationRate",
+            this.options.evaporationRate);
+        this.shaderLoader.addIntegerUniform(gl, shaderProgram,
+            "uSimulationConfine",
+            this.options.simulationConfine);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture",
+            fluxShaderInfo.waterTexture, 0);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uSourceTexture",
+            fluxShaderInfo.sourceTexture, 1);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uTerrainTexture",
+            fluxShaderInfo.terrainTexture, 2);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxUpTexture",
+            fluxShaderInfo.fluxUpTexture, 3);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uFluxDownTexture",
+            fluxShaderInfo.fluxDownTexture, 4);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uFluxLeftTexture",
+            fluxShaderInfo.fluxLeftTexture, 5);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uFluxRightTexture",
+            fluxShaderInfo.fluxRightTexture, 6);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uMinusSourceTexture", fluxShaderInfo.minusSourceTexture, 7);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uSeaWallTexture",
+            fluxShaderInfo.seaWallTexture, 8);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
         fluxShaderInfo.waterTexture = fluxShaderInfo.waterOutputTexture;
@@ -757,31 +871,49 @@ export class FluidEngine {
         const vertices = new Float32Array([
             -1.0, -1.0,
             1.0, -1.0,
-            -1.0,  1.0,
-            1.0,  1.0
+            -1.0, 1.0,
+            1.0, 1.0,
         ]);
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-        const aPosition = gl.getAttribLocation(shaderProgram, 'aPosition');
+        const aPosition = gl.getAttribLocation(shaderProgram, "aPosition");
         gl.enableVertexAttribArray(aPosition);
         gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
 
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCellSize", this.options.cellSize);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGridSize", this.options.gridSize);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxHeight", this.options.maxHeight);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxFlux", this.options.maxFlux);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGravity", this.options.gravity);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity", this.options.waterDensity);
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep", this.options.timeStep / Math.sqrt(this.options.cellSize));
-        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor", this.options.cushionFactor);
-        this.shaderLoader.addIntegerUniform(gl, shaderProgram, "uSimulationConfine", this.options.simulationConfine);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture", fluxShaderInfo.waterTexture, 0);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxUpTexture", fluxShaderInfo.fluxUpTexture, 1);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxDownTexture", fluxShaderInfo.fluxDownTexture, 2);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxLeftTexture", fluxShaderInfo.fluxLeftTexture, 3);
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxRightTexture", fluxShaderInfo.fluxRightTexture, 4);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCellSize",
+            this.options.cellSize);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGridSize",
+            this.options.gridSize);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxHeight",
+            this.options.maxHeight);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uMaxFlux",
+            this.options.maxFlux);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uGravity",
+            this.options.gravity);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uWaterDensity",
+            this.options.waterDensity);
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uTimeStep",
+            this.options.timeStep / Math.sqrt(this.options.cellSize));
+        this.shaderLoader.addFloatUniform(gl, shaderProgram, "uCushionFactor",
+            this.options.cushionFactor);
+        this.shaderLoader.addIntegerUniform(gl, shaderProgram,
+            "uSimulationConfine",
+            this.options.simulationConfine);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture",
+            fluxShaderInfo.waterTexture, 0);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uFluxUpTexture",
+            fluxShaderInfo.fluxUpTexture, 1);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uFluxDownTexture",
+            fluxShaderInfo.fluxDownTexture, 2);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uFluxLeftTexture",
+            fluxShaderInfo.fluxLeftTexture, 3);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram,
+            "uFluxRightTexture",
+            fluxShaderInfo.fluxRightTexture, 4);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         fluxShaderInfo.waterTexture = waterVelocityShaderInfo.waterOutputTexture;
@@ -800,19 +932,20 @@ export class FluidEngine {
         const vertices = new Float32Array([
             -1.0, -1.0,
             1.0, -1.0,
-            -1.0,  1.0,
-            1.0,  1.0
+            -1.0, 1.0,
+            1.0, 1.0,
         ]);
 
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-        const aPosition = gl.getAttribLocation(shaderProgram, 'aPosition');
+        const aPosition = gl.getAttribLocation(shaderProgram, "aPosition");
         gl.enableVertexAttribArray(aPosition);
         gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
 
-        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture", waterVelocityShaderInfo.waterOutputTexture, 0);
+        this.shaderLoader.addTextureUniform(gl, shaderProgram, "uWaterTexture",
+            waterVelocityShaderInfo.waterOutputTexture, 0);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         fluxShaderInfo.waterTexture = waterVelocityShaderInfo.waterOutputTexture;

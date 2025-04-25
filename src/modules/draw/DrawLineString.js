@@ -25,7 +25,7 @@ export class DrawLineString {
         this.endCartesian = undefined;
         this.polylineEntity = undefined;
         this.pointEntities = [];
-    }
+    };
 
     /**
      * Enables the line string drawing tool.
@@ -55,29 +55,32 @@ export class DrawLineString {
             this.pickedObject = scene.pick(event.position);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
-                );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                    scene.globe.ellipsoid);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
             this.cartesians.push(pickedEllipsoidPosition);
             this.endCartesian = pickedEllipsoidPosition;
 
             const pointEntity = viewer.entities.add({
-                position: pickedEllipsoidPosition,
-                point: {
+                position: pickedEllipsoidPosition, point: {
                     show: false,
                     color: this.color,
                     pixelSize: 4,
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                }
+                },
             });
             this.pointEntities.push(pointEntity);
 
@@ -87,40 +90,42 @@ export class DrawLineString {
                         positions: new Cesium.CallbackProperty(() => {
                             const cartesianPositions = this.cartesians.slice();
                             cartesianPositions.push(this.endCartesian);
-                            //cartesianPositions.push(this.cartesians[0]);
+                            // cartesianPositions.push(this.cartesians[0]);
                             return cartesianPositions;
                         }, false),
                         width: 3,
-                        material : this.color.withAlpha(0.8),
+                        material: this.color.withAlpha(0.8),
                         depthFailMaterial: this.color,
-                        clampToGround : this.clampToGround
-                        //disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                        clampToGround: this.clampToGround,
+                        // disableDepthTestDistance: Number.POSITIVE_INFINITY,
                     },
                 });
             }
-        }
-
+        };
 
         const mouseMoveHandler = (moveEvent) => {
             if (!this.status) {
                 return;
             }
-            //pickedObject = scene.pick(moveEvent.endPosition);
+            // pickedObject = scene.pick(moveEvent.endPosition);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(moveEvent.endPosition);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    moveEvent.endPosition);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
-                    moveEvent.endPosition,
-                    scene.globe.ellipsoid
-                );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                    moveEvent.endPosition, scene.globe.ellipsoid);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
-            this.endCartesian = pickedEllipsoidPosition
-        }
+            this.endCartesian = pickedEllipsoidPosition;
+        };
 
         const mouseRightClickHandler = (event) => {
             if (!this.status) {
@@ -131,22 +136,25 @@ export class DrawLineString {
             this.pickedObject = scene.pick(event.position);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
-                );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                    scene.globe.ellipsoid);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
             this.cartesians.push(pickedEllipsoidPosition);
             const pointEntity = viewer.entities.add({
-                position: pickedEllipsoidPosition,
-                point: {
+                position: pickedEllipsoidPosition, point: {
                     show: false,
                     color: this.color,
                     pixelSize: 4,
@@ -160,12 +168,16 @@ export class DrawLineString {
             scene.screenSpaceCameraController.enableZoom = true;
             scene.screenSpaceCameraController.enableTilt = true;
             scene.screenSpaceCameraController.enableLook = true;
-        }
-        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-        handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        handler.setInputAction(mouseRightClickHandler, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-        handler.setInputAction(mouseRightClickHandler, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    }
+        };
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseMoveHandler,
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction(mouseRightClickHandler,
+            Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        handler.setInputAction(mouseRightClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    };
 
     /**
      * Disables the drawing tool and clears the entities.
@@ -181,24 +193,25 @@ export class DrawLineString {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-            handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+            handler.removeInputAction(
+                Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
         }
-    }
+    };
 
     clearEntities = () => {
         this.viewer.entities.remove(this.polylineEntity);
         this.pointEntities.forEach(entity => {
             this.viewer.entities.remove(entity);
         });
-        this.polylineEntity = undefined
+        this.polylineEntity = undefined;
         this.pointEntities = [];
         this.cartesians = [];
         this.endCartesian = undefined;
-    }
+    };
 
     clearCartesians = () => {
         this.cartesians = [];
         this.endCartesian = undefined;
-    }
+    };
 }
 

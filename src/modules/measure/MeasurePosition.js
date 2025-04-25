@@ -47,10 +47,14 @@ export class MeasurePosition {
         const mouseLeftClickHandler = (event) => {
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
                 this.startCartographic = cartographic;
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
                 this.startHeight = height;
                 this.endHeight = height;
             }
@@ -58,21 +62,28 @@ export class MeasurePosition {
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
+                    scene.globe.ellipsoid,
                 );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
                 this.startCartographic = cartographic;
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
                 this.startHeight = height;
                 this.endHeight = height;
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
             this.startCartesian = pickedEllipsoidPosition;
             this.endCartesian = pickedEllipsoidPosition;
 
-            const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-            const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-            const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
+            const cartographic = Cesium.Cartographic.fromCartesian(
+                pickedEllipsoidPosition);
+            const longitude = Cesium.Math.toDegrees(cartographic.longitude).
+                toFixed(6);
+            const latitude = Cesium.Math.toDegrees(cartographic.latitude).
+                toFixed(6);
 
             this.startEntity = viewer.entities.add({
                 position: pickedEllipsoidPosition,
@@ -91,13 +102,16 @@ export class MeasurePosition {
                     pixelOffset: new Cesium.Cartesian2(0, -30),
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
                     text: new Cesium.CallbackProperty(() => {
-                        const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
+                        const height = viewer.scene.globe.getHeight(
+                            Cesium.Cartographic.fromRadians(
+                                cartographic.longitude,
+                                cartographic.latitude, 0));
                         let text = this.textFormat;
                         text = text.replace("{lon}", longitude);
                         text = text.replace("{lat}", latitude);
                         text = text.replace("{height}", height.toFixed(3));
                         return text;
-                    }, false)
+                    }, false),
                 },
             });
 
@@ -106,26 +120,34 @@ export class MeasurePosition {
 
         // Mouse Move
         const mouseMoveHandler = (moveEvent) => {
-            /*if (!this.status) {
+            /* if (!this.status) {
                 return;
             }*/
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(moveEvent.endPosition);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    moveEvent.endPosition);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     moveEvent.endPosition,
-                    scene.globe.ellipsoid
+                    scene.globe.ellipsoid,
                 );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
-            const convertCartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-            pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(convertCartographic.longitude, convertCartographic.latitude, convertCartographic.height);
-            this.endCartesian = pickedEllipsoidPosition
+            const convertCartographic = Cesium.Cartographic.fromCartesian(
+                pickedEllipsoidPosition);
+            pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                convertCartographic.longitude, convertCartographic.latitude,
+                convertCartographic.height);
+            this.endCartesian = pickedEllipsoidPosition;
             this.endHeight = convertCartographic.height;
 
             if (!this.endEntity) {
@@ -148,25 +170,32 @@ export class MeasurePosition {
                         pixelOffset: new Cesium.Cartesian2(0, -30),
                         disableDepthTestDistance: Number.POSITIVE_INFINITY,
                         text: new Cesium.CallbackProperty(() => {
-                            const cartographic = Cesium.Cartographic.fromCartesian(this.endCartesian);
-                            const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-                            const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
+                            const cartographic = Cesium.Cartographic.fromCartesian(
+                                this.endCartesian);
+                            const longitude = Cesium.Math.toDegrees(
+                                cartographic.longitude).
+                                toFixed(6);
+                            const latitude = Cesium.Math.toDegrees(
+                                cartographic.latitude).
+                                toFixed(6);
                             const height = this.endHeight;
                             let text = this.textFormat;
                             text = text.replace("{lon}", longitude);
                             text = text.replace("{lat}", latitude);
                             text = text.replace("{height}", height.toFixed(3));
                             return text;
-                            //return `${this.endHeight.toFixed(3)}m`;
-                        }, false)
+                            // return `${this.endHeight.toFixed(3)}m`;
+                        }, false),
                     },
                 });
                 this.entities.push(this.endEntity);
             }
-        }
-        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-        handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
+        };
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseMoveHandler,
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    };
 
     /**
      * Disables the position measurement tool.
@@ -175,14 +204,14 @@ export class MeasurePosition {
      */
     off = () => {
         this.scene.canvas.style.cursor = "default";
-        //this.status = false;
+        // this.status = false;
         this.clearEntities();
         const handler = this.handler;
         if (handler) {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         }
-    }
+    };
 
     clearEntities = () => {
         this.viewer.entities.remove(this.startEntity);
@@ -192,6 +221,6 @@ export class MeasurePosition {
         });
         this.startEntity = undefined;
         this.endEntity = undefined;
-    }
+    };
 }
 

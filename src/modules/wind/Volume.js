@@ -23,7 +23,9 @@ export class Volume {
         Object.assign(this, options);
     }
 
-    getPosition(normalizedXYZ) { return normalizedXYZ; }
+    getPosition(normalizedXYZ) {
+        return normalizedXYZ;
+    }
 
     /**
      * vertex mixing
@@ -36,7 +38,7 @@ export class Volume {
             a[0] + (b[0] - a[0]) * t,
             a[1] + (b[1] - a[1]) * t,
             a[2] + (b[2] - a[2]) * t,
-        ]
+        ];
     }
 }
 

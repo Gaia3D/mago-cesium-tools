@@ -1,7 +1,11 @@
-const customVertexShaders = import.meta.glob('/src/customShaders/**/*.vert', { query: '?raw', import: 'default' });
-const customFragmentShaders = import.meta.glob('/src/customShaders/**/*.frag', { query: '?raw', import: 'default' });
-const vertexShaders =  import.meta.glob('/src/shaders/**/*.vert', { query: '?raw', import: 'default' });
-const fragmentShaders = import.meta.glob('/src/shaders/**/*.frag', { query: '?raw', import: 'default' });
+const customVertexShaders = import.meta.glob("/src/customShaders/**/*.vert",
+    {query: "?raw", import: "default"});
+const customFragmentShaders = import.meta.glob("/src/customShaders/**/*.frag",
+    {query: "?raw", import: "default"});
+const vertexShaders = import.meta.glob("/src/shaders/**/*.vert",
+    {query: "?raw", import: "default"});
+const fragmentShaders = import.meta.glob("/src/shaders/**/*.frag",
+    {query: "?raw", import: "default"});
 
 /**
  * ShaderLoader class
@@ -31,7 +35,7 @@ export class ShaderLoader {
             return await this.shaderMap.get(url);
         }
 
-        let fullUrl = this.parentPath + "/" + url;
+        const fullUrl = this.parentPath + "/" + url;
         let shaderImport;
         if (customVertexShaders[fullUrl]) {
             shaderImport = await customVertexShaders[fullUrl]();
@@ -68,7 +72,7 @@ export class ShaderLoader {
      * @param name
      * @param value float value
      */
-     addFloatUniform(gl, program, name, value){
+    addFloatUniform(gl, program, name, value) {
         const location = gl.getUniformLocation(program, name);
         gl.uniform1f(location, value);
     }

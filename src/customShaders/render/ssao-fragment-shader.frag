@@ -113,7 +113,7 @@ float kernels[96] = float[96](
 
 in vec2 v_textureCoordinates;
 
-float randomFloat(vec2 co){
+float randomFloat(vec2 co) {
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
 }
 vec4 getAlbedo(vec2 screenPos) {
@@ -132,7 +132,7 @@ vec4 getNormal(vec2 screenPos) {
 vec4 getDepth(vec2 screenPos) {
     return texture(magoDepthTextureForSsao, screenPos);
 }
-vec4 getPositionEC(vec2 screenPos){
+vec4 getPositionEC(vec2 screenPos) {
     vec4 rawDepthColor = getDepth(screenPos);
     float depth = czm_unpackDepth(rawDepthColor);
     vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);
@@ -227,8 +227,8 @@ vec4 getSSAO(in vec2 screenPos) {
 
     int loopSize = iKernelSize * 3;
     mat3 modelViewRotation = mat3(czm_modelViewRelativeToEye);
-    for (int i = 0; i < loopSize; i+=3) {
-        vec3 kernel = rvec * vec3(kernels[i], kernels[i+1], kernels[i+2]);
+    for (int i = 0; i < loopSize; i += 3) {
+        vec3 kernel = rvec * vec3(kernels[i], kernels[i + 1], kernels[i + 2]);
         float radiusA = 0.1 * uRadius;
         float radiusB = 0.25 * uRadius;
         float radiusC = 0.5 * uRadius;

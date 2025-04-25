@@ -24,6 +24,7 @@
     height: 100%;
     width: 100%;
 }
+
 .cesium-viewer-cesiumWidgetContainer {
     height: 100%;
     width: 100%;
@@ -100,6 +101,7 @@ span.bufferingBar {
     height: 25px;
     cursor: pointer;
 }
+
 #timeSliderWrap button:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }

@@ -50,16 +50,21 @@ export class DrawPoint {
 
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
+                    scene.globe.ellipsoid,
                 );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
             this.startEntity = viewer.entities.add({
                 position: pickedEllipsoidPosition,
@@ -75,23 +80,28 @@ export class DrawPoint {
 
         // Mouse Move
         const mouseMoveHandler = (moveEvent) => {
-            /*if (!this.status) {
+            /* if (!this.status) {
                 return;
             }*/
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(moveEvent.endPosition);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    moveEvent.endPosition);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     moveEvent.endPosition,
-                    scene.globe.ellipsoid
+                    scene.globe.ellipsoid,
                 );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
-            this.endCartesian = pickedEllipsoidPosition
+            this.endCartesian = pickedEllipsoidPosition;
             if (!this.endEntity) {
                 this.endEntity = viewer.entities.add({
                     position: new Cesium.CallbackProperty(() => {
@@ -105,10 +115,12 @@ export class DrawPoint {
                 });
                 this.entities.push(this.endEntity);
             }
-        }
-        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-        handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
+        };
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseMoveHandler,
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    };
 
     /**
      * Disables the point drawing tool.
@@ -117,14 +129,14 @@ export class DrawPoint {
      */
     off = () => {
         this.scene.canvas.style.cursor = "default";
-        //this.status = false;
+        // this.status = false;
         this.clearEntities();
         const handler = this.handler;
         if (handler) {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         }
-    }
+    };
 
     clearEntities = () => {
         this.viewer.entities.remove(this.startEntity);
@@ -134,6 +146,6 @@ export class DrawPoint {
         });
         this.startEntity = undefined;
         this.endEntity = undefined;
-    }
+    };
 }
 

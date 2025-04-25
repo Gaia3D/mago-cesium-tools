@@ -92,7 +92,7 @@ export class MagoFluidOptions {
          * Rain amount
          * @type {number}
          */
-        this.rainAmount = 1; // percent
+        this.rainAmount = 1;
 
         /**
          * Rain max precipitation

@@ -67,29 +67,32 @@ export class DrawWall {
             this.pickedObject = scene.pick(event.position);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
-                );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                    scene.globe.ellipsoid);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
             this.cartesians.push(pickedEllipsoidPosition);
             this.endCartesian = pickedEllipsoidPosition;
 
             const pointEntity = viewer.entities.add({
-                position: pickedEllipsoidPosition,
-                point: {
+                position: pickedEllipsoidPosition, point: {
                     show: false,
                     color: this.color,
                     pixelSize: 4,
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                }
+                },
             });
             this.pointEntities.push(pointEntity);
 
@@ -99,38 +102,41 @@ export class DrawWall {
                         positions: new Cesium.CallbackProperty(() => {
                             const cartesianPositions = this.cartesians.slice();
                             cartesianPositions.push(this.endCartesian);
-                            //cartesianPositions.push(this.cartesians[0]);
+                            // cartesianPositions.push(this.cartesians[0]);
                             return cartesianPositions;
                         }, false),
                         width: 3,
                         depthFailMaterial: this.color,
-                        material : this.color.withAlpha(0.8),
-                        clampToGround : this.clampToGround
+                        material: this.color.withAlpha(0.8),
+                        clampToGround: this.clampToGround,
                     },
                 });
             }
-        }
+        };
 
         const mouseMoveHandler = (moveEvent) => {
             if (!this.status) {
                 return;
             }
-            //pickedObject = scene.pick(moveEvent.endPosition);
+            // pickedObject = scene.pick(moveEvent.endPosition);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(moveEvent.endPosition);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    moveEvent.endPosition);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
-                    moveEvent.endPosition,
-                    scene.globe.ellipsoid
-                );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                    moveEvent.endPosition, scene.globe.ellipsoid);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
-            this.endCartesian = pickedEllipsoidPosition
-        }
+            this.endCartesian = pickedEllipsoidPosition;
+        };
 
         const mouseRightClickHandler = (event) => {
             if (!this.status) {
@@ -142,16 +148,20 @@ export class DrawWall {
             this.pickedObject = scene.pick(event.position);
             let pickedEllipsoidPosition;
             if (scene.pickPositionSupported) {
-                pickedEllipsoidPosition = viewer.scene.pickPosition(event.position);
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
             }
             if (!pickedEllipsoidPosition) {
                 pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
                     event.position,
-                    scene.globe.ellipsoid
-                );
-                const cartographic = Cesium.Cartographic.fromCartesian(pickedEllipsoidPosition);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                    scene.globe.ellipsoid);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
             }
 
             this.cartesians.push(pickedEllipsoidPosition);
@@ -159,13 +169,12 @@ export class DrawWall {
             const area = this.calculateArea(this.cartesians);
 
             const pointEntity = viewer.entities.add({
-                position: pickedEllipsoidPosition,
-                point: {
+                position: pickedEllipsoidPosition, point: {
                     show: false,
                     color: this.color,
                     pixelSize: 4,
                     disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                }
+                },
             });
             this.pointEntities.push(pointEntity);
 
@@ -181,10 +190,18 @@ export class DrawWall {
                     const distance = Cesium.Cartesian3.distance(start, end);
                     const numPoints = Math.floor(distance / this.gap) + 1;
                     for (let j = 0; j <= numPoints; j++) {
-                        let position = Cesium.Cartesian3.lerp(start, end, j / numPoints, new Cesium.Cartesian3());
-                        const cartographic = Cesium.Cartographic.fromCartesian(position);
-                        const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                        position = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+                        let position = Cesium.Cartesian3.lerp(start, end,
+                            j / numPoints,
+                            new Cesium.Cartesian3());
+                        const cartographic = Cesium.Cartographic.fromCartesian(
+                            position);
+                        const height = viewer.scene.globe.getHeight(
+                            Cesium.Cartographic.fromRadians(
+                                cartographic.longitude,
+                                cartographic.latitude, 0));
+                        position = Cesium.Cartesian3.fromRadians(
+                            cartographic.longitude,
+                            cartographic.latitude, height);
                         separatedPositions.push(position);
                     }
                 }
@@ -192,33 +209,39 @@ export class DrawWall {
             }
 
             const wallPositions = cartesianPositions.map(cartesian => {
-                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const height = viewer.scene.globe.getHeight(Cesium.Cartographic.fromRadians(cartographic.longitude, cartographic.latitude, 0));
-                return Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height + this.wallHeight);
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    cartesian);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                return Cesium.Cartesian3.fromRadians(cartographic.longitude,
+                    cartographic.latitude, height + this.wallHeight);
             });
 
             const wallPolylinePositions = wallPositions.slice();
-            wallPolylinePositions.push(cartesianPositions[cartesianPositions.length - 1]);
+            wallPolylinePositions.push(
+                cartesianPositions[cartesianPositions.length - 1]);
 
             const wallPolylineEntity = viewer.entities.add({
                 polyline: {
                     positions: wallPolylinePositions,
                     width: 3,
                     depthFailMaterial: this.color,
-                    material : this.color.withAlpha(0.8),
+                    material: this.color.withAlpha(0.8),
                 },
             });
             this.polygonEntities.push(wallPolylineEntity);
 
             let floorPolylinePositions = [];
             floorPolylinePositions.push(wallPolylinePositions[0]);
-            floorPolylinePositions = floorPolylinePositions.concat(cartesianPositions.slice());
+            floorPolylinePositions = floorPolylinePositions.concat(
+                cartesianPositions.slice());
             const floorPolylineEntity = viewer.entities.add({
                 polyline: {
                     positions: floorPolylinePositions.slice(),
                     width: 3,
                     depthFailMaterial: this.color,
-                    material : this.color.withAlpha(0.8),
+                    material: this.color.withAlpha(0.8),
                 },
             });
             this.polygonEntities.push(floorPolylineEntity);
@@ -226,23 +249,23 @@ export class DrawWall {
 
             for (let i = 0; i < wallPositions.length - 1; i++) {
                 const floorA = cartesianPositions[i];
-                const floorB = cartesianPositions[i+1];
+                const floorB = cartesianPositions[i + 1];
                 const wallA = wallPositions[i];
-                const wallB = wallPositions[i+1];
+                const wallB = wallPositions[i + 1];
                 const resultPositions = [floorA, floorB, wallB, wallA];
                 resultPositions.push(floorA);
-                const wallHierarchy = new Cesium.PolygonHierarchy(resultPositions);
+                const wallHierarchy = new Cesium.PolygonHierarchy(
+                    resultPositions);
 
                 const wallEntity = viewer.entities.add({
                     polygon: {
                         hierarchy: wallHierarchy,
                         material: this.color.withAlpha(0.5),
-                        //perPositionHeight: !this.clampToGround,
-                        perPositionHeight : true,
-                    }
+                        perPositionHeight: true,
+                    },
                 });
                 this.polygonEntities.push(wallEntity);
-                //break;
+                // break;
             }
 
             scene.screenSpaceCameraController.enableRotate = true;
@@ -250,12 +273,16 @@ export class DrawWall {
             scene.screenSpaceCameraController.enableZoom = true;
             scene.screenSpaceCameraController.enableTilt = true;
             scene.screenSpaceCameraController.enableLook = true;
-        }
-        handler.setInputAction(mouseLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-        handler.setInputAction(mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        handler.setInputAction(mouseRightClickHandler, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-        handler.setInputAction(mouseRightClickHandler, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    }
+        };
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseMoveHandler,
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction(mouseRightClickHandler,
+            Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        handler.setInputAction(mouseRightClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    };
 
     /**
      * Disables the polygon drawing tool. and clears the entities.
@@ -271,52 +298,56 @@ export class DrawWall {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-            handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+            handler.removeInputAction(
+                Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
         }
-    }
+    };
 
     clearEntities = () => {
         this.viewer.entities.remove(this.polylineEntity);
-        //this.viewer.entities.remove(this.polygonEntity);
+        // this.viewer.entities.remove(this.polygonEntity);
         this.polygonEntities.forEach(entity => {
             this.viewer.entities.remove(entity);
         });
         this.pointEntities.forEach(entity => {
             this.viewer.entities.remove(entity);
         });
-        this.polylineEntity = undefined
+        this.polylineEntity = undefined;
         this.polygonEntities = [];
         this.pointEntities = [];
         this.cartesians = [];
         this.endCartesian = undefined;
-    }
+    };
 
     clearCartesians = () => {
         this.cartesians = [];
         this.endCartesian = undefined;
-    }
+    };
 
     calculateArea = (cartesians) => {
         const positions = cartesians;
-        const indices  = Cesium.PolygonPipeline.triangulate(positions, []);
+        const indices = Cesium.PolygonPipeline.triangulate(positions, []);
         let area = 0;
         for (let i = 0; i < indices.length; i += 3) {
             const vector1 = positions[indices[i]];
-            const vector2 = positions[indices[i+1]];
-            const vector3 = positions[indices[i+2]];
-            const vectorC = Cesium.Cartesian3.subtract(vector2, vector1, new Cesium.Cartesian3());
-            const vectorD = Cesium.Cartesian3.subtract(vector3, vector1, new Cesium.Cartesian3());
-            const areaVector = Cesium.Cartesian3.cross(vectorC, vectorD, new Cesium.Cartesian3());
+            const vector2 = positions[indices[i + 1]];
+            const vector3 = positions[indices[i + 2]];
+            const vectorC = Cesium.Cartesian3.subtract(vector2, vector1,
+                new Cesium.Cartesian3());
+            const vectorD = Cesium.Cartesian3.subtract(vector3, vector1,
+                new Cesium.Cartesian3());
+            const areaVector = Cesium.Cartesian3.cross(vectorC, vectorD,
+                new Cesium.Cartesian3());
             area += Cesium.Cartesian3.magnitude(areaVector) / 2.0;
         }
 
         if (area > 100000) {
             area = area / 1000;
-            return area.toFixed(3) + ' ㎢';
+            return area.toFixed(3) + " ㎢";
         } else {
-            return area.toFixed(3) + ' ㎡';
+            return area.toFixed(3) + " ㎡";
         }
-    }
+    };
 
 }
 

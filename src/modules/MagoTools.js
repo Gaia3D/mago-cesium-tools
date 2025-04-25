@@ -1,5 +1,5 @@
-import { Viewer, Entity, Cartesian3, Color } from "cesium";
-import * as Cesium from 'cesium'
+import * as Cesium from "cesium";
+import {Cartesian3, Color, Entity, Viewer} from "cesium";
 import tree from "../assets/lowpoly-tree.glb";
 
 /**
@@ -47,8 +47,8 @@ export class MagoTools {
             destination: Cartesian3.fromDegrees(lon, lat, height),
             orientation: {
                 heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-90.0)
-            }
+                pitch: Cesium.Math.toRadians(-90.0),
+            },
         });
     }
 
@@ -67,10 +67,10 @@ export class MagoTools {
             destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
             orientation: {
                 heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-90.0)
+                pitch: Cesium.Math.toRadians(-90.0),
             },
             duration: duration,
-        })
+        });
     }
 
     /**
@@ -89,13 +89,13 @@ export class MagoTools {
             point: {
                 pixelSize: 3,
                 color: Color.fromCssColorString(cssColor),
-                //distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0, 1000000.0)
             },
             billboard: {
                 image: "/src/assets/img.png",
                 width: 16,
                 height: 16,
-                distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0, 1000.0)
+                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0,
+                    1000.0),
             },
         });
 
@@ -115,8 +115,8 @@ export class MagoTools {
      * magoTools.addPoint(126.978388, 37.566610, "#ff0000")
      */
     addRandomPoint(cssColor = "#ff0000", entitiesCollection = null) {
-        let randomX = (Math.random() * 360) - 180;
-        let randomY = (Math.random() * 180) - 90;
+        const randomX = (Math.random() * 360) - 180;
+        const randomY = (Math.random() * 180) - 90;
         this.addPoint(randomX, randomY, cssColor, entitiesCollection);
     }
 
@@ -143,7 +143,8 @@ export class MagoTools {
      * magoTools.changeGlobeColor("#ff0000")
      */
     changeGlobeColor(cssColor) {
-        this.viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString(cssColor);
+        this.viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString(
+            cssColor);
     }
 
     /**
@@ -155,15 +156,14 @@ export class MagoTools {
     createGridImageryProvider(cell = 8) {
         const grid = new Cesium.GridImageryProvider({
             cells: cell,
-            color : Cesium.Color.WHITE.withAlpha(0.25),
-            glowColor : Cesium.Color.BLACK.withAlpha(0.0),
-            glowWidth : 4,
+            color: Cesium.Color.WHITE.withAlpha(0.25),
+            glowColor: Cesium.Color.BLACK.withAlpha(0.0),
+            glowWidth: 4,
             backgroundColor: Cesium.Color.BLACK.withAlpha(0.05),
-            maximumLevel: 5
-        })
+            maximumLevel: 5,
+        });
         const layers = this.viewer.scene.imageryLayers;
         layers.addImageryProvider(grid);
-        //layers.raiseToTop(grid);
     }
 
     /**
@@ -175,25 +175,25 @@ export class MagoTools {
      * magoTools.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
      */
     createVworldImageryLayerWithoutToken(type, extension) {
-        const minLevel = 5
-        const maxLevel = 19
+        const minLevel = 5;
+        const maxLevel = 19;
         const options = {
             url: `https://xdworld.vworld.kr/2d/${type}/service/{TileMatrix}/{TileCol}/{TileRow}.${extension}`,
-            layer: 'Base',
-            style: 'default',
-            //minimumLevel: 1,
+            layer: "Base",
+            style: "default",
             maximumLevel: maxLevel,
-            tileMatrixSetID: 'EPSG:3857',
-            credit: new Cesium.Credit('Vworld Korea'),
-        }
-        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
+            tileMatrixSetID: "EPSG:3857",
+            credit: new Cesium.Credit("Vworld Korea"),
+        };
+        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+            options);
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
             show: true,
-            minimumTerrainLevel: minLevel
+            minimumTerrainLevel: minLevel,
         });
 
-        const layers = this.viewer.scene.imageryLayers
-        layers.add(imageryLayer)
+        const layers = this.viewer.scene.imageryLayers;
+        layers.add(imageryLayer);
         return imageryLayer;
     }
 
@@ -208,40 +208,44 @@ export class MagoTools {
      * magoTools.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
      */
     createVworldImageryLayer(type, hybrid, extension, vworldKey) {
-        const minLevel = 5
-        const maxLevel = 19
+        const minLevel = 5;
+        const maxLevel = 19;
 
-        const protocol = location.protocol === 'https:' ? 'https' : 'http'
+        const protocol = location.protocol === "https:" ? "https" : "http";
         const options = {
             url: `${protocol}://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/${type}/{TileMatrix}/{TileRow}/{TileCol}.${extension}`,
-            layer: 'Base',
-            style: 'default',
+            layer: "Base",
+            style: "default",
             maximumLevel: maxLevel,
-            tileMatrixSetID: 'default028mm'
-        }
-        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
+            tileMatrixSetID: "default028mm",
+        };
+        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+            options);
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
             show: true,
-            minimumTerrainLevel: minLevel
+            minimumTerrainLevel: minLevel,
         });
 
-        const layers = this.viewer.scene.imageryLayers
-        layers.add(imageryLayer)
+        const layers = this.viewer.scene.imageryLayers;
+        layers.add(imageryLayer);
 
         if (hybrid) {
             const hybridOptions = {
                 url: `${protocol}://api.vworld.kr/req/wmts/1.0.0/${vworldKey}/Hybrid/{TileMatrix}/{TileRow}/{TileCol}.png`,
-                layer: 'Hybrid',
-                style: 'default',
+                layer: "Hybrid",
+                style: "default",
                 maximumLevel: maxLevel,
-                tileMatrixSetID: 'default028mm'
-            }
-            const hybridImageryProvider = new Cesium.WebMapTileServiceImageryProvider(hybridOptions)
-            const hybridImageryLayer = new Cesium.ImageryLayer(hybridImageryProvider, {
-                show: true,
-                minimumTerrainLevel: minLevel
-            });
-            layers.add(hybridImageryLayer)
+                tileMatrixSetID: "default028mm",
+            };
+            const hybridImageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+                hybridOptions);
+            const hybridImageryLayer = new Cesium.ImageryLayer(
+                hybridImageryProvider,
+                {
+                    show: true,
+                    minimumTerrainLevel: minLevel,
+                });
+            layers.add(hybridImageryLayer);
         }
         return imageryLayer;
     }
@@ -255,11 +259,12 @@ export class MagoTools {
      */
     async changeTerrain(url) {
         try {
-            this.viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(url, {
-                requestVertexNormals: true
-            });
+            this.viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+                url, {
+                    requestVertexNormals: true,
+                });
         } catch (error) {
-            console.warn('Failed to load terrain provider:', error);
+            console.warn("Failed to load terrain provider:", error);
             this.viewer.terrainProvider = await new Cesium.EllipsoidTerrainProvider();
         }
     }
@@ -274,12 +279,14 @@ export class MagoTools {
      * createModel('/assets/lowpoly-tree.glb', 126.978388, 37.566610)
      */
     createModel(url = tree, lon, lat) {
-        const model = this.viewer.entities.add({
-            name: 'Model', position: Cesium.Cartesian3.fromDegrees(lon, lat, 0), model: {
+        return this.viewer.entities.add({
+            name: "Model",
+            position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
+            model: {
                 uri: url,
                 scale: 1.0,
                 heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-            }
+            },
         });
     }
 

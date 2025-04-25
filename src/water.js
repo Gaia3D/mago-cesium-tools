@@ -1,16 +1,13 @@
-import './css/css-init.css'
-import './css/custom.css'
+import "./css/css-init.css";
+import "./css/custom.css";
+import * as Cesium from "cesium";
 import {Viewer} from "cesium";
 import {MagoTools} from "./modules/MagoTools.js";
 import {MagoFluid} from "./modules/fluid/MagoFluid.js";
-import * as Cesium from "cesium";
-import {MagoEdge} from "./modules/render/MagoEdge.js";
-import {MagoSSAO} from "./modules/render/MagoSSAO.js";
-import {MagoWind} from "@/modules/wind/MagoWind.js";
 import JSZip from "jszip";
-import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
+import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
-document.querySelector('#app').innerHTML = `
+document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
     <h1>Mago Cesium Tools</h1>
@@ -146,10 +143,9 @@ document.querySelector('#app').innerHTML = `
     <span class="line"></span>
     <p id="totalWaterAmount">0</p>
  </div>
-`
+`;
 
-import "@cesium/engine/Source/Widget/CesiumWidget.css";
-window.CESIUM_BASE_URL = '/node_modules/cesium/Build/Cesium'
+window.CESIUM_BASE_URL = "/node_modules/cesium/Build/Cesium";
 
 const viewer = new Viewer("cesiumContainer", {
     geocoder: false,
@@ -162,34 +158,36 @@ const viewer = new Viewer("cesiumContainer", {
     navigationHelpButton: false,
     selectionIndicator: false,
     fullscreenButton: false,
-    baseLayer : false,
+    baseLayer: false,
     shouldAnimate: true,
 });
 viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.postProcessStages.fxaa.enabled = true;
 viewer.scene.globe.enableLighting = false;
-viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+viewer.screenSpaceEventHandler.removeInputAction(
+    Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
 const [lon, lat] = [126.968905, 37.447571];
 const options = {
-    lon : lon,
-    lat : lat,
-    gridSize : 512,
-    cellSize : 1.0,
+    lon: lon,
+    lat: lat,
+    gridSize: 512,
+    cellSize: 1.0,
 };
 
 const timeInfo = {
     start: 0,
     end: 100,
     current: 0,
-}
+};
 
 const fluid = new MagoFluid(viewer);
 
-const init = async() => {
+const init = async () => {
     const magoViewer = new MagoTools(viewer);
-    await magoViewer.createVworldImageryLayerWithoutToken('Satellite', 'jpeg');
-    await magoViewer.changeTerrain('http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/');
+    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.changeTerrain(
+        "http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/");
 
     magoViewer.initPosition(options.lon, options.lat, 1000.0);
 
@@ -200,109 +198,125 @@ const init = async() => {
     fluid.start();
     fluid.addRandomSourcePosition();
 
-    document.querySelector('#timeSliderInput').max = end;
-}
+    document.querySelector("#timeSliderInput").max = end;
+};
 
 const setDefaultValue = () => {
-    document.querySelector('#water').value = fluid.options.waterSourceAmount;
-    document.querySelector('#waterValue').value = fluid.options.waterSourceAmount;
+    document.querySelector("#water").value = fluid.options.waterSourceAmount;
+    document.querySelector(
+        "#waterValue").value = fluid.options.waterSourceAmount;
 
-    document.querySelector('#waterspout').value = fluid.options.waterMinusSourceAmount;
-    document.querySelector('#waterspoutValue').value = fluid.options.waterMinusSourceAmount;
+    document.querySelector(
+        "#waterspout").value = fluid.options.waterMinusSourceAmount;
+    document.querySelector(
+        "#waterspoutValue").value = fluid.options.waterMinusSourceAmount;
 
-    document.querySelector('#rainfall').value = fluid.options.rainMaxPrecipitation;
-    document.querySelector('#rainfallValue').value = fluid.options.rainMaxPrecipitation;
+    document.querySelector(
+        "#rainfall").value = fluid.options.rainMaxPrecipitation;
+    document.querySelector(
+        "#rainfallValue").value = fluid.options.rainMaxPrecipitation;
 
-    document.querySelector('#gridSize').value = fluid.options.gridSize;
-    document.querySelector('#cellSize').value = fluid.options.cellSize;
+    document.querySelector("#gridSize").value = fluid.options.gridSize;
+    document.querySelector("#cellSize").value = fluid.options.cellSize;
 
-    document.querySelector('#color').value = fluid.options.waterColor.toCssHexString();
+    document.querySelector(
+        "#color").value = fluid.options.waterColor.toCssHexString();
 
-    document.querySelector('#intensity').value = fluid.options.colorIntensity;
-    document.querySelector('#intensityValue').value = fluid.options.colorIntensity;
+    document.querySelector("#intensity").value = fluid.options.colorIntensity;
+    document.querySelector(
+        "#intensityValue").value = fluid.options.colorIntensity;
 
-    document.querySelector('#brightness').value = fluid.options.waterBrightness;
-    document.querySelector('#brightnessValue').value = fluid.options.waterBrightness;
+    document.querySelector("#brightness").value = fluid.options.waterBrightness;
+    document.querySelector(
+        "#brightnessValue").value = fluid.options.waterBrightness;
 
-    document.querySelector('#maxOpacity').value = fluid.options.maxOpacity;
-    document.querySelector('#maxOpacityValue').value = fluid.options.maxOpacity;
+    document.querySelector("#maxOpacity").value = fluid.options.maxOpacity;
+    document.querySelector("#maxOpacityValue").value = fluid.options.maxOpacity;
 
-    document.querySelector('#evaporation').value = fluid.options.evaporationRate;
-    document.querySelector('#evaporationValue').value = fluid.options.evaporationRate;
+    document.querySelector(
+        "#evaporation").value = fluid.options.evaporationRate;
+    document.querySelector(
+        "#evaporationValue").value = fluid.options.evaporationRate;
 
-    document.querySelector('#interval').value = 1000 / fluid.options.interval;
-    document.querySelector('#intervalValue').value = 1000 / fluid.options.interval;
+    document.querySelector("#interval").value = 1000 / fluid.options.interval;
+    document.querySelector("#intervalValue").value = 1000 /
+        fluid.options.interval;
 
-    document.querySelector('#timeStep').value = fluid.options.timeStep;
-    document.querySelector('#timeStepValue').value = fluid.options.timeStep;
+    document.querySelector("#timeStep").value = fluid.options.timeStep;
+    document.querySelector("#timeStepValue").value = fluid.options.timeStep;
 
-    document.querySelector('#cushionFactor').value = fluid.options.cushionFactor;
-    document.querySelector('#cushionFactorValue').value = fluid.options.cushionFactor;
+    document.querySelector(
+        "#cushionFactor").value = fluid.options.cushionFactor;
+    document.querySelector(
+        "#cushionFactorValue").value = fluid.options.cushionFactor;
 
-    document.querySelector('#waterDensity').value = fluid.options.waterDensity;
-    document.querySelector('#waterDensityValue').value = fluid.options.waterDensity;
-}
+    document.querySelector("#waterDensity").value = fluid.options.waterDensity;
+    document.querySelector(
+        "#waterDensityValue").value = fluid.options.waterDensity;
+};
 
 // event listeners
-document.querySelector('#start').addEventListener('click', () => {
+document.querySelector("#start").addEventListener("click", () => {
     fluid.start();
 });
 
-document.querySelector('#stop').addEventListener('click', () => {
+document.querySelector("#stop").addEventListener("click", () => {
     fluid.stop();
 });
 
-document.querySelector('#clearWater').addEventListener('click', async () => {
+document.querySelector("#clearWater").addEventListener("click", async () => {
     await fluid.initializeWater();
 });
 
-document.querySelector('#reload').addEventListener('click', async () => {
+document.querySelector("#reload").addEventListener("click", async () => {
     await fluid.init(viewer);
     clearWaterSourceEntities();
     await fluid.initBase(options);
     fluid.start();
 });
 
-document.querySelector('#gridSize').addEventListener('change', async (event) => {
-    const gridSize = event.target.value;
-    options.gridSize = Number(gridSize);
-    refreshRectangle();
-});
+document.querySelector("#gridSize").
+    addEventListener("change", async (event) => {
+        const gridSize = event.target.value;
+        options.gridSize = Number(gridSize);
+        refreshRectangle();
+    });
 
-document.querySelector('#cellSize').addEventListener('change', async (event) => {
-    const cellSize = event.target.value;
-    options.cellSize = Number(cellSize);
-    refreshRectangle();
-});
+document.querySelector("#cellSize").
+    addEventListener("change", async (event) => {
+        const cellSize = event.target.value;
+        options.cellSize = Number(cellSize);
+        refreshRectangle();
+    });
 
 let isSave = false;
 let zip = undefined;
 let savingCount = 0;
-let savingInterval = 1000;
+const savingInterval = 1000;
 let savingInfo = {
-    count : 0,
-    interval : savingInterval,
-}
+    count: 0,
+    interval: savingInterval,
+};
 let saveInterval = undefined;
-document.querySelector('#saveImage').addEventListener('click', () => {
+document.querySelector("#saveImage").addEventListener("click", () => {
     if (isSave) {
-        console.log("save...")
+        console.log("save...");
         clearInterval(saveInterval);
         saveInterval = undefined;
 
         savingInfo = {
-            count : savingCount - 1,
-            interval : savingInterval,
-            gridSize : fluid.options.gridSize,
-            cellSize : fluid.options.cellSize,
-            lon : options.lon,
-            lat : options.lat,
-        }
+            count: savingCount - 1,
+            interval: savingInterval,
+            gridSize: fluid.options.gridSize,
+            cellSize: fluid.options.cellSize,
+            lon: options.lon,
+            lat: options.lat,
+        };
 
         const infoJson = JSON.stringify(savingInfo);
         zip.file("info.json", infoJson);
 
-        zip.generateAsync({type:"blob"}).then(function(content) {
+        zip.generateAsync({type: "blob"}).then(function(content) {
             const url = URL.createObjectURL(content);
             const a = document.createElement("a");
             a.href = url;
@@ -318,96 +332,95 @@ document.querySelector('#saveImage').addEventListener('click', () => {
         zip = new JSZip();
         savingCount = 0;
 
-        fluid.saveTerrainMapImage(zip, `terrain.bin`);
+        fluid.saveTerrainMapImage(zip, "terrain.bin");
 
         saveInterval = setInterval(() => {
             console.log(`add... : ${savingCount}`);
             fluid.saveWaterMapImage(zip, `${savingCount}.bin`);
             savingCount++;
-        }, savingInterval)
+        }, savingInterval);
     }
     isSave = !isSave;
 });
 
-document.querySelector('#wireframe').addEventListener('click', () => {
+document.querySelector("#wireframe").addEventListener("click", () => {
     if (fluid.gridPrimitive) {
         fluid.gridPrimitive.debugWireframe = !fluid.gridPrimitive.debugWireframe;
     }
 });
 
-document.querySelector('#heightLegend').addEventListener('click', () => {
+document.querySelector("#heightLegend").addEventListener("click", () => {
     fluid.options.heightPalette = !fluid.options.heightPalette;
 });
 
-document.querySelector('#water').addEventListener('input', (event) => {
+document.querySelector("#water").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#waterValue').value = value;
+    document.querySelector("#waterValue").value = value;
     fluid.options.waterSourceAmount = value;
 });
 
-document.querySelector('#waterspout').addEventListener('input', (event) => {
+document.querySelector("#waterspout").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#waterspoutValue').value = value;
+    document.querySelector("#waterspoutValue").value = value;
     fluid.options.waterMinusSourceAmount = value;
 });
 
-document.querySelector('#rainfall').addEventListener('input', (event) => {
+document.querySelector("#rainfall").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#rainfallValue').value = value;
+    document.querySelector("#rainfallValue").value = value;
     fluid.options.rainMaxPrecipitation = value;
 });
 
-document.querySelector('#intensity').addEventListener('input', (event) => {
+document.querySelector("#intensity").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#intensityValue').value = value;
+    document.querySelector("#intensityValue").value = value;
     fluid.options.colorIntensity = value;
 });
 
-document.querySelector('#brightness').addEventListener('input', (event) => {
+document.querySelector("#brightness").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#brightnessValue').value = value;
+    document.querySelector("#brightnessValue").value = value;
     fluid.options.waterBrightness = value;
 });
 
-document.querySelector('#maxOpacity').addEventListener('input', (event) => {
+document.querySelector("#maxOpacity").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#maxOpacityValue').value = value;
+    document.querySelector("#maxOpacityValue").value = value;
     fluid.options.maxOpacity = value;
 });
 
-document.querySelector('#evaporation').addEventListener('input', (event) => {
+document.querySelector("#evaporation").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#evaporationValue').value = value;
+    document.querySelector("#evaporationValue").value = value;
     fluid.options.evaporationRate = value;
 });
 
-document.querySelector('#simulationConfine').addEventListener('click', () => {
+document.querySelector("#simulationConfine").addEventListener("click", () => {
     fluid.options.simulationConfine = !fluid.options.simulationConfine;
 });
 
-document.querySelector('#waterSkirt').addEventListener('click', () => {
+document.querySelector("#waterSkirt").addEventListener("click", () => {
     fluid.options.waterSkirt = !fluid.options.waterSkirt;
 });
 
-document.querySelector('#interval').addEventListener('input', (event) => {
+document.querySelector("#interval").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#intervalValue').value = value;
+    document.querySelector("#intervalValue").value = value;
     fluid.options.interval = 1000 / value;
     fluid.startFrame();
 });
 
-document.querySelector('#timeStep').addEventListener('input', (event) => {
+document.querySelector("#timeStep").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#timeStepValue').value = value;
+    document.querySelector("#timeStepValue").value = value;
     fluid.options.timeStep = value;
 });
 
-document.querySelector('#cushionFactor').addEventListener('input', (event) => {
+document.querySelector("#cushionFactor").addEventListener("input", (event) => {
     const value = event.target.value;
-    document.querySelector('#cushionFactorValue').value = value;
+    document.querySelector("#cushionFactorValue").value = value;
     fluid.options.cushionFactor = value;
 });
-
 
 const selectionStatus = {
     rectangle: undefined,
@@ -415,7 +428,7 @@ const selectionStatus = {
     sourceMinusPositions: [],
     seaWallPositions: [],
     handler: undefined,
-}
+};
 
 const clearWaterSourceEntities = () => {
     if (selectionStatus.sourcePositions.length > 0) {
@@ -436,38 +449,43 @@ const clearWaterSourceEntities = () => {
         });
         selectionStatus.seaWallPositions = [];
     }
-}
+};
 
-document.querySelector('#clearWaterSource').addEventListener('click', () => {
+document.querySelector("#clearWaterSource").addEventListener("click", () => {
     clearWaterSourceEntities();
     fluid.clearWaterSourcePositions();
     fluid.clearWaterMinusSourcePositions();
     fluid.clearSeaWallPositions();
 });
 
-document.querySelector('#createWaterSource').addEventListener('click', () => {
-    viewer.scene.canvas.style.cursor = 'crosshair';
+document.querySelector("#createWaterSource").addEventListener("click", () => {
+    viewer.scene.canvas.style.cursor = "crosshair";
 
     if (selectionStatus.handler) {
         selectionStatus.handler.destroy();
         selectionStatus.handler = undefined;
-        viewer.scene.canvas.style.cursor = 'default';
+        viewer.scene.canvas.style.cursor = "default";
     } else {
-        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        let handler = selectionStatus.handler;
+        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(
+            viewer.scene.canvas);
+        const handler = selectionStatus.handler;
         handler.setInputAction(function(event) {
-            let ray = viewer.camera.getPickRay(event.position);
-            let cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            const ray = viewer.camera.getPickRay(event.position);
+            const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
             if (cartesian) {
-                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
-                const latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
-                console.log(longitudeString.toFixed(6), latitudeString.toFixed(6));
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    cartesian);
+                const longitudeString = Cesium.Math.toDegrees(
+                    cartographic.longitude);
+                const latitudeString = Cesium.Math.toDegrees(
+                    cartographic.latitude);
+                console.log(longitudeString.toFixed(6),
+                    latitudeString.toFixed(6));
 
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
                 const center = fluid.addWaterSourcePosition(lon, lat);
-                /*selectionStatus.sourcePositions.push(viewer.entities.add({
+                /* selectionStatus.sourcePositions.push(viewer.entities.add({
                     position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
                     cylinder: {
                         length: 30.0,
@@ -481,80 +499,97 @@ document.querySelector('#createWaterSource').addEventListener('click', () => {
     }
 });
 
-document.querySelector("#color").addEventListener('change', (event) => {
+document.querySelector("#color").addEventListener("change", (event) => {
     const color = event.target.value;
     const waterColor = Cesium.Color.fromCssColorString(color);
     fluid.options.waterColor = waterColor;
 });
 
-document.querySelector('#createWaterspout').addEventListener('click', () => {
-    viewer.scene.canvas.style.cursor = 'crosshair';
+document.querySelector("#createWaterspout").addEventListener("click", () => {
+    viewer.scene.canvas.style.cursor = "crosshair";
 
     if (selectionStatus.handler) {
         selectionStatus.handler.destroy();
         selectionStatus.handler = undefined;
-        viewer.scene.canvas.style.cursor = 'default';
+        viewer.scene.canvas.style.cursor = "default";
     } else {
-        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        let handler = selectionStatus.handler;
+        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(
+            viewer.scene.canvas);
+        const handler = selectionStatus.handler;
         handler.setInputAction(function(event) {
-            let ray = viewer.camera.getPickRay(event.position);
-            let cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            const ray = viewer.camera.getPickRay(event.position);
+            const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
             if (cartesian) {
-                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
-                const latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
-                console.log(longitudeString.toFixed(6), latitudeString.toFixed(6));
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    cartesian);
+                const longitudeString = Cesium.Math.toDegrees(
+                    cartographic.longitude);
+                const latitudeString = Cesium.Math.toDegrees(
+                    cartographic.latitude);
+                console.log(longitudeString.toFixed(6),
+                    latitudeString.toFixed(6));
 
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
 
                 const center = fluid.addWaterMinusSourcePosition(lon, lat);
                 selectionStatus.sourceMinusPositions.push(viewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
+                    position: Cesium.Cartesian3.fromDegrees(center.lon,
+                        center.lat,
+                        cartographic.height),
                     cylinder: {
                         length: 30.0,
                         topRadius: 3.0,
                         bottomRadius: 3.0,
                         material: Cesium.Color.RED,
                     },
-                }))
+                }));
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 });
 
-document.querySelector('#createSeaWall').addEventListener('click', () => {
-    viewer.scene.canvas.style.cursor = 'crosshair';
+document.querySelector("#createSeaWall").addEventListener("click", () => {
+    viewer.scene.canvas.style.cursor = "crosshair";
 
     if (selectionStatus.handler) {
         selectionStatus.handler.destroy();
         selectionStatus.handler = undefined;
-        viewer.scene.canvas.style.cursor = 'default';
+        viewer.scene.canvas.style.cursor = "default";
     } else {
-        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        let handler = selectionStatus.handler;
+        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(
+            viewer.scene.canvas);
+        const handler = selectionStatus.handler;
         handler.setInputAction(function(event) {
-            let ray = viewer.camera.getPickRay(event.position);
-            let cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            const ray = viewer.camera.getPickRay(event.position);
+            const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
             if (cartesian) {
-                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
-                const latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
-                console.log(longitudeString.toFixed(6), latitudeString.toFixed(6));
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    cartesian);
+                const longitudeString = Cesium.Math.toDegrees(
+                    cartographic.longitude);
+                const latitudeString = Cesium.Math.toDegrees(
+                    cartographic.latitude);
+                console.log(longitudeString.toFixed(6),
+                    latitudeString.toFixed(6));
 
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
                 const center = fluid.addSeaWallPosition(lon, lat);
 
                 selectionStatus.seaWallPositions.push(viewer.entities.add({
-                    position: Cesium.Cartesian3.fromDegrees(center.lon, center.lat, cartographic.height),
+                    position: Cesium.Cartesian3.fromDegrees(center.lon,
+                        center.lat,
+                        cartographic.height),
                     box: {
-                        dimensions: new Cesium.Cartesian3(9.0 * options.cellSize, 9.0 * options.cellSize, fluid.options.waterSeawallHeight * 2),
+                        dimensions: new Cesium.Cartesian3(
+                            9.0 * options.cellSize,
+                            9.0 * options.cellSize,
+                            fluid.options.waterSeawallHeight * 2),
                         material: Cesium.Color.DARKGRAY.withAlpha(0.75),
-                        /*outline: true,*/
-                    }
-                }))
+                        /* outline: true,*/
+                    },
+                }));
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
@@ -567,26 +602,31 @@ const refreshRectangle = () => {
     }
     const rectangle = fluid.createRectangle(extent);
     selectionStatus.rectangle = rectangle;
-}
+};
 
-document.querySelector('#simulationRectangle').addEventListener('click', () => {
-    viewer.scene.canvas.style.cursor = 'crosshair';
+document.querySelector("#simulationRectangle").addEventListener("click", () => {
+    viewer.scene.canvas.style.cursor = "crosshair";
 
     if (selectionStatus.handler) {
         selectionStatus.handler.destroy();
         selectionStatus.handler = undefined;
-        viewer.scene.canvas.style.cursor = 'default';
+        viewer.scene.canvas.style.cursor = "default";
     } else {
-        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        let handler = selectionStatus.handler;
+        selectionStatus.handler = new Cesium.ScreenSpaceEventHandler(
+            viewer.scene.canvas);
+        const handler = selectionStatus.handler;
         handler.setInputAction(function(event) {
-            let ray = viewer.camera.getPickRay(event.position);
-            let cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+            const ray = viewer.camera.getPickRay(event.position);
+            const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
             if (cartesian) {
-                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const longitudeString = Cesium.Math.toDegrees(cartographic.longitude);
-                const latitudeString = Cesium.Math.toDegrees(cartographic.latitude);
-                console.log(longitudeString.toFixed(6), latitudeString.toFixed(6));
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    cartesian);
+                const longitudeString = Cesium.Math.toDegrees(
+                    cartographic.longitude);
+                const latitudeString = Cesium.Math.toDegrees(
+                    cartographic.latitude);
+                console.log(longitudeString.toFixed(6),
+                    latitudeString.toFixed(6));
 
                 const lon = Number(longitudeString.toFixed(6));
                 const lat = Number(latitudeString.toFixed(6));
@@ -600,7 +640,8 @@ document.querySelector('#simulationRectangle').addEventListener('click', () => {
 
 setInterval(() => {
     const totalWaterAmount = fluid.info.totalWater;
-    document.querySelector('#totalWaterAmount').textContent = `Total Water Amount (t) : ${totalWaterAmount}`;
+    document.querySelector(
+        "#totalWaterAmount").textContent = `Total Water Amount (t) : ${totalWaterAmount}`;
 }, 100);
 
 init();
