@@ -12,6 +12,9 @@ import tree from "../assets/lowpoly-tree.glb";
  */
 export class MagoTools {
     constructor(viewer) {
+        /**
+         * @type {Viewer}
+         */
         this.viewer = viewer;
     }
 

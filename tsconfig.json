@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/@cesium/Build"
+    ],
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "types",
+    "rootDir": "src",
+    "module": "ESNext",
+    "target": "ESNext",
+    "checkJs": false,
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "strict": false
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

@@ -1,8 +1,8 @@
-import "./css/css-init.css";
-import "./css/custom.css";
+import "../css/css-init.css";
+import "../css/custom.css";
 import * as Cesium from "cesium";
 import {Viewer} from "cesium";
-import {MagoTools} from "./modules/MagoTools.js";
+import {MagoTools} from "../modules/MagoTools.js";
 import {MagoFrame} from "@/modules/fluid/MagoFrame.js";
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
 

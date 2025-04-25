@@ -1,0 +1,82 @@
+export class FluidEngine {
+    constructor(options: any);
+    shaderLoader: ShaderLoader;
+    options: any;
+    fluxShaderInfo: {
+        shaderProgram: any;
+        vertexShader: any;
+        fragmentShader: any;
+        framebuffer: any;
+        sourceTexture: any;
+        minusSourceTexture: any;
+        seaWallTexture: any;
+        waterTexture: any;
+        terrainTexture: any;
+        fluxUpTexture: any;
+        fluxDownTexture: any;
+        fluxRightTexture: any;
+        fluxLeftTexture: any;
+        waterOutputTexture: any;
+        fluxUpOutputTexture: any;
+        fluxDownOutputTexture: any;
+        fluxRightOutputTexture: any;
+        fluxLeftOutputTexture: any;
+    };
+    waterVelocityShaderInfo: {
+        shaderProgram: any;
+        vertexShader: any;
+        fragmentShader: any;
+        framebuffer: any;
+        waterOutputTexture: any;
+        velocityOutputTexture: any;
+    };
+    waterHeightShaderInfo: {
+        shaderProgram: any;
+        vertexShader: any;
+        fragmentShader: any;
+        framebuffer: any;
+        waterOutputTexture: any;
+    };
+    particlesShaderInfo: {
+        shaderProgram: any;
+        vertexShader: any;
+        fragmentShader: any;
+        framebuffer: any;
+        particlesPositionTexture: any;
+        particlesPositionOutputTexture: any;
+        particleTexture: any;
+    };
+    simulationInfo: {
+        canvas: any;
+        gl: any;
+        extensionBuffers: any;
+        waterUint8Array: any;
+        fluxUint8Array: any;
+        totalWater: number;
+    };
+    initWebGL(): any;
+    calcTotalWater(): number;
+    flipImageDataHorizontally(imageData: any): void;
+    flipImageDataVertically(imageData: any): void;
+    saveUint8ArrayAsPNG(zip: any, uint8Array: any, width: any, height: any, fileName?: string): void;
+    calculateSimulation(): Promise<any>;
+    compileShader(gl: any, source: any, type: any): any;
+    initFluxShaderProgram(): Promise<any>;
+    initWaterShaderProgram(): Promise<any>;
+    initWaterHeightShaderProgram(): Promise<any>;
+    initParticleShaderProgram(): Promise<any>;
+    resetWaterTexture(): void;
+    initTexture(): void;
+    setTerrainTexture(typedArray: any): void;
+    initFluxFramebuffer(): void;
+    initWaterFramebuffer(): void;
+    initWaterHeightFramebuffer(): void;
+    renderFluxFramebuffer(shaderProgram: any): void;
+    renderWaterFramebuffer(shaderProgram: any): void;
+    renderWaterHeightFramebuffer(shaderProgram: any): void;
+    setFluxTexture(): void;
+    setWaterTexture(): void;
+    getFluxShaderProgram(): Promise<any>;
+    getWaterShaderProgram(): Promise<any>;
+}
+import { ShaderLoader } from "../ShaderLoader.js";

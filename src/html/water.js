@@ -1,9 +1,9 @@
-import "./css/css-init.css";
-import "./css/custom.css";
+import "../css/css-init.css";
+import "../css/custom.css";
 import * as Cesium from "cesium";
 import {Viewer} from "cesium";
-import {MagoTools} from "./modules/MagoTools.js";
-import {MagoFluid} from "./modules/fluid/MagoFluid.js";
+import {MagoTools} from "../modules/MagoTools.js";
+import {MagoFluid} from "../modules/fluid/MagoFluid.js";
 import JSZip from "jszip";
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
