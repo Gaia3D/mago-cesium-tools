@@ -16,9 +16,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "lint:build": "eslint \"src/**/*.{js,ts,jsx,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{js,ts,jsx,tsx}\" --fix",
-    "build-publish": "lint:build && vite build && npm publish",
+    "build-publish": "vite build && npm publish",
     "docs": "jsdoc -c jsdoc.json"
   },
   "files": [
