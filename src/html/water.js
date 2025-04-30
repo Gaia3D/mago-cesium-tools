@@ -10,7 +10,7 @@ import "@cesium/engine/Source/Widget/CesiumWidget.css";
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago Cesium Tools</h1>
+    <h1>Mago Cesium Tools (🐳 Water)</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <h3>Initialization</h3>
@@ -186,8 +186,7 @@ const fluid = new MagoFluid(viewer);
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    await magoViewer.changeTerrain(
-        "http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/");
+    await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
 
     magoViewer.initPosition(options.lon, options.lat, 1000.0);
 

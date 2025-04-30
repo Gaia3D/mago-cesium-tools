@@ -14,11 +14,13 @@ import {DrawLineString} from "@/modules/draw/DrawLineString.js";
 import {MeasurePosition} from "@/modules/measure/MeasurePosition.js";
 import {DrawPoint} from "@/modules/draw/DrawPoint.js";
 import {DrawWall} from "@/modules/draw/DrawWall.js";
+import {DrawCircle} from "@/modules/draw/DrawCircle.js";
+import {DrawSphere} from "@/modules/draw/DrawSphere.js";
 
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago Cesium Tools (Measure)</h1>
+    <h1>Mago Cesium Tools (📏 Measure / ✏️ Draw)</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <h3>Measure Tools</h3>
@@ -40,6 +42,11 @@ document.querySelector("#app").innerHTML = `
     <button id="draw-area">Draw Area</button>
     <button id="draw-line">Draw Line</button>
     <button id="draw-wall">Draw Wall</button>
+    <button id="draw-circle">Draw Circle</button>
+    <span class="line"></span>
+    <button id="draw-sphere">Draw Sphere</button>
+    <button id="draw-cone">Draw Cone</button>
+    <button id="draw-box">Draw Box</button>
     <span class="line"></span>
     <button id="toggle-depth-test">Terrain Depth-Test</button>
  </div>
@@ -78,8 +85,9 @@ const measureAngle = new MeasureAngle(viewer);
 
 const drawPolygon = new DrawPolygon(viewer, {color: Cesium.Color.VIOLET});
 const drawLineString = new DrawLineString(viewer, {color: Cesium.Color.VIOLET});
-const drawWall = new DrawWall(viewer,
-    {clampToGround: false, color: Cesium.Color.RED});
+const drawWall = new DrawWall(viewer, {clampToGround: false, color: Cesium.Color.VIOLET});
+const drawCircle = new DrawCircle(viewer, {color: Cesium.Color.VIOLET});
+const drawSphere = new DrawSphere(viewer, {color: Cesium.Color.DARKORANGE});
 
 const drawPoint = new DrawPoint(viewer, {color: Cesium.Color.DARKORANGE});
 const drawPolygonClamped = new DrawPolygon(viewer,
@@ -92,8 +100,7 @@ const drawWallClamped = new DrawWall(viewer,
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    await magoViewer.changeTerrain(
-        "http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/");
+    await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     const tileset = await Cesium.Cesium3DTileset.fromUrl(
         "http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json",
         {});
@@ -130,6 +137,7 @@ const offAll = () => {
     measureMultiDistance.off();
     measureHeight.off();
     measureAngle.off();
+
     drawPoint.off();
     drawPolygonClamped.off();
     drawLineStringClamped.off();
@@ -137,6 +145,8 @@ const offAll = () => {
     drawPolygon.off();
     drawWall.off();
     drawWallClamped.off();
+    drawCircle.off();
+    drawSphere.off();
 };
 
 document.querySelector("#measure-point").addEventListener("click", () => {
@@ -183,6 +193,16 @@ document.querySelector("#draw-line").addEventListener("click", () => {
 document.querySelector("#draw-wall").addEventListener("click", () => {
     offAll();
     drawWall.on();
+});
+
+document.querySelector("#draw-circle").addEventListener("click", () => {
+    offAll();
+    drawCircle.on();
+});
+
+document.querySelector("#draw-sphere").addEventListener("click", () => {
+    offAll();
+    drawSphere.on();
 });
 
 document.querySelector("#draw-point-clamped").addEventListener("click", () => {

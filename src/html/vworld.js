@@ -9,7 +9,7 @@ import {Vworld} from "@/modules/Vworld.js";
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago Cesium Tools (Measure)</h1>
+    <h1>Mago Cesium Tools (🌏 V-World)</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <h3>GeoCoord</h3>
@@ -20,6 +20,13 @@ document.querySelector("#app").innerHTML = `
     <span class="line"></span>
     <input type="text" id="result-lon" placeholder="Result Lon" style="width: 100px" readonly/>
     <input type="text" id="result-lat" placeholder="Result Lat" style="width: 100px" readonly/>
+    <span class="line"></span>
+    <h3>WMTS</h3>
+    <select id="change-map">
+        <option value="satellite">Satellite</option>
+        <option value="road">Road</option>
+        <option value="hybrid">Hybrid</option>
+    </select>
  </div>
 `;
 
@@ -42,8 +49,7 @@ const viewer = new Viewer("cesiumContainer", {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.postProcessStages.fxaa.enabled = true;
 viewer.scene.globe.enableLighting = false;
-viewer.screenSpaceEventHandler.removeInputAction(
-    Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
 const [lon, lat] = [126.968905, 37.447571];
 
@@ -52,19 +58,15 @@ const vworld = new Vworld(viewer);
 
 const init = async () => {
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    await magoViewer.changeTerrain(
-        "http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/");
-    const tileset = await Cesium.Cesium3DTileset.fromUrl(
-        "http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json",
-        {});
+    await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
+    const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
     viewer.scene.primitives.add(tileset);
 
     magoViewer.initPosition(lon, lat, 1000.0);
 
     setDefaultValue();
     if (!viewer.scene.clampToHeightSupported) {
-        window.alert(
-            "This browser does not support clampToHeightMostDetailed.");
+        window.alert("This browser does not support clampToHeightMostDetailed.");
     }
 };
 
@@ -73,16 +75,27 @@ const setDefaultValue = () => {
 
 };
 
-document.querySelector("#test-geo-coord").
-    addEventListener("click", async () => {
-        const address = document.querySelector("#address").value;
-        const result = await vworld.getAddressCoord(address);
-        console.log(result);
-        document.querySelector("#result-address").value = result.address;
-        document.querySelector("#result-lon").value = result.lon;
-        document.querySelector("#result-lat").value = result.lat;
+document.querySelector("#test-geo-coord").addEventListener("click", async () => {
+    const address = document.querySelector("#address").value;
+    const result = await vworld.getAddressCoord(address);
+    console.log(result);
+    document.querySelector("#result-address").value = result.address;
+    document.querySelector("#result-lon").value = result.lon;
+    document.querySelector("#result-lat").value = result.lat;
 
-        magoViewer.flyTo(result.lon, result.lat, 300.0, 1.0);
-    });
+    magoViewer.flyTo(result.lon, result.lat, 300.0, 1.0);
+});
+
+document.querySelector("#change-map").addEventListener("change", async (e) => {
+    viewer.imageryLayers.removeAll();
+    const mapType = e.target.value;
+    if (mapType === "satellite") {
+        await vworld.createVworldImageryLayer("Satellite", false, "jpeg");
+    } else if (mapType === "road") {
+        await vworld.createVworldImageryLayer("Base", false, "png");
+    } else if (mapType === "hybrid") {
+        await vworld.createVworldImageryLayer("Satellite", true, "jpeg");
+    }
+});
 
 init();

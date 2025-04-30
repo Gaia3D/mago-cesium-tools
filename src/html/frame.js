@@ -9,7 +9,7 @@ import "@cesium/engine/Source/Widget/CesiumWidget.css";
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago Cesium Tools (Fluid Frame)</h1>
+    <h1>Mago Cesium Tools (🐟 Fluid Frame)</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <h3>Controller</h3>
@@ -89,7 +89,7 @@ const fluid = new MagoFrame(viewer);
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    await magoViewer.changeTerrain("http://175.197.92.213:10110/mago_terrain/korea_0501_d17_v195/");
+    await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
 
     const infoJson = await fetch("/sample/info.json");
     const info = await infoJson.json();
@@ -118,9 +118,9 @@ const init = async () => {
 
     // fluid.currentFrame = 0;
     fluid.frameNumber = 0;
-    fluid.frameUrl = "sample/0.bin";
+    fluid.frameUrl = "/sample/0.bin";
     setFrame(0);
-    fluid.terrainUrl = "sample/terrain.bin";
+    fluid.terrainUrl = "/sample/terrain.bin";
 
     fluid.preload(end, setBufferBar);
 
@@ -184,7 +184,7 @@ const animationStatus = {
 };
 
 const setFrame = (count) => {
-    const url = `sample/${count}.bin`;
+    const url = `/sample/${count}.bin`;
     fluid.frameUrl = url;
     fluid.frameNumber = count;
     animationStatus.recentFrame = count;

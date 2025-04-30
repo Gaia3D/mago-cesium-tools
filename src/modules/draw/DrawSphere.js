@@ -4,7 +4,7 @@ import * as Cesium from "cesium";
  * DrawCircle
  * @class DrawCircle
  */
-export class DrawCircle {
+export class DrawSphere {
     constructor(viewer, options = {}) {
         this.viewer = viewer;
         this.scene = viewer.scene;
@@ -86,23 +86,15 @@ export class DrawCircle {
 
             this.lineEntity = viewer.entities.add({
                 position: this.startCartesian,
-                ellipse: {
-                    semiMajorAxis: new Cesium.CallbackProperty(() => {
+                ellipsoid: {
+                    center: this.startCartesian,
+                    radii: new Cesium.CallbackProperty(() => {
                         const distance = Cesium.Cartesian3.distance(this.startCartesian, this.endCartesian);
-                        if (distance < 0.1) {
-                            return 0.1;
-                        }
-                        return distance;
+                        /*if (distance < 10.0) {
+                            return 10.0;
+                        }*/
+                        return new Cesium.Cartesian3(distance, distance, distance);
                     }, false),
-                    semiMinorAxis: new Cesium.CallbackProperty(() => {
-                        const distance = Cesium.Cartesian3.distance(this.startCartesian, this.endCartesian);
-                        if (distance < 0.1) {
-                            return 0.1;
-                        }
-                        return distance;
-                    }, false),
-                    extrudedHeight: height,
-                    height: height,
                     material: this.color.withAlpha(0.5),
                     outline: true,
                     outlineColor: Cesium.Color.WHITE,
