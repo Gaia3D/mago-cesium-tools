@@ -72,6 +72,12 @@ float interpolateAlpha(float waterHeight) {
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
     //vec3 norTex = getNormalTexture(v_texCoord * 64.0);
 
+    //material.diffuse = vec3(0.0);
+    //material.emissive = vec3(0.0);
+    material.roughness = 0.1;
+    //material.occlusion = 1.0;
+    //material.specular = vec3(0.02);
+
     vec3 color;
     bool isCompare = gl_FragCoord.x >= 1280.0;
     if (u_height_palette) {

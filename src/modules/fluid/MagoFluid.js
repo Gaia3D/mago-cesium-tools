@@ -25,6 +25,7 @@ export class MagoFluid {
 
     /**
      * Constructor for MagoFluid class
+     * @constructor
      * @param viewer Cesium Viewer instance
      * @param baseUrl
      */
@@ -135,6 +136,7 @@ export class MagoFluid {
                 width: 3,
                 material: Cesium.Color.RED.withAlpha(0.5),
                 clampToGround: true,
+                classificationType: Cesium.ClassificationType.TERRAIN,
             },
         });
     }
@@ -343,9 +345,67 @@ export class MagoFluid {
             gridModelUrl = baseUrl + "/grid/" + await this.getGridUrl(gridSize);
         }
 
+        const environmentMapURL = "https://cesium.com/public/SandcastleSampleData/kiara_6_afternoon_2k_ibl.ktx2";
+        const L00 = new Cesium.Cartesian3(
+            1.234897375106812,
+            1.221635103225708,
+            1.273374080657959,
+        );
+        const L1_1 = new Cesium.Cartesian3(
+            1.136140108108521,
+            1.171419978141785,
+            1.287894368171692,
+        );
+        const L10 = new Cesium.Cartesian3(
+            1.245410919189453,
+            1.245791077613831,
+            1.283067107200623,
+        );
+        const L11 = new Cesium.Cartesian3(
+            1.107124328613281,
+            1.112697005271912,
+            1.153419137001038,
+        );
+        const L2_2 = new Cesium.Cartesian3(
+            1.08641505241394,
+            1.079904079437256,
+            1.10212504863739,
+        );
+        const L2_1 = new Cesium.Cartesian3(
+            1.190043210983276,
+            1.186099290847778,
+            1.214627981185913,
+        );
+        const L20 = new Cesium.Cartesian3(
+            0.017783647403121,
+            0.020140396431088,
+            0.025317270308733,
+        );
+        const L21 = new Cesium.Cartesian3(
+            1.087014317512512,
+            1.084779262542725,
+            1.111417651176453,
+        );
+        const L22 = new Cesium.Cartesian3(
+            -0.052426788955927,
+            -0.048315055668354,
+            -0.041973855346441,
+        );
+        const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+        const imageBasedLighting = new Cesium.ImageBasedLighting({
+            sphericalHarmonicCoefficients: coefficients,
+            specularEnvironmentMaps: environmentMapURL,
+        });
+
+        //imageBasedLighting.sphericalHarmonicCoefficients = undefined;
+        //imageBasedLighting.specularEnvironmentMaps = undefined;
+        //imageBasedLighting.imageBasedLightingFactor = Cesium.Cartesian2.ONE;
+        //this.viewer.scene.light.intensity = 2.0;
+
         const gltf = await Cesium.Model.fromGltfAsync({
             url: gridModelUrl,
             modelMatrix: transform, debugShowBoundingVolume: false, enableDebugWireframe: true, debugWireframe: false, backFaceCulling: false, shadows: Cesium.ShadowMode.RECEIVE_ONLY,
+            //imageBasedLighting: imageBasedLighting,
         });
         this.gridPrimitive = gltf;
 
