@@ -2,14 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-<!--    <link rel="icon" type="image/svg+xml" href="/vite.svg"/>-->
-    <!-- favicon -->
     <link rel="icon" type="image/x-con" href="/src/favicon.ico"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Vite App</title>
+    <style>
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('/src/fonts/Montserrat-VariableFont_wght.ttf') format('woff');
+            font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+        }
+
+        * {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        html {
+            font-family: Avenir, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-align: center;
+            color: #fff;
+            background-color: #2c3e50;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 1.5em;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        div {
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        a {
+            display: block;
+            margin: 10px 0;
+            text-decoration: none;
+            color: #e1e1e1;
+            background-color: #35495e;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        a:hover {
+            background-color: #42b983;
+        }
+    </style>
 </head>
 <body>
-<div id="app"></div>
-<script type="module" src="/src/main.js"></script>
+<h1 class="page-title">🛠️ mago-cesium-tools example</h1>
+<div>
+    <!-- water.html link -->
+    <a href="/src/html/water.html">🐳 Fluid</a>
+    <!-- frame.html link -->
+    <a href="/src/html/frame.html">🐟 Frame</a>
+    <!-- wind.html link -->
+    <a href="/src/html/wind.html">🍃 Wind</a>
+    <!-- measure.html link -->
+    <a href="/src/html/measure.html">📏 Measure / ✏️ Draw</a>
+    <!-- vworld.html link -->
+    <a href="/src/html/vworld.html">🌏 Vworld</a>
+</div>
 </body>
 </html>

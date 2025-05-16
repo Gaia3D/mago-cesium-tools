@@ -43,9 +43,18 @@ export class MagoWind {
      * Creates an instance of MagoWind.
      * @param viewer
      */
-    constructor(viewer) {
-        console.log('[MCT][WIND] constructor');
+    constructor(viewer, baseUrl = "/") {
+        console.log("[MCT][WIND] constructor");
+
+        /**
+         * Cesium Viewer instance
+         */
         this.viewer = viewer;
+        /**
+         * Base URL for loading resources
+         * @type {string}
+         */
+        this.baseUrl = baseUrl.replace(/\/$/, "");
         this.context = viewer.scene.context;
         this.shaderLoader = new ShaderLoader("/src/customShaders/wind");
     }
@@ -57,7 +66,7 @@ export class MagoWind {
      * @returns {Promise<void>}
      */
     async init(options) {
-        console.log('[MCT][WIND] initialize');
+        console.log("[MCT][WIND] initialize");
         Object.assign(this, options);
 
         const viewer = this.viewer;
@@ -69,13 +78,14 @@ export class MagoWind {
         const fullscreenVertexShader = await this.shaderLoader.getShaderSource("fullscreen.vert");
         const screenDrawFragmentShader = await this.shaderLoader.getShaderSource("screenDraw.frag");
 
-        const collection = this.primitiveCollection = new Cesium.PrimitiveCollection();     // output primitive collection
+        // output primitive collection
+        const collection = this.primitiveCollection = new Cesium.PrimitiveCollection();
         // input data
         const {
             dimension, levels, uvws, boundary, textureSize, speedFactor, trailLength, renderingType,
         } = Object.assign({
             /* default options */
-            textureSize: 1000, speedFactor: 1000.0, renderingType: 'triangle', // trailLength: 5,
+            textureSize: 1000, speedFactor: 1000.0, renderingType: "triangle", // trailLength: 5,
             point: {
                 size: 2,
             }, triangle: {
@@ -85,11 +95,15 @@ export class MagoWind {
             trailLength: options.trailLength ? Math.max(MagoWind.MIN_TRAIL_LENGTH, Math.min(MagoWind.MAX_TRAIL_LENGTH, options.trailLength)) : 5,   // position buffer length (for position history)
         });
 
-        const valueMinMax = [[Math.min(...uvws.u.map(grid => grid.reduce((prev, curr) => prev > curr ? curr : prev))), Math.max(...uvws.u.map(grid => grid.reduce((prev, curr) => prev < curr ? curr : prev)))], [Math.min(...uvws.v.map(grid => grid.reduce((prev, curr) => prev > curr ? curr : prev))), Math.max(...uvws.v.map(grid => grid.reduce((prev, curr) => prev < curr ? curr : prev)))], [Math.min(...uvws.w.map(grid => grid.reduce((prev, curr) => prev > curr ? curr : prev))), Math.max(...uvws.w.map(grid => grid.reduce((prev, curr) => prev < curr ? curr : prev)))],]
-        const volume = new LonLatAltVolume(boundary, [levels[0], levels[levels.length - 1]])
+        const valueMinMax = [
+            [
+                Math.min(...uvws.u.map(grid => grid.reduce((prev, curr) => prev > curr ? curr : prev))), Math.max(...uvws.u.map(grid => grid.reduce((prev, curr) => prev < curr ? curr : prev)))], [
+                Math.min(...uvws.v.map(grid => grid.reduce((prev, curr) => prev > curr ? curr : prev))), Math.max(...uvws.v.map(grid => grid.reduce((prev, curr) => prev < curr ? curr : prev)))], [
+                Math.min(...uvws.w.map(grid => grid.reduce((prev, curr) => prev > curr ? curr : prev))), Math.max(...uvws.w.map(grid => grid.reduce((prev, curr) => prev < curr ? curr : prev)))]];
+        const volume = new LonLatAltVolume(boundary, [levels[0], levels[levels.length - 1]]);
 
         // convert data into normalized, combined wind speed texture
-        const combinedUVWs = [] // 모든 레벨을 하나의 texture로 합침
+        const combinedUVWs = []; // 모든 레벨을 하나의 texture로 합침
         levels.forEach((level, levelIndex) => {
             // normalize 해서 텍스쳐로 변환
             const UVW = combinedUVWs;
@@ -101,7 +115,7 @@ export class MagoWind {
                     UVW.push(1.0);
                 }
             }
-        })
+        });
         const combinedWindSpeedTextures = this.createTexture({
             context: context,
             width: dimension[0],
@@ -112,184 +126,166 @@ export class MagoWind {
             sampler: new Cesium.Sampler({
                 // the values of texture will not be interpolated
                 minificationFilter: Cesium.TextureMinificationFilter.NEAREST,       // LINEAR 로 자동 보간
-                magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST      // LINEAR 로 자동 보간
+                magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,      // LINEAR 로 자동 보간
             }),
-        }, new Float32Array(combinedUVWs))
+        }, new Float32Array(combinedUVWs));
 
         // wind speed & position
-        let windPositionTextures = new Array(trailLength).fill(0).map(() => this.createTexture({
-            context: context,
-            width: textureSize,
-            height: textureSize,
-            pixelFormat: Cesium.PixelFormat.RGBA,
-            pixelDatatype: Cesium.PixelDatatype.FLOAT,
-            flipY: false,
-            sampler: new Cesium.Sampler({
-                // the values of texture will not be interpolated
-                minificationFilter: Cesium.TextureMinificationFilter.NEAREST,       // => LINEAR 로 사용 대체 확인 필요
-                magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST      // => LINEAR 로 사용 대체 확인 필요
-            }),
-        }, new Float32Array(new Array(textureSize * textureSize * 4).fill(0)
-            // .map((e, i) => Math.random())
-        )))
+        const windPositionTextures = new Array(trailLength).fill(0).
+            map(() => this.createTexture({
+                context: context, width: textureSize, height: textureSize, pixelFormat: Cesium.PixelFormat.RGBA, pixelDatatype: Cesium.PixelDatatype.FLOAT, flipY: false, sampler: new Cesium.Sampler({
+                    // the values of texture will not be interpolated
+                    minificationFilter: Cesium.TextureMinificationFilter.NEAREST,       // => LINEAR 로 사용 대체 확인 필요
+                    magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,      // => LINEAR 로 사용 대체 확인 필요
+                }),
+            }, new Float32Array(new Array(textureSize * textureSize * 4).fill(0), // .map((e, i) => Math.random())
+            )));
         const windPosition = new ComputePrimitive({
             fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [calculateWindPosition]
+                sources: [calculateWindPosition],
             }), uniformMap: {
-                windPositionTexture: function () {
-                    return windPositionTextures[1]  // current position
-                }, windSpeedTextures: function () {
+                windPositionTexture: function() {
+                    return windPositionTextures[1];  // current position
+                }, windSpeedTextures: function() {
                     return combinedWindSpeedTextures;
-                }, dimensions: function () {
+                }, dimensions: function() {
                     return new Cesium.Cartesian3(dimension[0], dimension[1], levels.length);
-                }, altitudes: function () {
+                }, altitudes: function() {
                     return levels;
-                }, minValues: function () {
+                }, minValues: function() {
                     return new Cesium.Cartesian3(valueMinMax[0][0], valueMinMax[1][0], valueMinMax[2][0]);
-                }, maxValues: function () {
+                }, maxValues: function() {
                     return new Cesium.Cartesian3(valueMinMax[0][1], valueMinMax[1][1], valueMinMax[2][1]);
-                }, bounds: function () {
-                    return volume.bounds.map(v => new Cesium.Cartesian3(v[0], v[1], v[2])).slice(0, 4);
-                }, altitudeBounds: function () {
+                }, bounds: function() {
+                    return volume.bounds.map(v => new Cesium.Cartesian3(v[0], v[1], v[2])).
+                        slice(0, 4);
+                }, altitudeBounds: function() {
                     return volume.getAltitudeRange();
-                }, speedFactor: function () {
+                }, speedFactor: function() {
                     return speedFactor;
-                }, randomParam: function () {
+                }, randomParam: function() {
                     return Math.random();
-                }
+                },
             }, outputTexture: windPositionTextures[0],     // next position
-            preExecute: function (primitive) {
+            preExecute: function(primitive) {
                 // swap textures before binding
-                windPositionTextures.unshift(windPositionTextures.pop())
+                windPositionTextures.unshift(windPositionTextures.pop());
 
                 // keep the outputTexture up to date
                 primitive.commandToExecute.outputTexture = windPositionTextures[0];
-            }
-        })
+            },
+        });
 
         // wind color
         const windColorTexture = this.createTexture({
-            context: context,
-            width: textureSize,
-            height: textureSize,
-            pixelFormat: Cesium.PixelFormat.RGBA,
-            pixelDatatype: Cesium.PixelDatatype.FLOAT,
-            flipY: false,
-            sampler: new Cesium.Sampler({
+            context: context, width: textureSize, height: textureSize, pixelFormat: Cesium.PixelFormat.RGBA, pixelDatatype: Cesium.PixelDatatype.FLOAT, flipY: false, sampler: new Cesium.Sampler({
                 // the values of texture will not be interpolated
                 minificationFilter: Cesium.TextureMinificationFilter.NEAREST,       // => LINEAR 로 사용 대체 확인 필요
-                magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST      // => LINEAR 로 사용 대체 확인 필요
+                magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,      // => LINEAR 로 사용 대체 확인 필요
             }),
-        }, new Float32Array(new Array(textureSize * textureSize * 4).fill(0)
-            // .map((e, i) => Math.random())
-        ))
+        }, new Float32Array(new Array(textureSize * textureSize * 4).fill(0), // .map((e, i) => Math.random())
+        ));
         const windColor = new ComputePrimitive({
             fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [calculateWindColor]
+                sources: [calculateWindColor],
             }), uniformMap: {
-                windPositionTexture: function () {
-                    return windPositionTextures[0]
-                }, windSpeedTextures: function () {
+                windPositionTexture: function() {
+                    return windPositionTextures[0];
+                }, windSpeedTextures: function() {
                     return combinedWindSpeedTextures;
-                }, dimensions: function () {
+                }, dimensions: function() {
                     return new Cesium.Cartesian3(dimension[0], dimension[1], levels.length);
-                }, altitudes: function () {
+                }, altitudes: function() {
                     return levels;
-                }, minValues: function () {
+                }, minValues: function() {
                     return new Cesium.Cartesian3(valueMinMax[0][0], valueMinMax[1][0], valueMinMax[2][0]);
-                }, maxValues: function () {
+                }, maxValues: function() {
                     return new Cesium.Cartesian3(valueMinMax[0][1], valueMinMax[1][1], valueMinMax[2][1]);
-                }, bounds: function () {
-                    return volume.bounds.map(v => new Cesium.Cartesian3(v[0], v[1], v[2])).slice(0, 4);
-                }, altitudeBounds: function () {
+                }, bounds: function() {
+                    return volume.bounds.map(v => new Cesium.Cartesian3(v[0], v[1], v[2])).
+                        slice(0, 4);
+                }, altitudeBounds: function() {
                     return volume.getAltitudeRange();
                 },
-            }, outputTexture: windColorTexture
-        })
+            }, outputTexture: windColorTexture,
+        });
 
         // normalized position => ecef
-        let ecefPositionTextures = new Array(trailLength).fill(0).map(() => this.createTexture({
-            context: context,
-            width: textureSize,
-            height: textureSize,
-            pixelFormat: Cesium.PixelFormat.RGBA,
-            pixelDatatype: Cesium.PixelDatatype.FLOAT,
-            flipY: false,
-            sampler: new Cesium.Sampler({
-                // the values of texture will not be interpolated
-                minificationFilter: Cesium.TextureMinificationFilter.NEAREST,       // => LINEAR 로 사용 대체 확인 필요
-                magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST      // => LINEAR 로 사용 대체 확인 필요
-            }),
-        }, new Float32Array(new Array(textureSize * textureSize * 4).fill(0)
-            // .map((e, i) => Math.random())
-        )))
-        const normalized2ECEFs = new Array(trailLength).fill(0).map((v, i) => new ComputePrimitive({
-            fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [normalized2ecef]
-            }), uniformMap: {
-                windPositionTexture: function () {
-                    return windPositionTextures[i]
-                }, bounds: function () {
-                    return volume.bounds.map(v => new Cesium.Cartesian3(v[0], v[1], v[2])).slice(0, 5);
-                }, altitudeBounds: function () {
-                    return volume.getAltitudeRange();
-                },
-            }, outputTexture: ecefPositionTextures[i],
-        }));
+        const ecefPositionTextures = new Array(trailLength).fill(0).
+            map(() => this.createTexture({
+                context: context, width: textureSize, height: textureSize, pixelFormat: Cesium.PixelFormat.RGBA, pixelDatatype: Cesium.PixelDatatype.FLOAT, flipY: false, sampler: new Cesium.Sampler({
+                    // the values of texture will not be interpolated
+                    minificationFilter: Cesium.TextureMinificationFilter.NEAREST,       // => LINEAR 로 사용 대체 확인 필요
+                    magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,      // => LINEAR 로 사용 대체 확인 필요
+                }),
+            }, new Float32Array(new Array(textureSize * textureSize * 4).fill(0), // .map((e, i) => Math.random())
+            )));
+        const normalized2ECEFs = new Array(trailLength).fill(0).
+            map((v, i) => new ComputePrimitive({
+                fragmentShaderSource: new Cesium.ShaderSource({
+                    sources: [normalized2ecef],
+                }), uniformMap: {
+                    windPositionTexture: function() {
+                        return windPositionTextures[i];
+                    }, bounds: function() {
+                        return volume.bounds.map(v => new Cesium.Cartesian3(v[0], v[1], v[2])).
+                            slice(0, 5);
+                    }, altitudeBounds: function() {
+                        return volume.getAltitudeRange();
+                    },
+                }, outputTexture: ecefPositionTextures[i],
+            }));
 
         // projected
         const projectedTexture = this.createTexture({
-            context: context,
-            width: context.drawingBufferWidth,
-            height: context.drawingBufferHeight,
-            pixelFormat: Cesium.PixelFormat.RGBA,
-            pixelDatatype: Cesium.PixelDatatype.FLOAT, // flipY: false,
+            context: context, width: context.drawingBufferWidth, height: context.drawingBufferHeight, pixelFormat: Cesium.PixelFormat.RGBA, pixelDatatype: Cesium.PixelDatatype.FLOAT, // flipY: false,
             sampler: new Cesium.Sampler({
                 // the values of texture will not be interpolated
                 minificationFilter: Cesium.TextureMinificationFilter.LINEAR,       // => LINEAR 로 사용 대체 확인 필요
-                magnificationFilter: Cesium.TextureMagnificationFilter.LINEAR      // => LINEAR 로 사용 대체 확인 필요
+                magnificationFilter: Cesium.TextureMagnificationFilter.LINEAR,      // => LINEAR 로 사용 대체 확인 필요
             }),
-        }, new Float32Array(new Array(context.drawingBufferWidth * context.drawingBufferHeight * 4).fill(0)
-            // .map((e, i) => { return Math.random() })
-        ))
+        }, new Float32Array(new Array(context.drawingBufferWidth * context.drawingBufferHeight * 4).fill(0), // .map((e, i) => { return Math.random() })
+        ));
         const projectedDepth = this.createTexture({
-            context: context,
-            width: context.drawingBufferWidth,
-            height: context.drawingBufferHeight,
-            pixelFormat: Cesium.PixelFormat.DEPTH_COMPONENT,
-            pixelDatatype: Cesium.PixelDatatype.UNSIGNED_INT
-        })
-        const ecefToProjected = (renderingType === 'point') ? await this.createRenderingPoint(context, ecefPositionTextures[0], windColorTexture, projectedTexture, projectedDepth) : (renderingType === 'line') ? await this.createRenderingLine(context, ecefPositionTextures, windColorTexture, projectedTexture, projectedDepth) : (renderingType === 'triangle') ? await this.createRenderingTriangle(viewer, context, ecefPositionTextures, windColorTexture, projectedTexture, projectedDepth) : await this.createRenderingPoint(context, ecefPositionTextures[0], windColorTexture, projectedTexture, projectedDepth)
+            context: context, width: context.drawingBufferWidth, height: context.drawingBufferHeight, pixelFormat: Cesium.PixelFormat.DEPTH_COMPONENT, pixelDatatype: Cesium.PixelDatatype.UNSIGNED_INT,
+        });
+        const ecefToProjected = (renderingType === "point") ?
+            await this.createRenderingPoint(context, ecefPositionTextures[0], windColorTexture, projectedTexture, projectedDepth) :
+            (renderingType === "line") ?
+                await this.createRenderingLine(context, ecefPositionTextures, windColorTexture, projectedTexture, projectedDepth) :
+                (renderingType === "triangle") ?
+                    await this.createRenderingTriangle(viewer, context, ecefPositionTextures, windColorTexture, projectedTexture, projectedDepth) :
+                    await this.createRenderingPoint(context, ecefPositionTextures[0], windColorTexture, projectedTexture, projectedDepth);
 
         // screen
         const screen = new RenderPrimitive(context, {
             attributeLocations: {
-                position: 0, st: 1
+                position: 0, st: 1,
             }, geometry: this.getFullscreenQuad(), primitiveType: Cesium.PrimitiveType.TRIANGLES, uniformMap: {
-                projectedPosition: function () {
+                projectedPosition: function() {
                     return projectedTexture;
-                }, projectedDepth: function () {
+                }, projectedDepth: function() {
                     return projectedDepth;
-                }
+                },
             }, vertexShaderSource: new Cesium.ShaderSource({
-                sources: [fullscreenVertexShader]
+                sources: [fullscreenVertexShader],
             }), fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [screenDrawFragmentShader]
+                sources: [screenDrawFragmentShader],
             }), rawRenderState: this.createRawRenderState({
                 // viewport: undefined,
                 depthTest: {
-                    enabled: true
+                    enabled: true,
                 }, depthMask: false, blending: {
                     enabled: true,
-                }
-            }), framebuffer: undefined // undefined value means let Cesium deal with it
-        })
+                },
+            }), framebuffer: undefined, // undefined value means let Cesium deal with it
+        });
 
-        collection.add(windPosition)
-        collection.add(windColor)
+        collection.add(windPosition);
+        collection.add(windColor);
         normalized2ECEFs.forEach((normalized2ECEF) => collection.add(normalized2ECEF));
-        collection.add(ecefToProjected)
-        collection.add(screen)
+        collection.add(ecefToProjected);
+        collection.add(screen);
     }
 
     /**
@@ -326,34 +322,30 @@ export class MagoWind {
                     //  |     |
                     //  |     |
                     //  v0----v1
-                    values: new Float32Array([-1, -1, 0, // v0
+                    values: new Float32Array([
+                        -1, -1, 0, // v0
                         1, -1, 0, // v1
                         1, 1, 0, // v2
                         -1, 1, 0, // v3
-                    ])
+                    ]),
                 }), st: new Cesium.GeometryAttribute({
-                    componentDatatype: Cesium.ComponentDatatype.FLOAT,
-                    componentsPerAttribute: 2,
-                    values: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1,])
-                })
-            }), indices: new Uint32Array([3, 2, 0, 0, 2, 1])
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
+                }),
+            }), indices: new Uint32Array([3, 2, 0, 0, 2, 1]),
         });
     }
 
     createFramebuffer(context, colorTexture, depthTexture) {
         return new Cesium.Framebuffer({
-            context: context, colorTextures: [colorTexture], depthTexture: depthTexture
+            context: context, colorTextures: [colorTexture], depthTexture: depthTexture,
         });
     }
 
     createRawRenderState(options) {
         const translucent = true;
         const closed = false;
-        let existing = {
-            viewport: options.viewport,
-            depthTest: options.depthTest,
-            depthMask: options.depthMask,
-            blending: options.blending
+        const existing = {
+            viewport: options.viewport, depthTest: options.depthTest, depthMask: options.depthMask, blending: options.blending,
         };
 
         return Cesium.Appearance.getDefaultRenderState(translucent, closed, existing);
@@ -372,8 +364,8 @@ export class MagoWind {
         return new Cesium.Geometry({
             attributes: new Cesium.GeometryAttributes({
                 st: new Cesium.GeometryAttribute({
-                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: st
-                })
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: st,
+                }),
             }),
         });
     }
@@ -385,36 +377,28 @@ export class MagoWind {
         const that = this;
         return new RenderPrimitive(context, {
             attributeLocations: {
-                st: 1
-            },
-            geometry: this.createPointCloudGeometry(positionTexture),
-            primitiveType: Cesium.PrimitiveType.POINTS,
-            uniformMap: {
-                color: function () {
+                st: 1,
+            }, geometry: this.createPointCloudGeometry(positionTexture), primitiveType: Cesium.PrimitiveType.POINTS, uniformMap: {
+                color: function() {
                     return colorTexture;
-                }, ecefPosition: function () {
+                }, ecefPosition: function() {
                     return positionTexture;
-                }, pointSize: function () {
+                }, pointSize: function() {
                     return that.point?.pointSize || 2;
-                }
-            },
-            vertexShaderSource: new Cesium.ShaderSource({
-                sources: [vertexShader_ecef2projected_point]
-            }),
-            fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [fragmentShader_ecef2projected_point]
-            }),
-            rawRenderState: this.createRawRenderState({
+                },
+            }, vertexShaderSource: new Cesium.ShaderSource({
+                sources: [vertexShader_ecef2projected_point],
+            }), fragmentShaderSource: new Cesium.ShaderSource({
+                sources: [fragmentShader_ecef2projected_point],
+            }), rawRenderState: this.createRawRenderState({
                 // viewport: undefined,
                 depthTest: {
                     enabled: true,
                 }, depthMask: true, blending: {
                     enabled: true,
                 },
-            }),
-            framebuffer: this.createFramebuffer(context, projectedTexture, projectedDepth),
-            autoClear: true,
-        })
+            }), framebuffer: this.createFramebuffer(context, projectedTexture, projectedDepth), autoClear: true,
+        });
     }
 
     async createRenderingLine(context, trailTextures, colorTexture, projectedTexture, projectedDepth) {
@@ -424,35 +408,27 @@ export class MagoWind {
         return new RenderPrimitive(context, {
             attributeLocations: {
                 st: 1, normal: 2,
-            },
-            geometry: this.createLineStringGeometry(trailTextures),
-            primitiveType: Cesium.PrimitiveType.LINES,
-            uniformMap: {
-                trailLength: function () {
+            }, geometry: this.createLineStringGeometry(trailTextures), primitiveType: Cesium.PrimitiveType.LINES, uniformMap: {
+                trailLength: function() {
                     return trailTextures.length;
-                }, trailECEFPositionTextures: function () {
+                }, trailECEFPositionTextures: function() {
                     return trailTextures;
-                }, color: function () {
+                }, color: function() {
                     return colorTexture;
                 },
-            },
-            vertexShaderSource: new Cesium.ShaderSource({
-                sources: [vertexShader_ecef2projected_line]
-            }),
-            fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [fragmentShader_ecef2projected_line]
-            }),
-            rawRenderState: this.createRawRenderState({
+            }, vertexShaderSource: new Cesium.ShaderSource({
+                sources: [vertexShader_ecef2projected_line],
+            }), fragmentShaderSource: new Cesium.ShaderSource({
+                sources: [fragmentShader_ecef2projected_line],
+            }), rawRenderState: this.createRawRenderState({
                 // viewport: undefined,
                 depthTest: {
                     enabled: true,
                 }, depthMask: true, blending: {
                     enabled: true,
                 },
-            }),
-            framebuffer: this.createFramebuffer(context, projectedTexture, projectedDepth),
-            autoClear: true,
-        })
+            }), framebuffer: this.createFramebuffer(context, projectedTexture, projectedDepth), autoClear: true,
+        });
     }
 
     async createRenderingTriangle(viewer, context, trailTextures, colorTexture, projectedTexture, projectedDepth) {
@@ -463,40 +439,32 @@ export class MagoWind {
         return new RenderPrimitive(context, {
             attributeLocations: {
                 st: 1, normal: 2,
-            },
-            geometry: this.createTriangleGeometry(trailTextures),
-            primitiveType: Cesium.PrimitiveType.TRIANGLES,
-            uniformMap: {
-                trailLength: function () {
+            }, geometry: this.createTriangleGeometry(trailTextures), primitiveType: Cesium.PrimitiveType.TRIANGLES, uniformMap: {
+                trailLength: function() {
                     return trailTextures.length;
-                }, trailECEFPositionTextures: function () {
+                }, trailECEFPositionTextures: function() {
                     return trailTextures;
-                }, color: function () {
+                }, color: function() {
                     return colorTexture;
-                }, cameraPosition: function () {
-                    console.log(viewer.scene.camera.positionWC)
+                }, cameraPosition: function() {
+                    console.log(viewer.scene.camera.positionWC);
                     return viewer.scene.camera.positionWC;
-                }, lineWidth: function () {
+                }, lineWidth: function() {
                     return that.triangle?.lineWidth || 1000.0;
                 },
-            },
-            vertexShaderSource: new Cesium.ShaderSource({
-                sources: [vertexShader_ecef2projected_triangle]
-            }),
-            fragmentShaderSource: new Cesium.ShaderSource({
-                sources: [fragmentShader_ecef2projected_triangle]
-            }),
-            rawRenderState: this.createRawRenderState({
+            }, vertexShaderSource: new Cesium.ShaderSource({
+                sources: [vertexShader_ecef2projected_triangle],
+            }), fragmentShaderSource: new Cesium.ShaderSource({
+                sources: [fragmentShader_ecef2projected_triangle],
+            }), rawRenderState: this.createRawRenderState({
                 // viewport: undefined,
                 depthTest: {
                     enabled: true,
                 }, depthMask: true, blending: {
                     enabled: true,
                 },
-            }),
-            framebuffer: this.createFramebuffer(context, projectedTexture, projectedDepth),
-            autoClear: true,
-        })
+            }), framebuffer: this.createFramebuffer(context, projectedTexture, projectedDepth), autoClear: true,
+        });
     }
 
     createLineStringGeometry(textures) {
@@ -536,7 +504,7 @@ export class MagoWind {
         {
             for (let particleIndex = 0; particleIndex < texture.width * texture.height; particleIndex++) {
                 // for each particle,
-                let startVertexIndex = particleIndex * (lineLength);
+                const startVertexIndex = particleIndex * (lineLength);
 
                 for (let j = 0; j < lineLength - 1; j++) {
                     vertexIndexes[vIndex++] = startVertexIndex + j;
@@ -548,11 +516,11 @@ export class MagoWind {
         return new Cesium.Geometry({
             attributes: new Cesium.GeometryAttributes({
                 st: new Cesium.GeometryAttribute({
-                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: st
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: st,
                 }), normal: new Cesium.GeometryAttribute({
-                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: normal
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: normal,
                 }),
-            }), indices: vertexIndexes
+            }), indices: vertexIndexes,
         });
     }
 
@@ -601,7 +569,7 @@ export class MagoWind {
         {
             for (let particleIndex = 0; particleIndex < texture.width * texture.height; particleIndex++) {
 
-                let startVertexIndex = particleIndex * (lineLength) * 2;
+                const startVertexIndex = particleIndex * (lineLength) * 2;
 
                 for (let j = 0; j < lineLength - 1; j++) {
                     vertexIndexes[vIndex++] = startVertexIndex + j;
@@ -618,11 +586,11 @@ export class MagoWind {
         return new Cesium.Geometry({
             attributes: new Cesium.GeometryAttributes({
                 st: new Cesium.GeometryAttribute({
-                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: st
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: st,
                 }), normal: new Cesium.GeometryAttribute({
-                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: normal
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: normal,
                 }),
-            }), indices: vertexIndexes
+            }), indices: vertexIndexes,
         });
     }
 

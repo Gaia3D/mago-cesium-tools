@@ -80,8 +80,8 @@ export class Extent {
     getCenter() {
         return {
             x: (this.minX + this.maxX) / 2,
-            y: (this.minY + this.maxY) / 2
-        }
+            y: (this.minY + this.maxY) / 2,
+        };
     }
 
     /**
@@ -90,8 +90,8 @@ export class Extent {
     getCenterLonLat() {
         return {
             lon: (this.minX + this.maxX) / 2,
-            lat: (this.minY + this.maxY) / 2
-        }
+            lat: (this.minY + this.maxY) / 2,
+        };
     }
 
     /**

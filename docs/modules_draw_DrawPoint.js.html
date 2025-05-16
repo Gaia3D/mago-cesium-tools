@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/draw/DrawPoint.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/draw/DrawPoint.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as Cesium from "cesium";
+
+/**
+ * DrawPoint class for drawing a point in a Cesium viewer.
+ * @class drawPoint
+ * @param {Object} viewer - The Cesium viewer instance.
+ * @param {Object} [options] - Options for the drawing tool.
+ * @param {Cesium.Color} [options.color] - The color of the drawing point.
+ * @example
+ * const drawPoint = new DrawPoint(viewer, { color: Cesium.Color.RED });
+ * drawPoint.on();
+ * // To disable the drawing tool and clear entities:
+ * drawPoint.off();
+ */
+export class DrawPoint {
+    constructor(viewer, options = {}) {
+        this.viewer = viewer;
+        this.scene = viewer.scene;
+        this.handler = new Cesium.ScreenSpaceEventHandler();
+        this.color = options.color || Cesium.Color.LIGHTGRAY;
+        this.textFormat = options.textFormat || "({lon}, {lat}, {height})";
+        this.startHeight = undefined;
+        this.startCartographic = undefined;
+        this.startCartesian = undefined;
+        this.endHeight = undefined;
+        this.endCartesian = undefined;
+        this.startEntity = undefined;
+        this.endEntity = undefined;
+        this.entities = [];
+    }
+
+    /**
+     * Enables the point drawing tool.
+     * Click to start measuring, and click again to stop.
+     * @function
+     * @type {boolean} Continue - Whether to continue measuring after the first click.
+     * @returns {void}
+     */
+    on = (isContinue = false) => {
+        this.scene.canvas.style.cursor = "crosshair";
+        const viewer = this.viewer;
+        const scene = viewer.scene;
+        const handler = this.handler;
+
+        // Mouse Left Click
+        const mouseLeftClickHandler = (event) => {
+            if (!isContinue) {
+                this.clearEntities();
+            }
+
+            let pickedEllipsoidPosition;
+            if (scene.pickPositionSupported) {
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    event.position);
+            }
+            if (!pickedEllipsoidPosition) {
+                pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
+                    event.position,
+                    scene.globe.ellipsoid,
+                );
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
+            }
+            this.startEntity = viewer.entities.add({
+                position: pickedEllipsoidPosition,
+                point: {
+                    color: this.color,
+                    pixelSize: 4,
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                },
+            });
+
+            this.entities.push(this.startEntity);
+        };
+
+        // Mouse Move
+        const mouseMoveHandler = (moveEvent) => {
+            /* if (!this.status) {
+                return;
+            }*/
+            let pickedEllipsoidPosition;
+            if (scene.pickPositionSupported) {
+                pickedEllipsoidPosition = viewer.scene.pickPosition(
+                    moveEvent.endPosition);
+            }
+            if (!pickedEllipsoidPosition) {
+                pickedEllipsoidPosition = viewer.camera.pickEllipsoid(
+                    moveEvent.endPosition,
+                    scene.globe.ellipsoid,
+                );
+                const cartographic = Cesium.Cartographic.fromCartesian(
+                    pickedEllipsoidPosition);
+                const height = viewer.scene.globe.getHeight(
+                    Cesium.Cartographic.fromRadians(cartographic.longitude,
+                        cartographic.latitude, 0));
+                pickedEllipsoidPosition = Cesium.Cartesian3.fromRadians(
+                    cartographic.longitude, cartographic.latitude, height);
+            }
+            this.endCartesian = pickedEllipsoidPosition;
+            if (!this.endEntity) {
+                this.endEntity = viewer.entities.add({
+                    position: new Cesium.CallbackProperty(() => {
+                        return this.endCartesian;
+                    }, false),
+                    point: {
+                        color: this.color,
+                        pixelSize: 4,
+                        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    },
+                });
+                this.entities.push(this.endEntity);
+            }
+        };
+        handler.setInputAction(mouseLeftClickHandler,
+            Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction(mouseMoveHandler,
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    };
+
+    /**
+     * Disables the point drawing tool.
+     * @function
+     * @returns {void}
+     */
+    off = () => {
+        this.scene.canvas.style.cursor = "default";
+        // this.status = false;
+        this.clearEntities();
+        const handler = this.handler;
+        if (handler) {
+            handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        }
+    };
+
+    clearEntities = () => {
+        this.viewer.entities.remove(this.startEntity);
+        this.viewer.entities.remove(this.endEntity);
+        this.entities.forEach((entity) => {
+            this.viewer.entities.remove(entity);
+        });
+        this.startEntity = undefined;
+        this.endEntity = undefined;
+    };
+}
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="DrawWall.html">DrawWall</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Apr 25 2025 11:32:06 GMT+0900 (대한민국 표준시)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

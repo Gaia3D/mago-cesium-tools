@@ -6,7 +6,7 @@ in vec2 textureCoordinate;
 in float repositioned;
 
 void main() {
-    if(repositioned == 0.0) {
+    if (repositioned == 0.0) {
         float normalizeSpeed = texture(color, textureCoordinate).x;
         fragColor_1 = vec4(normalizeSpeed);
         fragColor_1 = vec4(1.0);

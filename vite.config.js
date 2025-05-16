@@ -1,39 +1,47 @@
-import { defineConfig } from 'vite';
-import cesium from 'vite-plugin-cesium';
-import glsl from 'vite-plugin-glsl';
+import {defineConfig} from "vite";
 import * as path from "node:path";
+import eslintPlugin from "vite-plugin-eslint";
 
-export default defineConfig({
-    plugins: [
-        cesium({
-            rebuildCesium: true
-        }, glsl()
-    )],
-    test: {
-        globals: true,
-        environment: 'jsdom',
-    },
-    build: {
-        lib: {
-            entry: path.resolve(__dirname, 'src/entry.js'),
-            name: 'mago-cesium-tools',
-            fileName: (format) => `index.${format}.js`,
-            formats: ['es', 'cjs']
+export default defineConfig(({command}) => {
+    const isBuild = command === "build";
+    //const publicEnabled = process.env.PUBLIC_ENABLED !== 'false'; // 기본 true
+    return {
+        publicDir: isBuild ? false : "public",
+        plugins: [eslintPlugin()],
+        server: {
+            host: true,
         },
-        minify: false,
-        rollupOptions: {
-            external: ['cesium'],
-            output: {
-                globals: {
-                    cesium: 'Cesium',
+        test: {
+            globals: true, environment: "jsdom",
+        },
+        build: {
+            lib: {
+                entry: path.resolve(__dirname, "src/entry.js"),
+                name: "MagoCesiumTools",
+                fileName: (format) => `index.${format}.js`,
+                formats: ["es", "cjs", "iife"],
+            }, minify: false, rollupOptions: {
+                external: ["http", "https", "url", "zlib"], output: {
+                    globals: {
+                        cesium: "Cesium",
+                    },
                 },
             },
-        }
-    },
-    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.jpg', '**/*.png', '**/*.svg', '**/*.json', '**/*.vert', '**/*.frag', '**/*.glsl'],
-    resolve: {
-        alias: {
-            '@': path.resolve(__dirname, 'src'),
         },
-    },
+        assetsInclude: [
+            "**/*.gltf",
+            "**/*.glb",
+            "**/*.jpg",
+            "**/*.png",
+            "**/*.svg",
+            "**/*.json",
+            "**/*.vert",
+            "**/*.frag",
+            "**/*.glsl"],
+        resolve: {
+            alias: {
+                "@": path.resolve(__dirname, "src"),
+            },
+        },
+    };
 });

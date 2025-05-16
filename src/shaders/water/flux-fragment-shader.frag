@@ -1,4 +1,4 @@
-#extension GL_EXT_draw_buffers : require
+#extension GL_EXT_draw_buffers: require
 
 precision highp float;
 
@@ -30,13 +30,15 @@ varying vec2 vTexCoordinate;
 vec4 packDepth(float v) {
     vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
     enc = fract(enc);
-    enc -= enc.yzww * vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
+    enc -= enc.yzww * vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);
     return enc;
 }
 
 float unpackDepth(const in vec4 rgba_depth) {
     return dot(rgba_depth, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
 }
+
+float maxTimeStep = 0.1;
 
 void main() {
     float cellSize = uCellSize;
@@ -47,6 +49,9 @@ void main() {
     float gravity = uGravity;
     float waterDensity = uWaterDensity;
     float timeStep = uTimeStep;
+    if (timeStep > maxTimeStep) {
+        timeStep = maxTimeStep;
+    }
     float cushionFactor = uCushionFactor;
 
     float cellArea = cellSize * cellSize;
@@ -161,7 +166,7 @@ void main() {
     float slopeRight = totalHeight - totalHeightRight;
 
     float deltaUp = waterDensity * gravity * slopeUp;
-    float deltaDown =  waterDensity * gravity * slopeDown;
+    float deltaDown = waterDensity * gravity * slopeDown;
     float deltaLeft = waterDensity * gravity * slopeLeft;
     float deltaRight = waterDensity * gravity * slopeRight;
 
@@ -174,6 +179,13 @@ void main() {
     float newFluxDownValue = (timeStep * accelDown * cellArea);
     float newFluxLeftValue = (timeStep * accelLeft * cellArea);
     float newFluxRightValue = (timeStep * accelRight * cellArea);
+
+/**float maxFluxFactor = cellArea * 0.1;
+    newFluxUpValue = min(newFluxUpValue, maxFluxFactor);
+    newFluxDownValue = min(newFluxDownValue, maxFluxFactor);
+    newFluxLeftValue = min(newFluxLeftValue, maxFluxFactor);
+    newFluxRightValue = min(newFluxRightValue, maxFluxFactor);*/
+
 
     float outFluxUp = (fluxUpValue + newFluxUpValue) * cushionFactor;
     float outFluxDown = (fluxDownValue + newFluxDownValue) * cushionFactor;
@@ -209,6 +221,8 @@ void main() {
     waterValue = waterValue + sourceValue - minusSourceValue - evaporation;
     if (waterValue < 0.0) {
         waterValue = 0.0;
+    } else if (waterValue > maxHeight) {
+        waterValue = maxHeight;
     }
 
     // fragColor

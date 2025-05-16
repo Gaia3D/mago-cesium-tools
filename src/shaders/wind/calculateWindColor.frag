@@ -46,26 +46,26 @@ vec3 getWindSpeedAt(vec3 normalizedPosition) {
     float altitude = (boundaryAltitudeSize == 0.0) ? altitudeBounds[1] : (normalizedPosition.z * (altitudeBounds[1] - altitudeBounds[0]) + altitudeBounds[0]);
 
     int levels = int(dimensions.z);
-    for(int i = 0; i < levels; i++) {
-        if(altitudes[i] >= altitude) {
-            if(highLevelIndex == -1)
-                highLevelIndex = i;
-            else if(altitudes[highLevelIndex] >= altitudes[i])
-                highLevelIndex = i;
+    for (int i = 0; i < levels; i++) {
+        if (altitudes[i] >= altitude) {
+            if (highLevelIndex == -1)
+            highLevelIndex = i;
+            else if (altitudes[highLevelIndex] >= altitudes[i])
+            highLevelIndex = i;
         }
-        if(altitudes[i] <= altitude) {
-            if(lowLevelIndex == -1)
-                lowLevelIndex = i;
-            else if(altitudes[lowLevelIndex] <= altitudes[i])
-                lowLevelIndex = i;
+        if (altitudes[i] <= altitude) {
+            if (lowLevelIndex == -1)
+            lowLevelIndex = i;
+            else if (altitudes[lowLevelIndex] <= altitudes[i])
+            lowLevelIndex = i;
         }
     }
 
-    if(lowLevelIndex == -1 || highLevelIndex == -1)
-        return vec3(-1.0);       // should not excute
+    if (lowLevelIndex == -1 || highLevelIndex == -1)
+    return vec3(-1.0);       // should not excute
 
     vec3 normalizedWindSpeed = vec3(0.0);
-    if(lowLevelIndex == highLevelIndex) {
+    if (lowLevelIndex == highLevelIndex) {
         normalizedWindSpeed = sampleWindSpeedAtLevel(lowLevelIndex, normalizedPosition.xy);
     } else {
         vec3 low = sampleWindSpeedAtLevel(lowLevelIndex, normalizedPosition.xy);
@@ -76,12 +76,12 @@ vec3 getWindSpeedAt(vec3 normalizedPosition) {
     }
 
     vec3 realWindSpeed = minValues + normalizedWindSpeed * (maxValues - minValues);
-    if(maxValues.x == minValues.x)
-        realWindSpeed.x = maxValues.x;
-    if(maxValues.y == minValues.y)
-        realWindSpeed.y = maxValues.y;
-    if(maxValues.z == minValues.z)
-        realWindSpeed.z = maxValues.z;
+    if (maxValues.x == minValues.x)
+    realWindSpeed.x = maxValues.x;
+    if (maxValues.y == minValues.y)
+    realWindSpeed.y = maxValues.y;
+    if (maxValues.z == minValues.z)
+    realWindSpeed.z = maxValues.z;
     return realWindSpeed;
 }
 
@@ -97,7 +97,7 @@ void main() {
 
     float normalizeSpeed = length(speed) / length(maxLength);
 
-    // color 
+    // color
     // fragColor_1 = vec4(vec3(normalizeSpeed), normalizeSpeed);
     fragColor_1 = vec4(vec3(1.0), 1.0);
 }

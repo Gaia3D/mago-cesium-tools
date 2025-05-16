@@ -23,21 +23,22 @@ export class Volume {
         Object.assign(this, options);
     }
 
-    getPosition(normalizedXYZ) { return normalizedXYZ; }
+    getPosition(normalizedXYZ) {
+        return normalizedXYZ;
+    }
 
     /**
      * vertex mixing
-     * @param {Array<Number>} a 
-     * @param {Array<Number>} b 
-     * @param {Number} t 
-     * @returns 
+     * @param {Array<Number>} a
+     * @param {Array<Number>} b
+     * @param {Number} t
      */
     _mix(a, b, t) {
         return [
             a[0] + (b[0] - a[0]) * t,
             a[1] + (b[1] - a[1]) * t,
             a[2] + (b[2] - a[2]) * t,
-        ]
+        ];
     }
 }
 

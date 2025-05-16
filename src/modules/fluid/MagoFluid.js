@@ -26,15 +26,22 @@ export class MagoFluid {
     /**
      * Constructor for MagoFluid class
      * @param viewer Cesium Viewer instance
+     * @param baseUrl
      */
-    constructor (viewer) {
-        console.log('[MCT][FLUID] constructor');
+    constructor(viewer, baseUrl = "/") {
+        console.log("[MCT][FLUID] constructor");
 
         /**
          * Cesium Viewer instance
          * @type {Cesium.Viewer}
          */
         this.viewer = undefined;
+
+        /**
+         * Base URL for loading resources
+         * @type {string}
+         */
+        this.baseUrl = baseUrl.replace(/\/$/, "");
 
         /**
          * Custom shader loader
@@ -67,9 +74,8 @@ export class MagoFluid {
         this.intervalObject = undefined;
 
         this.info = {
-            status: 'off',
-            totalWater: 0,
-        }
+            status: "off", totalWater: 0,
+        };
 
         /**
          * Default options for the water simulation.
@@ -82,9 +88,10 @@ export class MagoFluid {
     /**
      * Initializes the viewer to render points on a globe.
      * @param viewer
+     * @param baseUrl
      */
     init(viewer) {
-        console.log('[MCT][FLUID] init');
+        console.log("[MCT][FLUID] init");
         this.viewer = viewer;
         this.fluidEngine = new FluidEngine(this.options);
         this.customShaderLoader = new ShaderLoader("/src/customShaders/water");
@@ -108,7 +115,7 @@ export class MagoFluid {
         this.terrainTextureUniform = undefined;
         this.buildingHeightArray = [];
         this.intervalObject = undefined;
-        this.info.status = 'init';
+        this.info.status = "init";
     }
 
     /**
@@ -117,56 +124,43 @@ export class MagoFluid {
      * @returns {Entity}
      */
     createRectangle(extent = this.extent) {
-        console.log('[MCT][FLUID] createRectangle');
+        console.log("[MCT][FLUID] createRectangle");
         const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
         return this.viewer.entities.add({
             rectangle: {
-                coordinates: rectangle,
-                material: Cesium.Color.BLACK.withAlpha(0.1),
-                outline: true,
-                outlineColor: Cesium.Color.BLACK,
-                clampToGround: true
-            },
-            polyline: {
+                coordinates: rectangle, material: Cesium.Color.BLACK.withAlpha(0.1), outline: true, outlineColor: Cesium.Color.BLACK, clampToGround: true,
+            }, polyline: {
                 positions: Cesium.Cartesian3.fromRadiansArray([
-                    rectangle.west, rectangle.south,
-                    rectangle.east, rectangle.south,
-                    rectangle.east, rectangle.north,
-                    rectangle.west, rectangle.north,
-                    rectangle.west, rectangle.south
-                ]),
+                    rectangle.west, rectangle.south, rectangle.east, rectangle.south, rectangle.east, rectangle.north, rectangle.west, rectangle.north, rectangle.west, rectangle.south]),
                 width: 3,
                 material: Cesium.Color.RED.withAlpha(0.5),
-                clampToGround: true
-            }
+                clampToGround: true,
+            },
         });
     }
 
-    calcLonLat(center, offset)  {
+    calcLonLat(center, offset) {
         const transformMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        let translatedMatrix = Cesium.Matrix4.multiplyByTranslation(transformMatrix, offset, new Cesium.Matrix4());
-        let translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
-        let cartographic = Cesium.Cartographic.fromCartesian(translation);
+        const translatedMatrix = Cesium.Matrix4.multiplyByTranslation(transformMatrix, offset, new Cesium.Matrix4());
+        const translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
+        const cartographic = Cesium.Cartographic.fromCartesian(translation);
         return {
-            lon: Cesium.Math.toDegrees(cartographic.longitude),
-            lat: Cesium.Math.toDegrees(cartographic.latitude)
-        }
+            lon: Cesium.Math.toDegrees(cartographic.longitude), lat: Cesium.Math.toDegrees(cartographic.latitude),
+        };
     }
 
-    calcLonLatWithCenterMatrix(centerMatrix, offset)  {
-        let translatedMatrix = Cesium.Matrix4.multiplyByTranslation(centerMatrix, offset, new Cesium.Matrix4());
-        let translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
-        let cartographic = Cesium.Cartographic.fromCartesian(translation);
+    calcLonLatWithCenterMatrix(centerMatrix, offset) {
+        const translatedMatrix = Cesium.Matrix4.multiplyByTranslation(centerMatrix, offset, new Cesium.Matrix4());
+        const translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
+        const cartographic = Cesium.Cartographic.fromCartesian(translation);
         return {
-            lon: Cesium.Math.toDegrees(cartographic.longitude),
-            lat: Cesium.Math.toDegrees(cartographic.latitude)
-        }
+            lon: Cesium.Math.toDegrees(cartographic.longitude), lat: Cesium.Math.toDegrees(cartographic.latitude),
+        };
     }
 
     calcExtent(options) {
         const gridSize = !options.gridSize ? 8 : options.gridSize;
         const cellSize = !options.cellSize ? 1 : options.cellSize;
-
 
         const realGridSize = gridSize * cellSize;
         const center = Cesium.Cartesian3.fromDegrees(options.lon, options.lat);
@@ -185,8 +179,8 @@ export class MagoFluid {
      * @returns {Promise<void>}
      */
     async initBase(options) {
-        console.log('[MCT][FLUID] initBase');
-        this.info.status = 'loading';
+        console.log("[MCT][FLUID] initBase");
+        this.info.status = "loading";
         this.clearWaterSourcePositions();
         this.clearWaterMinusSourcePositions();
         this.clearSeaWallPositions();
@@ -194,9 +188,9 @@ export class MagoFluid {
         await this.initWaterSimulation(options);
         await this.initializeWater();
         await this.initializeTerrain();
-        //this.initWaterSource();
+
         this.renderFrame(true);
-        this.info.status = 'ready';
+        this.info.status = "ready";
     }
 
     /**
@@ -205,7 +199,7 @@ export class MagoFluid {
      */
     async start() {
         await this.startFrame();
-        this.info.status = 'running';
+        this.info.status = "running";
     }
 
     /**
@@ -215,21 +209,8 @@ export class MagoFluid {
         if (this.intervalObject) {
             clearInterval(this.intervalObject);
         }
-        this.info.status = 'stopped';
+        this.info.status = "stopped";
     }
-
-    /*initWaterSource() {
-        const gridSize = this.options.gridSize;
-        let cellPosition = ((gridSize * (gridSize / 2)) + (gridSize / 2)) * 4;
-        console.log('[MCT][FLUID] setWaterSourcePosition', cellPosition);
-        this.options.waterSourcePosition = cellPosition;
-    }*/
-
-    /*setWaterSourcePosition(lon, lat) {
-        let cellPosition = this.findCellFromDegree(lon, lat);
-        console.log('[MCT][FLUID] setWaterSourcePosition', cellPosition);
-        this.options.waterSourcePosition = cellPosition;
-    }*/
 
     /**
      * Clears the water source positions.
@@ -259,11 +240,11 @@ export class MagoFluid {
      * @returns {{lon: number, lat: number}}
      */
     addWaterSourcePosition(lon, lat) {
-        let cellPosition = this.findCellFromDegree(lon, lat);
-        let centerPosition = this.calcCellCenterPosition(cellPosition);
+        const cellPosition = this.findCellFromDegree(lon, lat);
+        const centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterSourcePositions.push(cellPosition * 4);
-        console.log('[MCT][FLUID] setWaterSourcePosition', cellPosition * 4);
+        console.log("[MCT][FLUID] setWaterSourcePosition", cellPosition * 4);
         return centerPosition;
     }
 
@@ -274,11 +255,11 @@ export class MagoFluid {
      * @returns {{lon: number, lat: number}}
      */
     addWaterMinusSourcePosition(lon, lat) {
-        let cellPosition = this.findCellFromDegree(lon, lat);
-        let centerPosition = this.calcCellCenterPosition(cellPosition);
+        const cellPosition = this.findCellFromDegree(lon, lat);
+        const centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterMinusSourcePositions.push(cellPosition * 4);
-        console.log('[MCT][FLUID] setWaterMinusSourcePosition', cellPosition * 4);
+        console.log("[MCT][FLUID] setWaterMinusSourcePosition", cellPosition * 4);
         return centerPosition;
     }
 
@@ -289,11 +270,11 @@ export class MagoFluid {
      * @returns {{lon: number, lat: number}}
      */
     addSeaWallPosition(lon, lat) {
-        let cellPosition = this.findCellFromDegree(lon, lat);
-        let centerPosition = this.calcCellCenterPosition(cellPosition);
+        const cellPosition = this.findCellFromDegree(lon, lat);
+        const centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterSeawallPositions.push(cellPosition * 4);
-        console.log('[MCT][FLUID] setWaterSeawallPosition', cellPosition * 4);
+        console.log("[MCT][FLUID] setWaterSeawallPosition", cellPosition * 4);
         return centerPosition;
     }
 
@@ -305,9 +286,9 @@ export class MagoFluid {
         const max = gridSize * gridSize;
 
         const randomSourceCell = Math.floor(Math.random() * max) * 4;
-        console.log('[MCT][FLUID] setWaterSourcePosition', randomSourceCell);
+        console.log("[MCT][FLUID] setWaterSourcePosition", randomSourceCell);
         this.options.waterSourcePositions.push(randomSourceCell);
-        //this.options.waterSourceAmount = Math.floor(Math.random() * 10);
+        // this.options.waterSourceAmount = Math.floor(Math.random() * 10);
     }
 
     initOptions(options) {
@@ -344,7 +325,7 @@ export class MagoFluid {
 
         let heightOffset = 0;
         if (terrainProvider instanceof Cesium.CesiumTerrainProvider) {
-            let centerWithHeight = await Cesium.sampleTerrainMostDetailed(terrainProvider, [Cesium.Cartographic.fromDegrees(options.lon, options.lat)]);
+            const centerWithHeight = await Cesium.sampleTerrainMostDetailed(terrainProvider, [Cesium.Cartographic.fromDegrees(options.lon, options.lat)]);
             heightOffset = centerWithHeight[0].height;
         }
         this.options.heightOffset = heightOffset;
@@ -354,27 +335,22 @@ export class MagoFluid {
         transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
         transform = Cesium.Matrix4.multiplyByTranslation(transform, new Cesium.Cartesian3(0, 0, heightOffset), new Cesium.Matrix4());
 
+        const baseUrl = this.baseUrl.replace(/\/$/, "");
         let gridModelUrl;
         if (options.gridUrl) {
             gridModelUrl = options.gridUrl;
         } else {
-            gridModelUrl = "/grid/" + await this.getGridUrl(gridSize);
+            gridModelUrl = baseUrl + "/grid/" + await this.getGridUrl(gridSize);
         }
 
         const gltf = await Cesium.Model.fromGltfAsync({
             url: gridModelUrl,
-            //url: grid,
-            modelMatrix: transform,
-            debugShowBoundingVolume: false,
-            enableDebugWireframe: true,
-            debugWireframe: false,
-            backFaceCulling: false,
-            shadows: Cesium.ShadowMode.RECEIVE_ONLY,
+            modelMatrix: transform, debugShowBoundingVolume: false, enableDebugWireframe: true, debugWireframe: false, backFaceCulling: false, shadows: Cesium.ShadowMode.RECEIVE_ONLY,
         });
         this.gridPrimitive = gltf;
 
-        const vertexShaderText = await this.customShaderLoader.getShaderSource('default-vertex-shader.vert');
-        const fragmentShaderText = await this.customShaderLoader.getShaderSource('default-fragment-shader.frag');
+        const vertexShaderText = await this.customShaderLoader.getShaderSource("default-vertex-shader.vert");
+        const fragmentShaderText = await this.customShaderLoader.getShaderSource("default-fragment-shader.frag");
         this.waterTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
         this.waterTextureUniform = new Cesium.TextureUniform({
             typedArray: this.waterTextureArray,
@@ -382,7 +358,7 @@ export class MagoFluid {
             height: this.options.gridSize,
             minificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
             magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            repeat: false
+            repeat: false,
         });
 
         this.fluxTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
@@ -392,26 +368,8 @@ export class MagoFluid {
             height: this.options.gridSize,
             minificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
             magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            repeat: false
+            repeat: false,
         });
-
-        /*this.waterNormalTexture = new Cesium.TextureUniform({
-            url: "/data/water-diff.png",
-            minificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            repeat: true
-        });*/
-        //this.customShader.setUniform('u_water_normal_texture', this.waterNormalTexture);
-
-        //loadBuildingTexture();
-
-        /*this.buildingTextureArray = new Uint8Array(this.gridSize * this.gridSize * 4);
-        this.buildingTextureUniform = new Cesium.TextureUniform({
-            url: "/data/grid/sample.png",
-            minificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            repeat: false
-        });*/
 
         this.terrainTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
         this.terrainTextureUniform = new Cesium.TextureUniform({
@@ -420,55 +378,38 @@ export class MagoFluid {
             height: this.options.gridSize,
             minificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
             magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-            repeat: false
+            repeat: false,
         });
 
         this.customShader = new Cesium.CustomShader({
             uniforms: {
                 u_height_offset: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.heightOffset
+                    type: Cesium.UniformType.FLOAT, value: this.options.heightOffset,
                 }, u_water_skirt: {
-                    type: Cesium.UniformType.BOOL,
-                    value: this.options.waterSkirt
+                    type: Cesium.UniformType.BOOL, value: this.options.waterSkirt,
                 }, u_water: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.waterTextureUniform
+                    type: Cesium.UniformType.SAMPLER_2D, value: this.waterTextureUniform,
                 }, u_terrain: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.terrainTextureUniform
+                    type: Cesium.UniformType.SAMPLER_2D, value: this.terrainTextureUniform,
                 }, u_flux: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.fluxTextureUniform
+                    type: Cesium.UniformType.SAMPLER_2D, value: this.fluxTextureUniform,
                 }, u_cell_size: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.cellSize
+                    type: Cesium.UniformType.FLOAT, value: this.options.cellSize,
                 }, u_grid_size: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.gridSize
+                    type: Cesium.UniformType.FLOAT, value: this.options.gridSize,
                 }, u_max_height: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.maxHeight
+                    type: Cesium.UniformType.FLOAT, value: this.options.maxHeight,
                 }, u_color_intensity: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.colorIntensity
+                    type: Cesium.UniformType.FLOAT, value: this.options.colorIntensity,
                 }, u_max_opacity: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.maxOpacity
+                    type: Cesium.UniformType.FLOAT, value: this.options.maxOpacity,
                 }, u_water_brightness: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.waterBrightness
+                    type: Cesium.UniformType.FLOAT, value: this.options.waterBrightness,
                 }, u_height_palette: {
-                    type: Cesium.UniformType.BOOL,
-                    value: this.options.heightPalette
+                    type: Cesium.UniformType.BOOL, value: this.options.heightPalette,
                 }, u_water_color: {
-                    type: Cesium.UniformType.VEC3,
-                    value: this.options.waterColor,
+                    type: Cesium.UniformType.VEC3, value: this.options.waterColor,
                 },
-                /*u_water_normal_texture: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.waterNormalTexture
-                }*/
             },
             varyings: {
                 v_normal: Cesium.VaryingType.VEC3,
@@ -476,13 +417,11 @@ export class MagoFluid {
                 v_temp_water_height: Cesium.VaryingType.FLOAT,
                 v_texCoord: Cesium.VaryingType.VEC2,
                 v_isNoWater: Cesium.VaryingType.FLOAT,
-                //v_normal_texture: Cesium.VaryingType.VEC3,
                 v_flux_value: Cesium.VaryingType.VEC2,
-                v_water_color: Cesium.VaryingType.VEC3
+                v_water_color: Cesium.VaryingType.VEC3,
             },
             vertexShaderText: vertexShaderText,
             fragmentShaderText: fragmentShaderText,
-            //lightingModel: Cesium.LightingModel.UNLIT,
             mode: Cesium.CustomShaderMode.MODIFY_MATERIAL,
             translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
         });
@@ -492,7 +431,7 @@ export class MagoFluid {
     }
 
     startFrame() {
-        console.log('[MCT][FLUID] startWaterSimulation');
+        console.log("[MCT][FLUID] startWaterSimulation");
         let stepCount = 0;
 
         if (this.intervalObject) {
@@ -509,9 +448,17 @@ export class MagoFluid {
     /**
      * Saves the water map image as a PNG file.
      */
-    saveWaterMapImage() {
+    saveWaterMapImage(zip, fileName) {
         const simulationInfo = this.fluidEngine.simulationInfo;
-        this.fluidEngine.saveUint8ArrayAsPNG(simulationInfo.waterUint8Array, this.options.gridSize, this.options.gridSize);
+        this.fluidEngine.saveUint8ArrayAsPNG(zip, simulationInfo.waterUint8Array, this.options.gridSize, this.options.gridSize, fileName);
+    }
+
+    /**
+     * Saves the terrain map image as a PNG file.
+     * @param isFirstFrame
+     */
+    saveTerrainMapImage(zip, fileName) {
+        this.fluidEngine.saveUint8ArrayAsPNG(zip, this.terrainTextureUniform.typedArray, this.options.gridSize, this.options.gridSize, fileName);
     }
 
     renderFrame(isFirstFrame) {
@@ -526,21 +473,21 @@ export class MagoFluid {
         this.waterTextureUniform.typedArray = simulationInfo.waterUint8Array;
         this.fluxTextureUniform.typedArray = simulationInfo.fluxUint8Array;
 
-        this.customShader.setUniform('u_water', this.waterTextureUniform);
-        this.customShader.setUniform('u_flux', this.fluxTextureUniform);
-        this.customShader.setUniform('u_color_intensity', this.options.colorIntensity);
-        this.customShader.setUniform('u_max_opacity', this.options.maxOpacity);
-        this.customShader.setUniform('u_water_skirt', this.options.waterSkirt);
-        this.customShader.setUniform('u_water_brightness', this.options.waterBrightness);
-        this.customShader.setUniform('u_height_palette', this.options.heightPalette);
-        this.customShader.setUniform('u_water_color', this.options.waterColor);
+        this.customShader.setUniform("u_water", this.waterTextureUniform);
+        this.customShader.setUniform("u_flux", this.fluxTextureUniform);
+        this.customShader.setUniform("u_color_intensity", this.options.colorIntensity);
+        this.customShader.setUniform("u_max_opacity", this.options.maxOpacity);
+        this.customShader.setUniform("u_water_skirt", this.options.waterSkirt);
+        this.customShader.setUniform("u_water_brightness", this.options.waterBrightness);
+        this.customShader.setUniform("u_height_palette", this.options.heightPalette);
+        this.customShader.setUniform("u_water_color", this.options.waterColor);
 
         if (isFirstFrame) {
-            console.log('[MCT][FLUID] render first frame');
+            console.log("[MCT][FLUID] render first frame");
             this.terrainTextureUniform.typedArray = this.convertMapToArray(this.terrainMap, this.options.maxHeight);
             this.fluidEngine.setTerrainTexture(this.terrainTextureUniform.typedArray);
-            this.customShader.setUniform('u_terrain', this.terrainTextureUniform);
-            //this.customShader.setUniform('u_water_normal_texture', this.waterNormalTexture);
+            this.customShader.setUniform("u_terrain", this.terrainTextureUniform);
+            // this.customShader.setUniform('u_water_normal_texture', this.waterNormalTexture);
         }
     }
 
@@ -548,17 +495,17 @@ export class MagoFluid {
      * Initializes the water simulation.
      * @returns {Promise<void>}
      */
-    async initializeWater(){
-        console.log('[MCT][FLUID] initializeWater');
+    async initializeWater() {
+        console.log("[MCT][FLUID] initializeWater");
         const gridSize = this.options.gridSize;
         this.waterMap = new Array(gridSize * gridSize).fill(0);
         await this.fluidEngine.resetWaterTexture();
     }
 
     async initializeTerrain() {
-        console.log('[MCT][FLUID] initializeTerrain');
+        console.log("[MCT][FLUID] initializeTerrain");
         const gridSize = this.options.gridSize;
-        let cellSize = this.options.cellSize;
+        const cellSize = this.options.cellSize;
         this.terrainMap = new Array(gridSize * gridSize).fill(0);
         const terrainProvider = this.viewer.scene.terrainProvider;
 
@@ -567,7 +514,7 @@ export class MagoFluid {
         const minLat = extent.getMinLat();
 
         if (terrainProvider instanceof Cesium.EllipsoidTerrainProvider) {
-            /*const terrainHeight = 0;
+            /* const terrainHeight = 0;
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
                     if (j > gridSize / 3 && i > gridSize / 3) {
@@ -578,21 +525,20 @@ export class MagoFluid {
         } else if (terrainProvider instanceof Cesium.CesiumTerrainProvider) {
             const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon, minLat);
             const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
-            let positions = [];
+            const positions = [];
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
-                    let realGridSize = gridSize * cellSize;
-                    let realj = j * cellSize;
-                    let reali = i * cellSize;
+                    const realGridSize = gridSize * cellSize;
+                    const realj = j * cellSize;
+                    const reali = i * cellSize;
 
-                    let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
-                    let position = new Cesium.Cartographic(Cesium.Math.toRadians(gridPosition.lon), Cesium.Math.toRadians(gridPosition.lat), 0);
+                    const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+                    const position = new Cesium.Cartographic(Cesium.Math.toRadians(gridPosition.lon), Cesium.Math.toRadians(gridPosition.lat), 0);
                     positions.push(position);
                 }
             }
             const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions, false);
-            //const updatedPositions = await Cesium.sampleTerrain(terrainProvider, 13, positions, false);
-
+            // const updatedPositions = await Cesium.sampleTerrain(terrainProvider, 13, positions, false);
 
             const terrainOffset = 1;
             for (let i = 0; i < gridSize; i++) {
@@ -623,9 +569,9 @@ export class MagoFluid {
 
         const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(this.extent.getMinLon(), this.extent.getMinLat());
         const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
-        let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+        const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
 
-        console.log('[MCT][FLUID] calcCellCenterPosition', gridPosition);
+        console.log("[MCT][FLUID] calcCellCenterPosition", gridPosition);
 
         return gridPosition;
     }
@@ -643,16 +589,16 @@ export class MagoFluid {
         const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
         for (let i = 0; i < gridSize - 1; i++) {
             for (let j = 0; j < gridSize - 1; j++) {
-                let realj = j * cellSize;
-                let reali = i * cellSize;
-                let gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
-                let nextGridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - (reali - cellSize), (realj - cellSize), 0));
+                const realj = j * cellSize;
+                const reali = i * cellSize;
+                const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+                const nextGridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - (reali - cellSize), (realj - cellSize), 0));
 
-                let inLon = gridPosition.lon <= lon && nextGridPosition.lon >= lon;
-                let inLat = gridPosition.lat >= lat && nextGridPosition.lat <= lat;
+                const inLon = gridPosition.lon <= lon && nextGridPosition.lon >= lon;
+                const inLat = gridPosition.lat >= lat && nextGridPosition.lat <= lat;
                 if (inLon && inLat) {
                     const index = this.findIndex(j, i);
-                    console.log('[MCT][FLUID] findCellFromDegree', index);
+                    console.log("[MCT][FLUID] findCellFromDegree", index);
                     return index;
                 }
             }

@@ -17,6 +17,93 @@
     width: 100vw;
     height: 100vh;
     z-index: 0;
+    overflow: hidden;
+}
+
+.cesium-viewer {
+    height: 100%;
+    width: 100%;
+}
+
+.cesium-viewer-cesiumWidgetContainer {
+    height: 100%;
+    width: 100%;
+}
+
+#timeSliderWrap {
+    position: absolute;
+    left: 50%;
+    bottom: 100px;
+    translate: -50% -50%;
+    padding: 10px 15px;
+    width: 1024px;
+
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#timeSlider {
+    height: 25px;
+    position: relative;
+}
+
+span.bufferingBar {
+    width: 0;
+    height: 14px;
+    position: absolute;
+    background-color: #0075ff4a;
+    left: 0;
+    top: 2px;
+    z-index: -10;
+    border-radius: 10px;
+}
+
+#timeSliderWrap * {
+    vertical-align: middle;
+}
+
+#timeSliderWrap input[type="range"] {
+    /*width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;*/
+
+    width: 100%;
+    margin: 0;
+    background: #0000002e;
+    border-radius: 10px;
+    -webkit-appearance: none;
+}
+
+#timeSliderWrap input[type="text"] {
+    background-color: unset;
+    border: 1px solid #0000002e;
+    border-radius: 6px;
+    text-align: center;
+    padding: 2px 10px;
+    width: 150px;
+    color: #1a1a1a;
+    font-size: 12px;
+    height: 25px;
+}
+
+#timeSliderWrap button {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid #0000002e;
+    border-radius: 6px;
+    padding: 2px 10px;
+    color: #1a1a1a;
+    font-size: 11px;
+    height: 25px;
+    cursor: pointer;
+}
+
+#timeSliderWrap button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 #toolbar {

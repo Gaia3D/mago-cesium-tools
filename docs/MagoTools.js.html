@@ -1,28 +1,56 @@
-import { Viewer, Entity, Cartesian3, Color } from "cesium";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: MagoTools.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: MagoTools.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { Viewer, Entity, Cartesian3, Color } from "cesium";
 import * as Cesium from 'cesium'
 import tree from "../assets/lowpoly-tree.glb";
 
 /**
- * MagoViewer is a class that creates a viewer to render points on a globe.
+ * MagoTools is a class that creates a viewer to render points on a globe.
  * @class
  * @param {Viewer} viewer - Cesium Viewer instance
  * @example
- * const magoViewer = new MagoViewer(viewer);
- * magoViewer.test();
+ * const magoTools = new MagoTools(viewer);
+ * magoTools.test();
  */
-export class MagoViewer {
+export class MagoTools {
     constructor(viewer) {
         this.viewer = viewer;
     }
 
     /**
-     * Tests the MagoViewer class.
+     * Tests the MagoTools class.
      * draws points on the globe.
      * @function
      * @returns {void}
      * @example
-     * const magoViewer = new MagoViewer(viewer);
-     * magoViewer.test()
+     * const magoTools = new MagoTools(viewer);
+     * magoTools.test()
      */
     test() {
         const [lon, lat] = [126.968905, 37.447571];
@@ -40,7 +68,7 @@ export class MagoViewer {
      * @param height {number} height meters
      * @returns {void}
      * @example
-     * magoViewer.initPosition(126.978388, 37.566610, 10000)
+     * magoTools.initPosition(126.978388, 37.566610, 10000)
      */
     initPosition(lon = 0, lat = 0, height = 0) {
         this.viewer.camera.setView({
@@ -57,18 +85,19 @@ export class MagoViewer {
      * @param lon {number} longitude degrees
      * @param lat {number} latitude degrees
      * @param height {number} height meters
+     * @param duration {number} duration seconds
      * @returns {void}
      * @example
-     * magoViewer.flyTo(126.978388, 37.566610, 10000)
+     * magoTools.flyTo(126.978388, 37.566610, 10000)
      */
-    flyTo(lon, lat, height) {
+    flyTo(lon, lat, height = 1000, duration = 0) {
         this.viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 1000.0),
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
             orientation: {
                 heading: Cesium.Math.toRadians(0.0),
                 pitch: Cesium.Math.toRadians(-90.0)
             },
-            duration: 0
+            duration: duration,
         })
     }
 
@@ -77,46 +106,60 @@ export class MagoViewer {
      * @param lon {number} longitude degrees
      * @param lat {number} latitude degrees
      * @param cssColor {String} CSS color string "#ff0000"
+     * @param entitiesCollection
      * @returns {void}
      * @example
-     * magoViewer.addPoint(126.978388, 37.566610, "#ff0000")
+     * magoTools.addPoint(126.978388, 37.566610, "#ff0000")
      */
-    addPoint(lon, lat, cssColor = "#ffcc00") {
-        this.viewer.entities.add(
-            new Entity({
-                position: Cartesian3.fromDegrees(lon, lat),
-                point: {
-                    pixelSize: 3,
-                    color: Color.fromCssColorString(cssColor)
-                }
-            })
-        );
+    addPoint(lon, lat, cssColor = "#ffcc00", entitiesCollection = null) {
+        const entity = new Entity({
+            position: Cartesian3.fromDegrees(lon, lat),
+            point: {
+                pixelSize: 3,
+                color: Color.fromCssColorString(cssColor),
+                //distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0, 1000000.0)
+            },
+            billboard: {
+                image: "/src/assets/img.png",
+                width: 16,
+                height: 16,
+                distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0, 1000.0)
+            },
+        });
+
+        if (entitiesCollection) {
+            entitiesCollection.add(entity);
+        } else {
+            this.viewer.entities.add(entity);
+        }
     }
 
     /**
      * Adds a point to the globe.
      * @param cssColor {String} CSS color string "#ff0000"
+     * @param entitiesCollection
      * @returns {void}
      * @example
-     * magoViewer.addPoint(126.978388, 37.566610, "#ff0000")
+     * magoTools.addPoint(126.978388, 37.566610, "#ff0000")
      */
-    addRandomPoint(cssColor = "#ff0000") {
+    addRandomPoint(cssColor = "#ff0000", entitiesCollection = null) {
         let randomX = (Math.random() * 360) - 180;
         let randomY = (Math.random() * 180) - 90;
-        this.addPoint(randomX, randomY, cssColor);
+        this.addPoint(randomX, randomY, cssColor, entitiesCollection);
     }
 
     /**
      * Samples random points on the globe.
      * @param count {number}
      * @param cssColor {string} CSS color string "#ff0000"
+     * @param entitiesCollection
      * @returns {void}
      * @example
-     * magoViewer.addRandomPoints(1000, "#ffff00")
+     * magoTools.addRandomPoints(1000, "#ffff00")
      */
-    addRandomPoints(count, cssColor = "#00ff00") {
-        for (let i = 0; i < count; i++) {
-            this.addRandomPoint(cssColor);
+    addRandomPoints(count, cssColor = "#00ff00", entitiesCollection = null) {
+        for (let i = 0; i &lt; count; i++) {
+            this.addRandomPoint(cssColor, entitiesCollection);
         }
     }
 
@@ -125,7 +168,7 @@ export class MagoViewer {
      * @param cssColor {string} CSS color string "#ff0000"
      * @returns {void}
      * @example
-     * magoViewer.changeGlobeColor("#ff0000")
+     * magoTools.changeGlobeColor("#ff0000")
      */
     changeGlobeColor(cssColor) {
         this.viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString(cssColor);
@@ -135,7 +178,7 @@ export class MagoViewer {
      * Creates a grid imagery provider on the globe.
      * @returns {void}
      * @example
-     * magoViewer.createGridImageryProvider()
+     * magoTools.createGridImageryProvider()
      */
     createGridImageryProvider(cell = 8) {
         const grid = new Cesium.GridImageryProvider({
@@ -157,7 +200,7 @@ export class MagoViewer {
      * @param extension {String} jpeg, png
      * @returns {module:cesium.ImageryLayer}
      * @example
-     * magoViewer.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
+     * magoTools.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
      */
     createVworldImageryLayerWithoutToken(type, extension) {
         const minLevel = 5
@@ -166,8 +209,10 @@ export class MagoViewer {
             url: `https://xdworld.vworld.kr/2d/${type}/service/{TileMatrix}/{TileCol}/{TileRow}.${extension}`,
             layer: 'Base',
             style: 'default',
+            //minimumLevel: 1,
             maximumLevel: maxLevel,
-            tileMatrixSetID: 'default028mm'
+            tileMatrixSetID: 'EPSG:3857',
+            credit: new Cesium.Credit('Vworld Korea'),
         }
         const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
         const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
@@ -188,7 +233,7 @@ export class MagoViewer {
      * @param vworldKey {String} 00000000-0000-0000-0000-000000000000
      * @returns {module:cesium.ImageryLayer}
      * @example
-     * magoViewer.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
+     * magoTools.createVworldImageryLayer('Satellite', true, 'jpeg', '00000000-0000-0000-0000-000000000000')
      */
     createVworldImageryLayer(type, hybrid, extension, vworldKey) {
         const minLevel = 5
@@ -232,7 +277,7 @@ export class MagoViewer {
     /**
      * Changes the terrain provider of the
      * @param url {String}
-     * @returns {Promise<void>}
+     * @returns {Promise&lt;void>}
      * @example
      * changeTerrain('url')
      */
@@ -269,4 +314,26 @@ export class MagoViewer {
     destroy() {
         this.viewer.destroy();
     }
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Apr 21 2025 18:33:36 GMT+0900 (대한민국 표준시)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

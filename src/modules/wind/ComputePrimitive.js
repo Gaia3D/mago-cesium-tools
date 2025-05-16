@@ -12,7 +12,7 @@ export class ComputePrimitive {
             fragmentShaderSource: this.fragmentShaderSource,
             uniformMap: this.uniformMap,
             outputTexture: this.outputTexture,
-            persists: true
+            persists: true,
         });
     }
 

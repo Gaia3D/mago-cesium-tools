@@ -100,7 +100,7 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         material.normalEC = czm_normal * v_normal;
     }
 
-    /*if (v_water_height != v_temp_water_height) {
+/*if (v_water_height != v_temp_water_height) {
         material.diffuse = vec3(0.1, 0.1, 0.1);
     }*/
 

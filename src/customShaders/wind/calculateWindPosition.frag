@@ -48,21 +48,21 @@ vec2 invBilinear(in vec2 p, in vec3 quad[4]) {
     float k0 = cross2d(h, e);
 
     // if edges are parallel, this is a linear equation
-    if(abs(k2) < 0.001) {
+    if (abs(k2) < 0.001) {
         res = vec2((h.x * k1 + f.x * k0) / (e.x * k1 - g.x * k0), -k0 / k1);
     }
     // otherwise, it's a quadratic
     else {
         float w = k1 * k1 - 4.0 * k0 * k2;
-        if(w < 0.0)
-            return vec2(-1.0);
+        if (w < 0.0)
+        return vec2(-1.0);
         w = sqrt(w);
 
         float ik2 = 0.5 / k2;
         float v = (-k1 - w) * ik2;
         float u = (h.x - f.x * v) / (e.x + g.x * v);
 
-        if(u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
+        if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
             v = (-k1 + w) * ik2;
             u = (h.x - f.x * v) / (e.x + g.x * v);
         }
@@ -112,8 +112,8 @@ vec3 calculateNextPosition(vec3 normalizedPosition, vec3 speed) {
 
     vec2 uv = invBilinear(movedLonlatalt.xy, bounds);
 
-    if(uv.x == -1.0 || uv.y == -1.0)
-        return vec3(0.0);
+    if (uv.x == -1.0 || uv.y == -1.0)
+    return vec3(0.0);
 
     float boundaryAltitudeSize = (altitudeBounds[1] - altitudeBounds[0]);
     vec3 movedUVW = vec3(uv, (boundaryAltitudeSize == 0.0) ? 0.5 : ((movedLonlatalt.z - altitudeBounds[0]) / (altitudeBounds[1] - altitudeBounds[0])));
@@ -175,26 +175,26 @@ vec3 getWindSpeedAt(vec3 normalizedPosition) {
     float altitude = (boundaryAltitudeSize == 0.0) ? altitudeBounds[1] : (normalizedPosition.z * (altitudeBounds[1] - altitudeBounds[0]) + altitudeBounds[0]);
 
     int levels = int(dimensions.z);
-    for(int i = 0; i < levels; i++) {
-        if(altitudes[i] >= altitude) {
-            if(highLevelIndex == -1)
-                highLevelIndex = i;
-            else if(altitudes[highLevelIndex] >= altitudes[i])
-                highLevelIndex = i;
+    for (int i = 0; i < levels; i++) {
+        if (altitudes[i] >= altitude) {
+            if (highLevelIndex == -1)
+            highLevelIndex = i;
+            else if (altitudes[highLevelIndex] >= altitudes[i])
+            highLevelIndex = i;
         }
-        if(altitudes[i] <= altitude) {
-            if(lowLevelIndex == -1)
-                lowLevelIndex = i;
-            else if(altitudes[lowLevelIndex] <= altitudes[i])
-                lowLevelIndex = i;
+        if (altitudes[i] <= altitude) {
+            if (lowLevelIndex == -1)
+            lowLevelIndex = i;
+            else if (altitudes[lowLevelIndex] <= altitudes[i])
+            lowLevelIndex = i;
         }
     }
 
-    if(lowLevelIndex == -1 || highLevelIndex == -1)
-        return vec3(-1.0);       // should not excute
+    if (lowLevelIndex == -1 || highLevelIndex == -1)
+    return vec3(-1.0);       // should not excute
 
     vec3 normalizedWindSpeed = vec3(0.0);
-    if(lowLevelIndex == highLevelIndex) {
+    if (lowLevelIndex == highLevelIndex) {
         normalizedWindSpeed = sampleWindSpeedAtLevel(lowLevelIndex, normalizedPosition.xy);
     } else {
         vec3 low = sampleWindSpeedAtLevel(lowLevelIndex, normalizedPosition.xy);
@@ -205,23 +205,23 @@ vec3 getWindSpeedAt(vec3 normalizedPosition) {
     }
 
     vec3 realWindSpeed = minValues + normalizedWindSpeed * (maxValues - minValues);
-    if(maxValues.x == minValues.x)
-        realWindSpeed.x = maxValues.x;
-    if(maxValues.y == minValues.y)
-        realWindSpeed.y = maxValues.y;
-    if(maxValues.z == minValues.z)
-        realWindSpeed.z = maxValues.z;
+    if (maxValues.x == minValues.x)
+    realWindSpeed.x = maxValues.x;
+    if (maxValues.y == minValues.y)
+    realWindSpeed.y = maxValues.y;
+    if (maxValues.z == minValues.z)
+    realWindSpeed.z = maxValues.z;
     return realWindSpeed;
 }
 
 bool checkOutBounds(vec3 normalizedPosition) {
-    if(normalizedPosition.x <= 0.0 || normalizedPosition.x >= 1.0)
-        return true;
-    if(normalizedPosition.y <= 0.0 || normalizedPosition.y >= 1.0)
-        return true;
+    if (normalizedPosition.x <= 0.0 || normalizedPosition.x >= 1.0)
+    return true;
+    if (normalizedPosition.y <= 0.0 || normalizedPosition.y >= 1.0)
+    return true;
     float boundaryAltitudeSize = (altitudeBounds[1] - altitudeBounds[0]);
-    if(boundaryAltitudeSize > 0.0 && (normalizedPosition.z <= 0.0 || normalizedPosition.z >= 1.0))    // 단일면 데이터를 위해
-        return true;
+    if (boundaryAltitudeSize > 0.0 && (normalizedPosition.z <= 0.0 || normalizedPosition.z >= 1.0))    // 단일면 데이터를 위해
+    return true;
 
     return false;
 }
@@ -243,7 +243,7 @@ void main() {
 
     bool shouldReposition = checkOutBounds(clampedNormalized) || random > 0.999;
     float repositioned = 0.0;
-    if(shouldReposition) {
+    if (shouldReposition) {
         // reposition to random p inside volume
         clampedNormalized = generateRandomParticle(particleIndex);
         repositioned = 1.0;

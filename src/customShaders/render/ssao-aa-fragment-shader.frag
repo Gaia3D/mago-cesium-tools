@@ -10,7 +10,7 @@ uniform float intensity;
 vec4 getDepth(vec2 screenPos) {
     return texture(magoDepthTextureForSsao, screenPos);
 }
-vec4 getPositionEC(vec2 screenPos){
+vec4 getPositionEC(vec2 screenPos) {
     vec4 rawDepthColor = getDepth(screenPos);
     float depth = czm_unpackDepth(rawDepthColor);
     vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord.xy, depth);

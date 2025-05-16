@@ -1,4 +1,4 @@
-import * as Cesium from 'cesium';
+import * as Cesium from "cesium";
 import {ShaderLoader} from "../ShaderLoader.js";
 
 /**
@@ -10,12 +10,23 @@ import {ShaderLoader} from "../ShaderLoader.js";
 class MagoSSAO {
     constructor(viewer) {
         this.viewer = viewer;
+
+        /**
+         * Global configuration options.
+         * @typedef {Object} GlobalOptions
+         * @property {number} gridSize - Grid size of the simulation.
+         * @property {number} threshold - Depth threshold for filtering.
+         * @property {number} intensity - Effect intensity from 0 to 1.
+         * @property {number} radius - Influence radius.
+         */
+
+        /** @type {GlobalOptions} */
         this.globalOptions = {
-            gridSize: 5, // grid size
-            threshold: 5, // depth threshold
-            intensity: 0.9, // intensity
-            radius: 1.0, // radius
-        }
+            gridSize: 5,
+            threshold: 5,
+            intensity: 0.9,
+            radius: 1.0,
+        };
         this.composite = null;
         this.customShaderLoader = new ShaderLoader("/src/customShaders/render");
         this.init(viewer);
@@ -42,67 +53,78 @@ class MagoSSAO {
      */
     async setup(viewer) {
         const globalOptions = this.globalOptions;
-        const depthFragmentShader = await this.customShaderLoader.getShaderSource("depth-fragment-shader.frag");
+        const depthFragmentShader = await this.customShaderLoader.getShaderSource(
+            "depth-fragment-shader.frag");
         const depthProcess = new Cesium.PostProcessStage({
             fragmentShader: depthFragmentShader,
             inputPreviousStageTexture: true,
-            name: 'magoDepthTextureForSsao',
+            name: "magoDepthTextureForSsao",
         });
 
-        const normalFragmentShader = await this.customShaderLoader.getShaderSource("normal-fragment-shader-ssao.frag");
+        const normalFragmentShader = await this.customShaderLoader.getShaderSource(
+            "normal-fragment-shader-ssao.frag");
         const normalProcess = new Cesium.PostProcessStage({
             fragmentShader: normalFragmentShader,
             inputPreviousStageTexture: true,
-            name: 'magoNormalTextureForSsao',
+            name: "magoNormalTextureForSsao",
         });
 
-        const ssaoFragmentShader = await this.customShaderLoader.getShaderSource("ssao-fragment-shader.frag");
+        const ssaoFragmentShader = await this.customShaderLoader.getShaderSource(
+            "ssao-fragment-shader.frag");
         const ssaoProcess = new Cesium.PostProcessStage({
             fragmentShader: ssaoFragmentShader,
             uniforms: {
-                magoNormalTextureForSsao: 'magoNormalTextureForSsao',
-                magoDepthTextureForSsao: 'magoDepthTextureForSsao',
-                aspectRatio: function () {
+                magoNormalTextureForSsao: "magoNormalTextureForSsao",
+                magoDepthTextureForSsao: "magoDepthTextureForSsao",
+                aspectRatio: function() {
                     return viewer.scene.camera.frustum.aspectRatio;
                 },
-                fovy: function () {
+                fovy: function() {
                     return viewer.scene.camera.frustum.fovy;
                 },
-                tangentOfFovy: function () {
+                tangentOfFovy: function() {
                     return Math.tan(viewer.scene.camera.frustum.fovy / 2);
                 },
-                near: function () {
+                near: function() {
                     return viewer.scene.camera.frustum.near;
                 },
-                far: function () {
+                far: function() {
                     return viewer.scene.camera.frustum.far;
                 },
-                uIntensity: function () {
+                uIntensity: function() {
                     return globalOptions.intensity;
                 },
-                uRadius: function () {
+                uRadius: function() {
                     return globalOptions.radius;
-                }
-            }, inputPreviousStageTexture: true, name: 'ssaoTexture'
+                },
+            }, inputPreviousStageTexture: true, name: "ssaoTexture",
         });
 
-        const ssaoAntiAliasingFragmentShader = await this.customShaderLoader.getShaderSource("ssao-aa-fragment-shader.frag");
+        const ssaoAntiAliasingFragmentShader = await this.customShaderLoader.getShaderSource(
+            "ssao-aa-fragment-shader.frag");
         const ssaoAntiAliasing = new Cesium.PostProcessStage({
             fragmentShader: ssaoAntiAliasingFragmentShader,
             uniforms: {
-                ssaoTexture: 'ssaoTexture', magoDepthTextureForSsao: 'magoDepthTextureForSsao', gridSize: function () {
+                ssaoTexture: "ssaoTexture",
+                magoDepthTextureForSsao: "magoDepthTextureForSsao",
+                gridSize: function() {
                     return globalOptions.gridSize;
-                }, threshold: function () {
+                },
+                threshold: function() {
                     return globalOptions.threshold;
                 },
-            }, inputPreviousStageTexture: true, name: 'ssaoAntiAliasingTexture'
+            }, inputPreviousStageTexture: true, name: "ssaoAntiAliasingTexture",
         });
 
         const createdComposite = new Cesium.PostProcessStageComposite({
-            name: 'ssaoComposite',
+            name: "ssaoComposite",
             inputPreviousStageTexture: false,
-            stages: [depthProcess, normalProcess, ssaoProcess, ssaoAntiAliasing]
-        })
+            stages: [
+                depthProcess,
+                normalProcess,
+                ssaoProcess,
+                ssaoAntiAliasing],
+        });
         viewer.scene.postProcessStages.add(createdComposite);
         this.composite = createdComposite;
         this.off();
