@@ -71,10 +71,9 @@ const viewer = new Viewer("cesiumContainer", {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.postProcessStages.fxaa.enabled = true;
 viewer.scene.globe.enableLighting = false;
-viewer.screenSpaceEventHandler.removeInputAction(
-    Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
-const [lon, lat] = [126.968905, 37.447571];
+const [lon, lat] = [-86.264209991, 39.91867743486771];
 
 const measurePoint = new MeasurePosition(viewer);
 const measureArea = new MeasureArea(viewer);
@@ -90,20 +89,16 @@ const drawCircle = new DrawCircle(viewer, {color: Cesium.Color.VIOLET});
 const drawSphere = new DrawSphere(viewer, {color: Cesium.Color.DARKORANGE});
 
 const drawPoint = new DrawPoint(viewer, {color: Cesium.Color.DARKORANGE});
-const drawPolygonClamped = new DrawPolygon(viewer,
-    {clampToGround: true, color: Cesium.Color.RED});
-const drawLineStringClamped = new DrawLineString(viewer,
-    {clampToGround: true, color: Cesium.Color.RED});
-const drawWallClamped = new DrawWall(viewer,
-    {clampToGround: true, color: Cesium.Color.RED});
+const drawPolygonClamped = new DrawPolygon(viewer, {clampToGround: true, color: Cesium.Color.RED});
+const drawLineStringClamped = new DrawLineString(viewer, {clampToGround: true, color: Cesium.Color.RED});
+const drawWallClamped = new DrawWall(viewer, {clampToGround: true, color: Cesium.Color.RED});
 
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
-    const tileset = await Cesium.Cesium3DTileset.fromUrl(
-        "http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json",
-        {});
+    await magoViewer.createGridImageryProvider();
+    await magoViewer.changeTerrain("https://seoul.gaia3d.com:10107/mago_terrain/output/hamilton_2024_dtm_4326_d20");
+    const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
     viewer.scene.primitives.add(tileset);
 
     magoViewer.initPosition(lon, lat, 1000.0);
