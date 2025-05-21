@@ -281,14 +281,13 @@ export class MagoTools {
      * @example
      * createModel('/assets/lowpoly-tree.glb', 126.978388, 37.566610)
      */
-    createModel(url = tree, lon, lat) {
+    createModel(url = tree, lon, lat, height = 0) {
         return this.viewer.entities.add({
             name: "Model",
-            position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
+            position: Cesium.Cartesian3.fromDegrees(lon, lat, height),
             model: {
                 uri: url,
                 scale: 1.0,
-                heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
             },
         });
     }
