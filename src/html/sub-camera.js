@@ -4,11 +4,11 @@ import * as Cesium from "cesium";
 import {Viewer} from "cesium";
 import {MagoTools} from "../modules/MagoTools.js";
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
-import {ModelSwapAnimator} from "@/modules/model/ModelSwapAnimator.js";
 import {SubViewer} from "@/modules/render/SubViewer.js";
 
-import camera from "@/assets/camera.glb";
 import {MagoDepth} from "@/modules/render/MagoDepth.js";
+import {FirstPersonView} from "@/modules/render/FirstPersonView.js";
+import {FirstPersonOnGround} from "@/modules/render/FirstPersonOnGround.js";
 
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
@@ -19,6 +19,10 @@ document.querySelector("#app").innerHTML = `
     <button id="start">Start</button>
     <button id="sync">Sync Camera</button>
     <button id="look-at-camera">LookAtCamera</button>
+    <span class="line"></span>
+    <button id="toggleShow">Toggle Show</button>
+    <span class="line"></span>
+    <button id="first-person-view">First Person View</button>
     <span class="line"></span>
     <button id="capture" class="btn">Capture</button>
     <span class="line"></span>
@@ -60,26 +64,26 @@ const magoTools = new MagoTools(viewer);
 let subViewer = undefined;
 let magoSubTools = undefined;
 let magoDepth = undefined;
+let firstPersonView = undefined;
 
 let modelSwapAnimator;
 let info;
 const init = async () => {
-    await magoTools.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    magoTools.initPosition(lon, lat, 1000.0);
-
     console.log(Cesium.Cartesian3.fromDegrees(lon, lat, 1000.0));
 
-    //await magoTools.createModel(camera, lon, lat, 1000.0);
-
-    subViewer = new SubViewer(viewer);
-    magoSubTools = new MagoTools(subViewer.viewer);
-
-    await magoSubTools.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    magoSubTools.initPosition(lon, lat, 1000.0);
+    await magoTools.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    magoTools.initPosition(lon, lat, 1000.0);
 
     await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     const tilesetA = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
     viewer.scene.primitives.add(tilesetA);
+
+    subViewer = new SubViewer(viewer);
+    subViewer.init();
+    magoSubTools = new MagoTools(subViewer.viewer);
+
+    await magoSubTools.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    magoSubTools.initPosition(lon, lat, 1000.0);
 
     await magoSubTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     const tilesetB = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
@@ -89,6 +93,8 @@ const init = async () => {
     setTimeout(() => {
         //magoDepth.on();
     }, 1000);
+
+    firstPersonView = new FirstPersonOnGround(viewer);
 
     setDefaultValue();
 };
@@ -106,8 +112,16 @@ const nextFrame = () => {
     modelSwapAnimator.loadModel(glbUrl, maxValue);
 };
 
+document.querySelector("#first-person-view").addEventListener("click", async () => {
+    firstPersonView.toggle();
+});
+
 document.querySelector("#start").addEventListener("click", async () => {
 
+});
+
+document.querySelector("#toggleShow").addEventListener("click", async () => {
+    subViewer.toggleShow();
 });
 
 document.querySelector("#sync").addEventListener("click", async () => {

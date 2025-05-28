@@ -5,41 +5,50 @@ import camera from "@/assets/camera.glb";
  * SubViewer
  */
 export class SubViewer {
-    constructor(refViewer) {
+    constructor(refViewer, cesiumContainer) {
         this.refViewer = refViewer;
-        this.cesiumContainer = undefined;
+        this.cesiumContainer = cesiumContainer;
         this.viewer = undefined;
-        this.isSync = true;
+        this.isShow = false;
+        this.isSync = false;
         this.isLookAtCamera = false;
 
         this.refCameraModel = undefined;
         this.cameraModel = undefined;
-        this.init();
     }
 
-    init() {
-        this.clear();
-        // invisible the default cesium viewer
-
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        let minWidth = width / 3;
-        let minHeight = height / 3;
-
-        // random id
+    createCesiumContainer() {
+        let minWidth = 400;
+        let minHeight = 300;
         const randomId = "container-" + Math.floor(Math.random() * 1000000);
         this.cesiumContainer = document.createElement("div");
         this.cesiumContainer.id = randomId;
-        //this.cesiumContainer.display = "none";
+        if (this.isShow) {
+            this.cesiumContainer.style.zIndex = "9999";
+        } else {
+            this.cesiumContainer.style.zIndex = "-1";
+        }
         this.cesiumContainer.style.position = "absolute";
-        this.cesiumContainer.style.top = "0px";
-        this.cesiumContainer.style.right = "0px";
+        this.cesiumContainer.style.top = "5px";
+        this.cesiumContainer.style.right = "5px";
         this.cesiumContainer.style.width = minWidth + "px";
         this.cesiumContainer.style.height = minHeight + "px";
+        this.cesiumContainer.style.border = "1px solid #000";
+        this.cesiumContainer.style.borderRadius = "5px";
+        this.cesiumContainer.style.overflow = "hidden";
         this.cesiumContainer.style.zIndex = "9999";
         document.body.appendChild(this.cesiumContainer);
+    }
 
-        this.viewer = new Cesium.Viewer(randomId, {
+    init() {
+        let minWidth = 400;
+        let minHeight = 300;
+
+        if (!this.cesiumContainer) {
+            this.createCesiumContainer();
+        }
+
+        this.viewer = new Cesium.Viewer(this.cesiumContainer.id, {
             geocoder: false,
             baseLayerPicker: false,
             homeButton: false,
@@ -51,7 +60,7 @@ export class SubViewer {
             selectionIndicator: false,
             fullscreenButton: false,
             baseLayer: false,
-            sceneMode: Cesium.SceneMode.SCENE3D,
+            //sceneMode: Cesium.SceneMode.SCENE3D,
             selectedEntity: undefined,
             selectedEntityChanged: undefined,
             selectedEntityChangedEvent: undefined,
@@ -73,9 +82,7 @@ export class SubViewer {
 
         let modelMatrix = Cesium.Matrix4.inverse(this.refViewer.camera.viewMatrix, new Cesium.Matrix4());
         modelMatrix = this.finalModelMatrix(modelMatrix);
-        //console.log("positionWC", refCamera.positionWC);
-        //console.log("viewMatrix", this.refViewer.camera.viewMatrix);
-        //console.log("modelMatrix", modelMatrix);
+
         Cesium.Model.fromGltfAsync({
             url: camera,
             modelMatrix: modelMatrix,
@@ -153,22 +160,19 @@ export class SubViewer {
         const targetPos = targetCamera.positionWC;
         const refPos = refCamera.positionWC;
 
-        // 3. target 위치에서의 ENU 좌표계
-        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        if (Cesium.Cartesian3.equals(targetPos, refPos)) {
+            //console.warn("Target camera position is the same as reference camera position. No adjustment needed.");
+            return;
+        }
 
-        // 4. ENU 행렬에서 기본 축 추출
-        const xAxis = Cesium.Matrix4.getColumn(enuTransform, 0, new Cesium.Cartesian3()); // east → right
-        const yAxis = Cesium.Matrix4.getColumn(enuTransform, 1, new Cesium.Cartesian3()); // north → up
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        //const xAxis = Cesium.Matrix4.getColumn(enuTransform, 0, new Cesium.Cartesian3()); // east → right
+        //const yAxis = Cesium.Matrix4.getColumn(enuTransform, 1, new Cesium.Cartesian3()); // north → up
         const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3()); // up → back (보정 필요)
 
-        // direction: refCamera를 바라보는 방향
         const direction = Cesium.Cartesian3.subtract(refPos, targetPos, new Cesium.Cartesian3());
         Cesium.Cartesian3.normalize(direction, direction);
 
-        // 기존 up에서 roll 없이 새 방향에 맞는 up을 투영
-        //const tempUp = Cesium.Cartesian3.clone(refCamera.up);
-
-        // up 벡터를 direction에 직교하도록 정리
         const right = Cesium.Cartesian3.cross(direction, zAxis, new Cesium.Cartesian3());
         Cesium.Cartesian3.normalize(right, right);
 
@@ -179,6 +183,17 @@ export class SubViewer {
         targetCamera.direction = direction;
         targetCamera.up = up;
         targetCamera.right = right;
+    }
+
+    toggleShow() {
+        this.isShow = !this.isShow;
+        if (this.isShow) {
+            //this.cesiumContainer.style.display = "block";
+            this.cesiumContainer.style.zIndex = "9999";
+        } else {
+            //this.cesiumContainer.style.display = "none"
+            this.cesiumContainer.style.zIndex = "-1";
+        }
     }
 
     setLookAtCamera() {
