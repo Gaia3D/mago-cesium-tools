@@ -27,9 +27,9 @@ export class FirstPersonOnGround {
         this.pysicalState = {
             isJumping: false,
             verticalVelocity: 0,
-            gravity: -9.8 * 2.0, // m/s²
-            moveSpeed: 20.0, // m/s (수평 이동 속도)
-            jumpSpeed: 10.0, // m/s (초기 점프 속도)
+            gravity: -9.8 * 2.0,
+            moveSpeed: 20.0,
+            jumpSpeed: 10.0,
             lastUpdateTime: performance.now(), // 마지막 업데이트 시간
         };
     }
@@ -55,7 +55,7 @@ export class FirstPersonOnGround {
             this.deactivate();
             this.isActive = false;
         } else {
-            this.activate();
+            this.activate(true);
             this.isActive = true;
         }
     }
@@ -75,8 +75,8 @@ export class FirstPersonOnGround {
         // 수평 방향 이동
         // =====================
         const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
-        //const xAxis = Cesium.Matrix4.getColumn(enuTransform, 0, new Cesium.Cartesian3()); // east → right
-        //const yAxis = Cesium.Matrix4.getColumn(enuTransform, 1, new Cesium.Cartesian3()); // north → up
+        // const xAxis = Cesium.Matrix4.getColumn(enuTransform, 0, new Cesium.Cartesian3()); // east → right
+        // const yAxis = Cesium.Matrix4.getColumn(enuTransform, 1, new Cesium.Cartesian3()); // north → up
         const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3());
         let direction = camera.direction;
         let right = camera.right;
@@ -86,17 +86,16 @@ export class FirstPersonOnGround {
         Cesium.Cartesian3.normalize(right, right);
 
         // 위쪽 방향 기준으로 수평 이동 벡터 계산
-        let tempRight = Cesium.Cartesian3.cross(zAxis, direction, new Cesium.Cartesian3());
+        const tempRight = Cesium.Cartesian3.cross(zAxis, direction, new Cesium.Cartesian3());
         Cesium.Cartesian3.negate(tempRight, tempRight);
         Cesium.Cartesian3.normalize(right, right);
-        let tempDirection = Cesium.Cartesian3.cross(zAxis, right, new Cesium.Cartesian3());
+        const tempDirection = Cesium.Cartesian3.cross(zAxis, right, new Cesium.Cartesian3());
         Cesium.Cartesian3.normalize(direction, direction);
 
         direction = tempDirection;
         right = tempRight;
 
-        let moveVec = new Cesium.Cartesian3();
-
+        const moveVec = new Cesium.Cartesian3();
         if (this.flags.moveForward) {
             Cesium.Cartesian3.add(moveVec, direction, moveVec);
         }
@@ -147,7 +146,7 @@ export class FirstPersonOnGround {
         camera.position = newPos;
     }
 
-    activate() {
+    activate(lockMode = false) {
         if (!this.crosshair) {
             this.init();
         }
@@ -165,13 +164,27 @@ export class FirstPersonOnGround {
         canvas.addEventListener("keydown", this.keyDownEventHandler, false);
         canvas.addEventListener("keyup", this.keyUpEventHandler, false);
 
-        this.handler.setInputAction(this.mouseDownHandler, Cesium.ScreenSpaceEventType.LEFT_DOWN);
-        this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
-        this.handler.setInputAction(this.mouseUpHandler, Cesium.ScreenSpaceEventType.LEFT_UP);
-
         const viewer = this.viewer;
         viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
+
+        if (lockMode) {
+            viewer.canvas.addEventListener("click", () => {
+                viewer.canvas.requestPointerLock();
+            });
+            viewer.canvas.addEventListener("pointerlockchange", () => {
+                if (document.pointerLockElement === viewer.canvas) {
+                    console.log("Pointer lock enabled");
+                } else {
+                    console.log("Pointer lock disabled");
+                }
+            });
+            viewer.canvas.addEventListener("mousemove", this.mouseMoveWithPointerLockHandler);
+        } else {
+            this.handler.setInputAction(this.mouseDownHandler, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+            this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
+            this.handler.setInputAction(this.mouseUpHandler, Cesium.ScreenSpaceEventType.LEFT_UP);
+        }
     }
 
     deactivate() {
@@ -216,16 +229,15 @@ export class FirstPersonOnGround {
         this.pysicalState = {
             isJumping: false,
             verticalVelocity: 0,
-            gravity: -9.8 * 2.0, // m/s²
-            moveSpeed: 20.0, // m/s (수평 이동 속도)
-            jumpSpeed: 10.0, // m/s (초기 점프 속도)
-            lastUpdateTime: performance.now(), // 마지막 업데이트 시간
+            gravity: -9.8 * 2.0,
+            moveSpeed: 20.0,
+            jumpSpeed: 10.0,
+            lastUpdateTime: performance.now(),
         };
     }
 
     keyboardEventHandler = () => {
         const viewer = this.viewer;
-        const camera = viewer.camera;
         const flags = this.flags;
         if (flags.speedUp) {
             flags.moveRate += 0.025;
@@ -265,11 +277,11 @@ export class FirstPersonOnGround {
         }
     };
 
-    mouseDownHandler = (event) => {
+    mouseDownHandler = () => {
         this.flags.mouseStatus = true;
     };
 
-    mouseUpHandler = (event) => {
+    mouseUpHandler = () => {
         this.flags.mouseStatus = false;
     };
 
@@ -294,6 +306,27 @@ export class FirstPersonOnGround {
                 },
             });
         }
+    };
+
+    mouseMoveWithPointerLockHandler = (moveEvent) => {
+        const viewer = this.viewer;
+        const intensity = 2.0;
+        const width = viewer.canvas.clientWidth;
+        const height = viewer.canvas.clientHeight;
+        const x = -moveEvent.movementX;
+        const y = -moveEvent.movementY;
+        const angleX = (-x / width) * intensity;
+        const angleY = (y / height) * intensity;
+
+        const camera = viewer.camera;
+        camera.setView({
+            destination: camera.position,
+            orientation: {
+                heading: camera.heading + angleX,
+                pitch: camera.pitch + angleY,
+                roll: camera.roll,
+            },
+        });
     };
 
     getFlagForKeyCode(code) {
