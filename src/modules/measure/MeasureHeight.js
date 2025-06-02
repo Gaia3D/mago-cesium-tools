@@ -80,19 +80,6 @@ export class MeasureHeight {
                 },
             });
 
-            const startUpCartesian = Cesium.Cartesian3.fromRadians(this.startCartographic.longitude, this.startCartographic.latitude, this.startHeight + 50.0);
-            let startUpNormal = Cesium.Cartesian3.subtract(startUpCartesian, this.startCartesian, new Cesium.Cartesian3());
-            startUpNormal = Cesium.Cartesian3.normalize(startUpNormal, new Cesium.Cartesian3());
-
-            const cameraDirection = viewer.camera.direction;
-
-            let startRight = Cesium.Cartesian3.cross(startUpNormal, cameraDirection, new Cesium.Cartesian3());
-            startRight = Cesium.Cartesian3.normalize(startRight, new Cesium.Cartesian3());
-
-            let startDir = Cesium.Cartesian3.cross(startUpNormal, startRight, new Cesium.Cartesian3());
-            startDir = Cesium.Cartesian3.normalize(startDir, new Cesium.Cartesian3());
-
-            this.plane = Cesium.Plane.fromPointNormal(this.startCartesian, startDir, new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0));
             this.lineEntity = viewer.entities.add({
                 polyline: {
                     positions: new Cesium.CallbackProperty(() => {

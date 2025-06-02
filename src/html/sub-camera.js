@@ -75,8 +75,10 @@ const init = async () => {
     magoTools.initPosition(lon, lat, 1000.0);
 
     await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
-    const tilesetA = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
-    viewer.scene.primitives.add(tilesetA);
+    const tree = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/FOREST_MAP/tileset.json");
+    viewer.scene.primitives.add(tree);
+    const buildings = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/NGII_BUILDINGS/tileset.json", {});
+    viewer.scene.primitives.add(buildings);
 
     subViewer = new SubViewer(viewer);
     subViewer.init();
@@ -86,8 +88,11 @@ const init = async () => {
     magoSubTools.initPosition(lon, lat, 1000.0);
 
     await magoSubTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
-    const tilesetB = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
-    subViewer.viewer.scene.primitives.add(tilesetB);
+
+    const treeB = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/FOREST_MAP/tileset.json");
+    subViewer.viewer.scene.primitives.add(treeB);
+    const buildingsB = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/NGII_BUILDINGS/tileset.json", {});
+    subViewer.viewer.scene.primitives.add(buildingsB);
 
     magoDepth = new MagoDepth(subViewer.viewer);
     setTimeout(() => {

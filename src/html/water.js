@@ -188,8 +188,8 @@ const init = async () => {
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
     await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     //const tileset = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/FOREST_MAP/tileset.json");
-    const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/개체목-텍스쳐/tileset.json");
-    viewer.scene.primitives.add(tileset);
+    //const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/개체목-텍스쳐/tileset.json");
+    //viewer.scene.primitives.add(tileset);
 
     magoViewer.initPosition(options.lon, options.lat, 1000.0);
 
