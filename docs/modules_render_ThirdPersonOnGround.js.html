@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/render/ThirdPersonOnGround.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/render/ThirdPersonOnGround.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as Cesium from "cesium";
+import cesiumMan from "@/assets/cesium-man.glb";
+
+/**
+ * ThirdPersonOnGround
+ * This class provides a third-person view controller for navigating a 3D scene in CesiumJS.
+ * @class
+ */
+export class ThirdPersonOnGround {
+    constructor(viewer) {
+        this.viewer = viewer;
+        this.canvas = viewer.canvas;
+        this.isActive = false;
+        this.handler = new Cesium.ScreenSpaceEventHandler();
+        this.crosshair = undefined;
+        this.flags = {
+            isActive: false,
+            speedUp: false,
+            speedDown: false,
+            moveForward: false,
+            moveBackward: false,
+            fastMove: false,
+            moveUp: false,
+            moveDown: false,
+            moveLeft: false,
+            moveRight: false,
+            moveRate: 1.0,
+        };
+
+        this.pysicalState = {
+            isJumping: false,
+            verticalVelocity: 0,
+            gravity: -9.8 * 2.0,
+            moveSpeed: 20.0,
+            jumpSpeed: 10.0,
+            lastUpdateTime: performance.now(),
+        };
+    }
+
+    init() {
+        const crosshairDiv = document.createElement("div");
+        crosshairDiv.id = "crosshair";
+        crosshairDiv.style.position = "absolute";
+        crosshairDiv.style.top = "calc(50% - 10px)";
+        crosshairDiv.style.left = "calc(50% - 10px)";
+        crosshairDiv.style.width = "20px";
+        crosshairDiv.style.height = "20px";
+        crosshairDiv.style.color = "white";
+        crosshairDiv.style.fontSize = "24px";
+        crosshairDiv.style.textAlign = "center";
+        crosshairDiv.textContent = "+";
+        document.body.appendChild(crosshairDiv);
+        this.crosshair = crosshairDiv;
+    }
+
+    toggle() {
+        if (this.isActive) {
+            this.deactivate();
+            this.isActive = false;
+        } else {
+            this.activate(true);
+            this.isActive = true;
+        }
+    }
+
+    preRenderEvent() {
+        const viewer = this.viewer;
+        const camera = viewer.camera;
+
+        const now = performance.now();
+        const dt = (now - this.pysicalState.lastUpdateTime) / 1000;
+        this.pysicalState.lastUpdateTime = now;
+
+        const targetPos = camera.positionWC;
+        const carto = Cesium.Cartographic.fromCartesian(targetPos);
+
+        // vertical position adjustment
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3());
+        let direction = camera.direction;
+        let right = camera.right;
+
+        // vector normalization
+        Cesium.Cartesian3.normalize(direction, direction);
+        Cesium.Cartesian3.normalize(right, right);
+
+        // cross product to adjust right and direction vectors
+        const tempRight = Cesium.Cartesian3.cross(zAxis, direction, new Cesium.Cartesian3());
+        Cesium.Cartesian3.negate(tempRight, tempRight);
+        Cesium.Cartesian3.normalize(right, right);
+        const tempDirection = Cesium.Cartesian3.cross(zAxis, right, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(direction, direction);
+
+        direction = tempDirection;
+        right = tempRight;
+
+        const moveVec = new Cesium.Cartesian3();
+        if (this.flags.moveForward) {
+            Cesium.Cartesian3.add(moveVec, direction, moveVec);
+        }
+        if (this.flags.moveBackward) {
+            Cesium.Cartesian3.subtract(moveVec, direction, moveVec);
+        }
+        if (this.flags.moveRight) {
+            Cesium.Cartesian3.add(moveVec, right, moveVec);
+        }
+        if (this.flags.moveLeft) {
+            Cesium.Cartesian3.subtract(moveVec, right, moveVec);
+        }
+
+        if (moveVec.x !== 0 &amp;&amp; moveVec.y !== 0 &amp;&amp; moveVec.z !== 0) {
+            Cesium.Cartesian3.normalize(moveVec, moveVec);
+
+            let speed = this.pysicalState.moveSpeed;
+            if (this.flags.fastMove) {
+                speed *= 2.0;
+            }
+            Cesium.Cartesian3.multiplyByScalar(moveVec, speed * dt, moveVec);
+        }
+
+        // gravity and jump handling
+        this.pysicalState.verticalVelocity += this.pysicalState.gravity * dt;
+        carto.height += this.pysicalState.verticalVelocity * dt;
+
+        const groundHeight = viewer.scene.globe.getHeight(carto) ?? 0;
+        const cameraHeight = groundHeight + 1.7;
+
+        if (carto.height &lt;= cameraHeight) {
+            carto.height = cameraHeight;
+            this.pysicalState.verticalVelocity = 0;
+            this.pysicalState.isJumping = false;
+        }
+
+        // update camera position
+        const newPos = Cesium.Cartesian3.fromRadians(
+            carto.longitude,
+            carto.latitude,
+            carto.height,
+        );
+        Cesium.Cartesian3.add(newPos, moveVec, newPos);
+
+        camera.position = newPos;
+    }
+
+    /**
+     * Activate the third-person view controller
+     * @method
+     * @description This method activates the third-person view controller, enabling keyboard and mouse controls for navigation.
+     * @param lockMode {boolean} - If true, enables pointer lock mode for mouse movement.
+     */
+    activate(lockMode = false) {
+        if (!this.crosshair) {
+            this.init();
+        }
+        this.crosshair.style.display = "block";
+
+        const scene = this.viewer.scene;
+        scene.screenSpaceCameraController.enableRotate = false;
+        scene.screenSpaceCameraController.enableTranslate = false;
+        scene.screenSpaceCameraController.enableZoom = false;
+        scene.screenSpaceCameraController.enableTilt = false;
+        scene.screenSpaceCameraController.enableLook = false;
+
+        this.viewer.clock.onTick.addEventListener(this.keyboardEventHandler, this);
+        document.addEventListener("keydown", this.keyDownEventHandler, false);
+        document.addEventListener("keyup", this.keyUpEventHandler, false);
+
+        const viewer = this.viewer;
+        viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
+
+        if (lockMode) {
+            viewer.canvas.addEventListener("click", this.mouseClickWithPointerLockHandler, false);
+            viewer.canvas.addEventListener("mousemove", this.mouseMoveWithPointerLockHandler, false);
+        } else {
+            this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
+        }
+    }
+
+    /**
+     * Deactivate the first-person view controller
+     * @method
+     * @description This method deactivates the first-person view controller, restoring the default camera controls and removing event listeners.
+     */
+    deactivate() {
+        if (this.crosshair) {
+            this.crosshair.style.display = "none";
+        }
+
+        const scene = this.viewer.scene;
+        scene.screenSpaceCameraController.enableRotate = true;
+        scene.screenSpaceCameraController.enableTranslate = true;
+        scene.screenSpaceCameraController.enableZoom = true;
+        scene.screenSpaceCameraController.enableTilt = true;
+        scene.screenSpaceCameraController.enableLook = true;
+
+        this.viewer.clock.onTick.removeEventListener(this.keyboardEventHandler);
+        document.removeEventListener("keydown", this.keyDownEventHandler, false);
+        document.removeEventListener("keyup", this.keyUpEventHandler, false);
+
+        this.viewer.canvas.removeEventListener("click", this.mouseClickWithPointerLockHandler, false);
+        this.viewer.canvas.removeEventListener("mousemove", this.mouseMoveWithPointerLockHandler, false);
+
+        this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
+
+        this.viewer.scene.preRender.removeEventListener(this.preRenderEvent, this);
+
+        this.flags = {
+            isActive: false,
+            speedUp: false,
+            speedDown: false,
+            moveForward: false,
+            moveBackward: false,
+            fastMove: false,
+            moveUp: false,
+            moveDown: false,
+            moveLeft: false,
+            moveRight: false,
+            moveRate: 1.0,
+        };
+
+        this.pysicalState = {
+            isJumping: false,
+            verticalVelocity: 0,
+            gravity: -9.8 * 2.0,
+            moveSpeed: 20.0,
+            jumpSpeed: 10.0,
+            lastUpdateTime: performance.now(),
+        };
+    }
+
+    keyboardEventHandler = () => {
+        const flags = this.flags;
+        if (flags.speedUp) {
+            flags.moveRate += 0.025;
+        }
+        if (flags.speedDown) {
+            flags.moveRate -= 0.025;
+            if (flags.moveRate &lt; 0.01) {
+                flags.moveRate = 0.01;
+            }
+        }
+    };
+
+    keyDownEventHandler = (e) => {
+        const flags = this.flags;
+        const flagName = this.getFlagForKeyCode(e.code);
+        if (typeof flagName !== "undefined") {
+            flags[flagName] = true;
+        }
+
+        if (e.key === " " &amp;&amp; !this.pysicalState.isJumping) {
+            this.pysicalState.verticalVelocity = this.pysicalState.jumpSpeed;
+            this.pysicalState.isJumping = true;
+        }
+        if (e.key === "Shift") {
+            this.flags.fastMove = true;
+        }
+    };
+
+    keyUpEventHandler = (event) => {
+        const flags = this.flags;
+        const flagName = this.getFlagForKeyCode(event.code);
+        if (typeof flagName !== "undefined") {
+            flags[flagName] = false;
+        }
+        if (e.key === "Shift") {
+            this.flags.fastMove = false;
+        }
+    };
+
+    mouseMoveHandler(moveEvent) {
+        const viewer = this.viewer;
+        if (this.flags.mouseStatus) {
+            const intensity = 2.0;
+            const width = viewer.canvas.clientWidth;
+            const height = viewer.canvas.clientHeight;
+            const x = moveEvent.endPosition.x - moveEvent.startPosition.x;
+            const y = moveEvent.endPosition.y - moveEvent.startPosition.y;
+            const angleX = (-x / width) * intensity;
+            const angleY = (y / height) * intensity;
+
+            const camera = viewer.camera;
+            camera.setView({
+                destination: camera.position,
+                orientation: {
+                    heading: camera.heading + angleX,
+                    pitch: camera.pitch + angleY,
+                    roll: camera.roll,
+                },
+            });
+        }
+    };
+
+    mouseClickWithPointerLockHandler = () => {
+        const viewer = this.viewer;
+        console.log("Requesting pointer lock");
+        if (document.pointerLockElement !== viewer.canvas) {
+            viewer.canvas.requestPointerLock();
+        }
+    };
+
+    mouseMoveWithPointerLockHandler = (moveEvent) => {
+        if (document.pointerLockElement === this.viewer.canvas) {
+            const viewer = this.viewer;
+            const intensity = 2.0;
+            const width = viewer.canvas.clientWidth;
+            const height = viewer.canvas.clientHeight;
+            const x = -moveEvent.movementX;
+            const y = -moveEvent.movementY;
+            const angleX = (-x / width) * intensity;
+            const angleY = (y / height) * intensity;
+
+            const camera = viewer.camera;
+            camera.setView({
+                destination: camera.position,
+                orientation: {
+                    heading: camera.heading + angleX,
+                    pitch: camera.pitch + angleY,
+                    roll: camera.roll,
+                },
+            });
+        }
+    };
+
+    getFlagForKeyCode(code) {
+        if (code === "KeyO") {
+            return "speedDown";
+        } else if (code === "KeyP") {
+            return "speedUp";
+        } else if (code === "KeyW") {
+            return "moveForward";
+        } else if (code === "KeyS") {
+            return "moveBackward";
+        } else if (code === "KeyQ") {
+            return "moveUp";
+        } else if (code === "KeyE") {
+            return "moveDown";
+        } else if (code === "KeyD") {
+            return "moveRight";
+        } else if (code === "KeyA") {
+            return "moveLeft";
+        } else {
+            return undefined;
+        }
+    }
+
+    clear() {
+        if (this.viewer) {
+            this.viewer.destroy();
+            this.viewer = undefined;
+        }
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawCircle.html">DrawCircle</a></li><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="DrawWall.html">DrawWall</a></li><li><a href="FirstPersonOnGround.html">FirstPersonOnGround</a></li><li><a href="FirstPersonView.html">FirstPersonView</a></li><li><a href="MagoDepth.html">MagoDepth</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="ModelSwapAnimator_ModelSwapAnimator.html">ModelSwapAnimator</a></li><li><a href="SubViewer.html">SubViewer</a></li><li><a href="ThirdPersonOnGround.html">ThirdPersonOnGround</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Jun 04 2025 16:10:35 GMT+0900 (대한민국 표준시)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

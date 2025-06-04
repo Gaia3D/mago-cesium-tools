@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/model/ModelSwapAnimator.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/model/ModelSwapAnimator.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as Cesium from "cesium";
+
+export class ModelSwapAnimator {
+
+    /**
+     * Constructor for the ModelSwapAnimator class.
+     * @constructor
+     * @param viewer Cesium Viewer instance.
+     * @param options
+     */
+    constructor(viewer, options) {
+        this.viewer = viewer;
+        this.options = options || {};
+        this.center = options.center || Cesium.Cartesian3.fromDegrees(127.3839550536586, 36.46552371257934);
+        this.currentModel = null;
+    }
+
+    async loadModel(url, maxValue = 1.0) {
+        const viewer = this.viewer;
+
+        const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(this.center);
+        const model = await Cesium.Model.fromGltfAsync({
+            url: url,
+            modelMatrix: modelMatrix,
+            upAxis: Cesium.Cartesian3.UNIT_Z,
+            forwardAxis: Cesium.Cartesian3.UNIT_X,
+            //show: false,
+        });
+
+        const customShader = new Cesium.CustomShader({
+            lightingModel: Cesium.LightingModel.UNLIT,
+            uniforms: {
+                u_maxValue: {
+                    type: Cesium.UniformType.FLOAT,
+                    value: maxValue,
+                },
+            },
+            fragmentShaderText: `
+              //uniform float u_maxValue;
+            
+              float linearOpacity(float value) {
+                float minValue = 0.0;
+                float maxValue = u_maxValue;
+                float opacity = (value - minValue) / (maxValue - minValue);
+                return clamp(opacity, 0.0, 1.0);
+              }
+            
+              vec3 colorRamp(vec3 color1, vec3 color2, vec3 color3, float value) {
+                float minValue = 0.0;
+                float maxValue = u_maxValue;
+                vec3 finalColor;
+                if (value &lt;= minValue) {
+                    finalColor = color1;
+                } else if (value >= maxValue) {
+                    finalColor = color3;
+                } else {
+                    float mid = (minValue + maxValue) * 0.5;
+            
+                    if (value &lt; mid) {
+                        float t = (value - minValue) / (mid - minValue);
+                        finalColor = mix(color1, color2, t);
+                    } else {
+                        float t = (value - mid) / (maxValue - mid);
+                        finalColor = mix(color2, color3, t);
+                    }
+                }
+                return finalColor;
+              }
+            
+              float unpackDepth(const in vec4 rgba_depth) {
+                return dot(rgba_depth, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
+              }
+            
+              float decode2(vec4 color) {
+                return color.r * 256.0 * 256.0 * 256.0 +
+                       color.g * 256.0 * 256.0 +
+                       color.b * 256.0 +
+                       color.a;
+              }
+              
+              float decode(vec4 color) {
+                return color.a * 256.0 * 256.0 * 256.0 +
+                       color.b * 256.0 * 256.0 +
+                       color.g * 256.0 +
+                       color.r;
+              }
+              
+              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+                vec4 color = vec4(material.diffuse, material.alpha);
+                
+                float value = unpackDepth(color);
+
+                vec3 color1 = vec3(1.0, 0.0, 0.0);
+                vec3 color2 = vec3(0.0, 1.0, 0.0);
+                vec3 color3 = vec3(0.0, 0.0, 1.0);
+                
+                material.diffuse = colorRamp(color3, color2, color1, value);
+                material.alpha = linearOpacity(value);
+              }
+            `,
+        });
+        model.customShader = customShader;
+
+        viewer.scene.primitives.add(model);
+
+        model.readyEvent.addEventListener(() => {
+
+            const currentModel = this.currentModel;
+            if (currentModel) {
+                viewer.scene.primitives.remove(currentModel);
+            }
+            this.currentModel = model;
+
+            /*const boundingSphere = model.boundingSphere;
+            viewer.camera.flyTo({
+                destination: boundingSphere.center, duration: 1.0, complete: () => {
+                    console.log("Camera fly completed");
+                },
+            });*/
+        });
+
+        /*const currentModel = this.currentModel;
+        if (currentModel) {
+            viewer.scene.primitives.remove(currentModel);
+        }
+        this.currentModel = model;*/
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawCircle.html">DrawCircle</a></li><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="DrawWall.html">DrawWall</a></li><li><a href="FirstPersonOnGround.html">FirstPersonOnGround</a></li><li><a href="FirstPersonView.html">FirstPersonView</a></li><li><a href="MagoDepth.html">MagoDepth</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="ModelSwapAnimator_ModelSwapAnimator.html">ModelSwapAnimator</a></li><li><a href="SubViewer.html">SubViewer</a></li><li><a href="ThirdPersonOnGround.html">ThirdPersonOnGround</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Jun 04 2025 16:10:35 GMT+0900 (대한민국 표준시)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

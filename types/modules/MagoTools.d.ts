@@ -125,7 +125,7 @@ export class MagoTools {
      * @example
      * createModel('/assets/lowpoly-tree.glb', 126.978388, 37.566610)
      */
-    createModel(url: string, lon: number, lat: number): void;
+    createModel(url: string, lon: number, lat: number, height?: number): void;
     destroy(): void;
 }
 import { Viewer } from "cesium";

@@ -33,7 +33,6 @@ export class MeasureHeight {
      * @returns {void}
      */
     on: boolean;
-    plane: Cesium.Plane;
     /**
      * Disables the angle measurement tool and clears the entities.
      * @function

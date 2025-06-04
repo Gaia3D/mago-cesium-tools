@@ -17,6 +17,7 @@
 export class MagoFluid {
     /**
      * Constructor for MagoFluid class
+     * @constructor
      * @param viewer Cesium Viewer instance
      * @param baseUrl
      */
