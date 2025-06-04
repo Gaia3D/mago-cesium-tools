@@ -1,17 +1,20 @@
 import * as Cesium from "cesium";
+import cesiumMan from "@/assets/sedan.glb";
+
+//import cesiumMan from "@/assets/cesium-man.glb";
 
 /**
- * FirstPersonOnGround
- * This class provides a first-person view controller that allows the user to navigate
+ * ThirdPersonOnGround
+ * This class provides a third-person view controller for navigating a 3D scene in CesiumJS.
  * @class
  */
-export class FirstPersonOnGround {
+export class ThirdPersonOnGround {
     constructor(viewer) {
         this.viewer = viewer;
         this.canvas = viewer.canvas;
         this.isActive = false;
         this.handler = new Cesium.ScreenSpaceEventHandler();
-        this.crosshair = undefined;
+        this.f = undefined;
         this.flags = {
             isActive: false,
             speedUp: false,
@@ -36,20 +39,43 @@ export class FirstPersonOnGround {
         };
     }
 
+    yUpToZUp() {
+        return Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(-90)));
+    }
+
+    finalModelMatrix(modelMatrix) {
+        return Cesium.Matrix4.multiply(
+            modelMatrix,
+            this.yUpToZUp(),
+            new Cesium.Matrix4(),
+        );
+    }
+
     init() {
-        const crosshairDiv = document.createElement("div");
-        crosshairDiv.id = "crosshair";
-        crosshairDiv.style.position = "absolute";
-        crosshairDiv.style.top = "calc(50% - 10px)";
-        crosshairDiv.style.left = "calc(50% - 10px)";
-        crosshairDiv.style.width = "20px";
-        crosshairDiv.style.height = "20px";
-        crosshairDiv.textContent = "+";
-        crosshairDiv.style.color = "white";
-        crosshairDiv.style.fontSize = "24px";
-        crosshairDiv.style.textAlign = "center";
-        document.body.appendChild(crosshairDiv);
-        this.crosshair = crosshairDiv;
+        let modelMatrix = Cesium.Matrix4.inverse(this.viewer.camera.viewMatrix, new Cesium.Matrix4());
+        modelMatrix = this.finalModelMatrix(modelMatrix);
+        console.log("modelMatrix", modelMatrix);
+
+        const camera = this.viewer.camera;
+        const position = camera.positionWC;
+        const direction = camera.directionWC;
+
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+        const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3());
+
+        Cesium.Model.fromGltfAsync({
+            url: cesiumMan,
+            modelMatrix: modelMatrix,
+            scale: 1.0,
+            shadows: Cesium.ShadowMode.DISABLED,
+            minimumPixelSize: 16,
+            allowPicking: false,
+            show: true,
+        }).then((model) => {
+            console.log("added model", model);
+            this.model = model;
+            this.viewer.scene.primitives.add(model);
+        });
     }
 
     toggle() {
@@ -62,22 +88,68 @@ export class FirstPersonOnGround {
         }
     }
 
+    lookAtCamera() {
+        if (!this.model || !this.viewer) {
+            return;
+        }
+
+        const modelMatrix = this.model.modelMatrix;
+        const targetCamera = this.viewer.camera;
+
+        const targetPos = targetCamera.positionWC;
+        const refPos = Cesium.Matrix4.getTranslation(modelMatrix, new Cesium.Cartesian3());
+
+        if (Cesium.Cartesian3.equals(targetPos, refPos)) {
+            //console.warn("Target camera position is the same as reference camera position. No adjustment needed.");
+            return;
+        }
+
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        //const xAxis = Cesium.Matrix4.getColumn(enuTransform, 0, new Cesium.Cartesian3()); // east → right
+        //const yAxis = Cesium.Matrix4.getColumn(enuTransform, 1, new Cesium.Cartesian3()); // north → up
+        const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3()); // up → back (보정 필요)
+
+        const direction = Cesium.Cartesian3.subtract(refPos, targetPos, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(direction, direction);
+
+        const right = Cesium.Cartesian3.cross(direction, zAxis, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(right, right);
+
+        const up = Cesium.Cartesian3.cross(right, direction, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(up, up);
+
+        targetCamera.direction = direction;
+        targetCamera.up = up;
+        targetCamera.right = right;
+    }
+
     preRenderEvent() {
         const viewer = this.viewer;
-        const camera = viewer.camera;
+        const model = this.model;
+        if (!model) {
+            console.warn("Model not initialized. Call init() first.");
+            return;
+        }
 
         const now = performance.now();
         const dt = (now - this.pysicalState.lastUpdateTime) / 1000;
         this.pysicalState.lastUpdateTime = now;
 
-        const targetPos = camera.positionWC;
-        const carto = Cesium.Cartographic.fromCartesian(targetPos);
+        const camera = viewer.camera;
+
+        const modelMatrix = model.modelMatrix;
+        const position = Cesium.Matrix4.getTranslation(modelMatrix, new Cesium.Cartesian3());
+        const rotation = Cesium.Matrix4.getRotation(modelMatrix, new Cesium.Matrix3());
+        //let direction = Cesium.Matrix4.getColumn(modelMatrix, 2, new Cesium.Cartesian3());
+        //let right = Cesium.Matrix4.getColumn(modelMatrix, 0, new Cesium.Cartesian3());
+
+        const carto = Cesium.Cartographic.fromCartesian(position);
 
         // vertical position adjustment
-        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
         const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3());
-        let direction = camera.direction;
-        let right = camera.right;
+        let direction = camera.directionWC;
+        let right = camera.rightWC;
 
         // vector normalization
         Cesium.Cartesian3.normalize(direction, direction);
@@ -138,21 +210,56 @@ export class FirstPersonOnGround {
         );
         Cesium.Cartesian3.add(newPos, moveVec, newPos);
 
-        camera.position = newPos;
+        let modelRotationMatrix = rotation.clone();
+        const subPos = Cesium.Cartesian3.subtract(newPos, position, new Cesium.Cartesian3());
+        let directionLength = Cesium.Cartesian3.magnitude(subPos);
+
+        if (!Cesium.Cartesian3.equals(newPos, position)) {
+            let newDirection = subPos;
+            Cesium.Cartesian3.normalize(newDirection, newDirection);
+
+            let tempRight = Cesium.Cartesian3.cross(newDirection, zAxis, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(tempRight, tempRight);
+
+            newDirection = Cesium.Cartesian3.cross(zAxis, tempRight, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newDirection, newDirection);
+
+            const newRight = Cesium.Cartesian3.cross(newDirection, zAxis, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newRight, newRight);
+
+            const newUp = Cesium.Cartesian3.cross(newRight, newDirection, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newUp, newUp);
+
+            /*let newRight = Cesium.Cartesian3.cross(direction, zAxis, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newRight, newRight);
+
+            let newDirection = Cesium.Cartesian3.cross(zAxis, newRight, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newDirection, newDirection);*/
+
+            modelRotationMatrix = Cesium.Matrix3.setColumn(modelRotationMatrix, 0, newDirection, modelRotationMatrix);
+            modelRotationMatrix = Cesium.Matrix3.setColumn(modelRotationMatrix, 1, newRight, modelRotationMatrix);
+            modelRotationMatrix = Cesium.Matrix3.setColumn(modelRotationMatrix, 2, zAxis, modelRotationMatrix);
+        }
+
+        let newModelMatrix = Cesium.Matrix4.IDENTITY.clone();
+        newModelMatrix = Cesium.Matrix4.multiplyByMatrix3(newModelMatrix, modelRotationMatrix, newModelMatrix);
+        newModelMatrix = Cesium.Matrix4.setColumn(newModelMatrix, 3, new Cesium.Cartesian4(newPos.x, newPos.y, newPos.z, 1.0), newModelMatrix);
+
+        model.modelMatrix = newModelMatrix;
+
+        this.lookAtCamera();
     }
 
     /**
-     * Activate the first-person view controller
+     * Activate the third-person view controller
      * @method
-     * @description This method activates the first-person view controller, enabling keyboard and mouse controls for navigation.
+     * @description This method activates the third-person view controller, enabling keyboard and mouse controls for navigation.
      * @param lockMode {boolean} - If true, enables pointer lock mode for mouse movement.
      */
     activate(lockMode = false) {
-        if (!this.crosshair) {
+        if (!this.model) {
             this.init();
         }
-        this.crosshair.style.display = "block";
-
         const scene = this.viewer.scene;
         scene.screenSpaceCameraController.enableRotate = false;
         scene.screenSpaceCameraController.enableTranslate = false;
@@ -161,11 +268,12 @@ export class FirstPersonOnGround {
         scene.screenSpaceCameraController.enableLook = false;
 
         this.viewer.clock.onTick.addEventListener(this.keyboardEventHandler, this);
+        this.viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
         document.addEventListener("keydown", this.keyDownEventHandler, false);
         document.addEventListener("keyup", this.keyUpEventHandler, false);
 
-        const viewer = this.viewer;
-        viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
+        /*const viewer = this.viewer;
+
 
         if (lockMode) {
             viewer.canvas.addEventListener("click", this.mouseClickWithPointerLockHandler, false);
@@ -173,7 +281,7 @@ export class FirstPersonOnGround {
         } else {
             this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
-        }
+        }*/
     }
 
     /**
@@ -182,10 +290,6 @@ export class FirstPersonOnGround {
      * @description This method deactivates the first-person view controller, restoring the default camera controls and removing event listeners.
      */
     deactivate() {
-        if (this.crosshair) {
-            this.crosshair.style.display = "none";
-        }
-
         const scene = this.viewer.scene;
         scene.screenSpaceCameraController.enableRotate = true;
         scene.screenSpaceCameraController.enableTranslate = true;
@@ -194,16 +298,15 @@ export class FirstPersonOnGround {
         scene.screenSpaceCameraController.enableLook = true;
 
         this.viewer.clock.onTick.removeEventListener(this.keyboardEventHandler);
+        this.viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
         document.removeEventListener("keydown", this.keyDownEventHandler, false);
         document.removeEventListener("keyup", this.keyUpEventHandler, false);
 
-        this.viewer.canvas.removeEventListener("click", this.mouseClickWithPointerLockHandler, false);
+        /*this.viewer.canvas.removeEventListener("click", this.mouseClickWithPointerLockHandler, false);
         this.viewer.canvas.removeEventListener("mousemove", this.mouseMoveWithPointerLockHandler, false);
 
         this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
-
-        this.viewer.scene.preRender.removeEventListener(this.preRenderEvent, this);
+        this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);*/
 
         this.flags = {
             isActive: false,
@@ -227,6 +330,9 @@ export class FirstPersonOnGround {
             jumpSpeed: 10.0,
             lastUpdateTime: performance.now(),
         };
+
+        this.viewer.scene.primitives.remove(this.model);
+        this.model = undefined;
     }
 
     keyboardEventHandler = () => {

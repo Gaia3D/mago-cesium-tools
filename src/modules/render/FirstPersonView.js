@@ -2,6 +2,8 @@ import * as Cesium from "cesium";
 
 /**
  * FirstPersonView
+ * A class to handle first-person view navigation in a Cesium viewer.
+ * @class FirstPersonView
  */
 export class FirstPersonView {
     constructor(viewer) {
@@ -24,7 +26,7 @@ export class FirstPersonView {
         };
     }
 
-    init() {
+    #init() {
         const crosshairDiv = document.createElement("div");
         crosshairDiv.id = "crosshair";
         crosshairDiv.style.position = "absolute";
@@ -50,9 +52,15 @@ export class FirstPersonView {
         }
     }
 
+    /**
+     * Activate the first-person view mode.
+     * @method
+     * @description Activates the first-person view mode by setting up the necessary event handlers and UI elements.
+     * @returns {void}
+     */
     activate() {
         if (!this.crosshair) {
-            this.init();
+            this.#init();
         }
         this.crosshair.style.display = "block";
 
@@ -63,16 +71,23 @@ export class FirstPersonView {
         scene.screenSpaceCameraController.enableTilt = false;
         scene.screenSpaceCameraController.enableLook = false;
 
-        this.viewer.clock.onTick.addEventListener(this.keyboardEventHandler);
+        this.viewer.clock.onTick.addEventListener(this.#keyboardEventHandler);
         const canvas = document;
-        canvas.addEventListener("keydown", this.keyDownEventHandler, false);
-        canvas.addEventListener("keyup", this.keyUpEventHandler, false);
+        canvas.addEventListener("keydown", this.#keyDownEventHandler, false);
+        canvas.addEventListener("keyup", this.#keyUpEventHandler, false);
 
-        this.handler.setInputAction(this.mouseDownHandler, Cesium.ScreenSpaceEventType.LEFT_DOWN);
-        this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        this.handler.setInputAction(this.mouseUpHandler, Cesium.ScreenSpaceEventType.LEFT_UP);
+        this.handler.setInputAction(this.#mouseDownHandler, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+        this.handler.setInputAction(this.#mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        this.handler.setInputAction(this.#mouseUpHandler, Cesium.ScreenSpaceEventType.LEFT_UP);
+
     }
 
+    /**
+     * Deactivate the first-person view mode.
+     * @method
+     * @description Deactivates the first-person view mode by removing event handlers and hiding the crosshair.
+     * @returns {void}
+     */
     deactivate() {
         if (this.crosshair) {
             this.crosshair.style.display = "none";
@@ -85,7 +100,7 @@ export class FirstPersonView {
         scene.screenSpaceCameraController.enableTilt = true;
         scene.screenSpaceCameraController.enableLook = true;
 
-        this.viewer.clock.onTick.removeEventListener(this.keyboardEventHandler);
+        this.viewer.clock.onTick.removeEventListener(this.#keyboardEventHandler);
         const canvas = document;
         canvas.removeEventListener("keydown", this.keyDownEventHandler, false);
         canvas.removeEventListener("keyup", this.keyUpEventHandler, false);
@@ -95,7 +110,7 @@ export class FirstPersonView {
         this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_UP);
     }
 
-    keyboardEventHandler = () => {
+    #keyboardEventHandler = () => {
         const viewer = this.viewer;
         const camera = viewer.camera;
         const flags = this.flags;
@@ -128,7 +143,7 @@ export class FirstPersonView {
         }
     };
 
-    keyDownEventHandler = (e) => {
+    #keyDownEventHandler = (e) => {
         const flags = this.flags;
         const flagName = this.getFlagForKeyCode(e.code);
         if (typeof flagName !== "undefined") {
@@ -136,7 +151,7 @@ export class FirstPersonView {
         }
     };
 
-    keyUpEventHandler = (e) => {
+    #keyUpEventHandler = (e) => {
         const flags = this.flags;
         const flagName = this.getFlagForKeyCode(e.code);
         if (typeof flagName !== "undefined") {
@@ -144,15 +159,15 @@ export class FirstPersonView {
         }
     };
 
-    mouseDownHandler = (event) => {
+    #mouseDownHandler = () => {
         this.flags.mouseStatus = true;
     };
 
-    mouseUpHandler = (event) => {
+    #mouseUpHandler = () => {
         this.flags.mouseStatus = false;
     };
 
-    mouseMoveHandler = (moveEvent) => {
+    #mouseMoveHandler = (moveEvent) => {
         const viewer = this.viewer;
         if (this.flags.mouseStatus) {
             const intensity = 2.0;

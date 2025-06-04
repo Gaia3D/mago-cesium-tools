@@ -9,6 +9,7 @@ import {SubViewer} from "@/modules/render/SubViewer.js";
 import {MagoDepth} from "@/modules/render/MagoDepth.js";
 import {FirstPersonView} from "@/modules/render/FirstPersonView.js";
 import {FirstPersonOnGround} from "@/modules/render/FirstPersonOnGround.js";
+import {ThirdPersonOnGround} from "@/modules/render/ThirdPersonOnGround.js";
 
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
@@ -22,7 +23,8 @@ document.querySelector("#app").innerHTML = `
     <span class="line"></span>
     <button id="toggleShow">Toggle Show</button>
     <span class="line"></span>
-    <button id="first-person-view">First Person View</button>
+    <button id="first-person-view">FPS Mode</button>
+    <button id="third-person-view">TPS Mode</button> 
     <span class="line"></span>
     <button id="capture" class="btn">Capture</button>
     <span class="line"></span>
@@ -65,6 +67,7 @@ let subViewer = undefined;
 let magoSubTools = undefined;
 let magoDepth = undefined;
 let firstPersonView = undefined;
+let thirdPersonView = undefined;
 
 let modelSwapAnimator;
 let info;
@@ -100,6 +103,7 @@ const init = async () => {
     }, 1000);
 
     firstPersonView = new FirstPersonOnGround(viewer);
+    thirdPersonView = new ThirdPersonOnGround(viewer);
 
     setDefaultValue();
 };
@@ -119,6 +123,10 @@ const nextFrame = () => {
 
 document.querySelector("#first-person-view").addEventListener("click", async () => {
     firstPersonView.toggle();
+});
+
+document.querySelector("#third-person-view").addEventListener("click", async () => {
+    thirdPersonView.toggle();
 });
 
 document.querySelector("#start").addEventListener("click", async () => {

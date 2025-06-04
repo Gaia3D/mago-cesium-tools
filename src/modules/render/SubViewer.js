@@ -188,17 +188,14 @@ export class SubViewer {
     toggleShow() {
         this.isShow = !this.isShow;
         if (this.isShow) {
-            //this.cesiumContainer.style.display = "block";
             this.cesiumContainer.style.zIndex = "9999";
         } else {
-            //this.cesiumContainer.style.display = "none"
             this.cesiumContainer.style.zIndex = "-1";
         }
     }
 
     setLookAtCamera() {
         this.isLookAtCamera = !this.isLookAtCamera;
-
         if (this.isLookAtCamera) {
             this.lookAtCamera();
         }
@@ -206,7 +203,6 @@ export class SubViewer {
 
     setSync() {
         this.isSync = !this.isSync;
-
         if (this.isSync) {
             this.syncCamera();
         }
