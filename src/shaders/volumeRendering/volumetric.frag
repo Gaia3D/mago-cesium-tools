@@ -352,6 +352,11 @@ float getValue_triLinearInterpolation(in vec2 subTexCoord2d, in int col_mosaic, 
     vec2 texCoord_bl = vc + vec2(0.0, px.y);
     vec2 texCoord_br = vc + vec2(px.x, px.y);
 
+    texCoord_tl.y = 1.0 - texCoord_tl.y; // Invert Y coordinate for texture sampling.
+    texCoord_tr.y = 1.0 - texCoord_tr.y; // Invert Y coordinate for texture sampling.
+    texCoord_bl.y = 1.0 - texCoord_bl.y; // Invert Y coordinate for texture sampling.
+    texCoord_br.y = 1.0 - texCoord_br.y; // Invert Y coordinate for texture sampling.
+
     vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_tl, col_mosaic, row_mosaic));
     vec4 texColor_tr = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_tr, col_mosaic, row_mosaic));
     vec4 texColor_bl = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_bl, col_mosaic, row_mosaic));
@@ -373,7 +378,9 @@ float getValue_triLinearInterpolation(in vec2 subTexCoord2d, in int col_mosaic, 
 float getValue_NEAREST(in vec2 subTexCoord2d, in int col_mosaic, in int row_mosaic) {
     // The subTexCoord2d is the 2D texture coordinate of the slice.***
     // The col_mosaic and row_mosaic are the column and row of the mosaic texture.***
-    vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(subTexCoord2d, col_mosaic, row_mosaic));
+    vec2 subTexCoord = subTexCoord2d;
+    subTexCoord.y = 1.0 - subTexCoord.y; // Invert Y coordinate for texture sampling.
+    vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(subTexCoord, col_mosaic, row_mosaic));
     float realvalueRange = u_minMaxValues.y - u_minMaxValues.x;
     float value_tl = unpackDepth(texColor_tl) * realvalueRange + u_minMaxValues.x;
 
