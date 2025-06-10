@@ -103,11 +103,6 @@ const init = async () => {
     setDefaultValue();
     refreshRectangle();
 
-    // console.log(info)
-
-    // fluid
-
-    // magoViewer.initPosition(info.lon, info.lat, 1000.0);
     await fluid.initBase(options);
     fluid.start();
 

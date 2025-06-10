@@ -9,7 +9,7 @@ import {ModelSwapAnimator} from "@/modules/model/ModelSwapAnimator.js";
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago Cesium Tools (🧊 MarchingCube)</h1>
+    <h1>Mago Cesium Tools (🧊 MarchingCube/Isosurface)</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <button id="start">Start</button>
@@ -50,17 +50,14 @@ let modelSwapAnimator;
 let info;
 const init = async () => {
     await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
-    //await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
-    //const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
-    //viewer.scene.primitives.add(tileset);
     magoViewer.initPosition(lon, lat, 1000.0);
 
-    const infoJson = await fetch("/ac-no2/index.json");
+    const infoJson = await fetch("/marching-cube-sample/index.json");
     info = await infoJson.json();
     console.log(info);
 
     frame.max = info.glbMetaDataFileNames.length;
-    
+
     const center = Cesium.Cartesian3.fromDegrees(lon, lat);
     const options = {center};
     modelSwapAnimator = new ModelSwapAnimator(viewer, center);
@@ -80,7 +77,7 @@ const nextFrame = () => {
     const currentGlb = info.glbMetaDataFileNames[frame.current];
     const glbFileName = currentGlb.glbFileName;
     const maxValue = currentGlb.maxValue;
-    const glbUrl = `/ac-no2/${glbFileName}`;
+    const glbUrl = `/marching-cube-sample/${glbFileName}`;
     modelSwapAnimator.loadModel(glbUrl, maxValue);
 };
 

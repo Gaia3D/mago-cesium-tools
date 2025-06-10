@@ -24,7 +24,6 @@ export class ModelSwapAnimator {
             modelMatrix: modelMatrix,
             upAxis: Cesium.Cartesian3.UNIT_Z,
             forwardAxis: Cesium.Cartesian3.UNIT_X,
-            //show: false,
         });
 
         const customShader = new Cesium.CustomShader({
@@ -110,19 +109,6 @@ export class ModelSwapAnimator {
                 viewer.scene.primitives.remove(currentModel);
             }
             this.currentModel = model;
-
-            /*const boundingSphere = model.boundingSphere;
-            viewer.camera.flyTo({
-                destination: boundingSphere.center, duration: 1.0, complete: () => {
-                    console.log("Camera fly completed");
-                },
-            });*/
         });
-
-        /*const currentModel = this.currentModel;
-        if (currentModel) {
-            viewer.scene.primitives.remove(currentModel);
-        }
-        this.currentModel = model;*/
     }
 }

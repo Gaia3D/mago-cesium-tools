@@ -30,7 +30,7 @@ export class RenderPrimitive {
             vertexArray: vertexArray,
             primitiveType: this.primitiveType,
             uniformMap: this.uniformMap,
-            modelMatrix: Cesium.Matrix4.IDENTITY,
+            modelMatrix: this.modelMatrix,
             shaderProgram: shaderProgram,
             framebuffer: this.framebuffer,
             renderState: renderState,
