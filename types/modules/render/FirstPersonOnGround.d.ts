@@ -49,10 +49,9 @@ export class FirstPersonOnGround {
     deactivate(): void;
     keyboardEventHandler: () => void;
     keyDownEventHandler: (e: any) => void;
-    keyUpEventHandler: (e: any) => void;
-    mouseDownHandler: () => void;
-    mouseUpHandler: () => void;
-    mouseMoveHandler: (moveEvent: any) => void;
+    keyUpEventHandler: (event: any) => void;
+    mouseMoveHandler(moveEvent: any): void;
+    mouseClickWithPointerLockHandler: () => void;
     mouseMoveWithPointerLockHandler: (moveEvent: any) => void;
     getFlagForKeyCode(code: any): "speedDown" | "speedUp" | "moveForward" | "moveBackward" | "moveUp" | "moveDown" | "moveRight" | "moveLeft";
     clear(): void;

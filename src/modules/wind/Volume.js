@@ -19,7 +19,7 @@ export class Volume {
         return normalizedXYZ;
     }
 
-    #mix(a, b, t) {
+    mix(a, b, t) {
         return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
     }
 }
@@ -28,15 +28,15 @@ export class HomogeneousVolume extends Volume {
     getPosition(normalizedXYZ) {
         const [x, y, z] = normalizedXYZ;
 
-        const bottomBack = this.#mix(this.bounds[0], this.bounds[1], x);
-        const bottomFront = this.#mix(this.bounds[3], this.bounds[2], x);
-        const bottom = this.#mix(bottomBack, bottomFront, y);
+        const bottomBack = this.mix(this.bounds[0], this.bounds[1], x);
+        const bottomFront = this.mix(this.bounds[3], this.bounds[2], x);
+        const bottom = this.mix(bottomBack, bottomFront, y);
 
-        const topBack = this.#mix(this.bounds[4], this.bounds[5], x);
-        const topFront = this.#mix(this.bounds[7], this.bounds[6], x);
-        const top = this.#mix(topBack, topFront, y);
+        const topBack = this.mix(this.bounds[4], this.bounds[5], x);
+        const topFront = this.mix(this.bounds[7], this.bounds[6], x);
+        const top = this.mix(topBack, topFront, y);
 
-        return this.#mix(bottom, top, z);
+        return this.mix(bottom, top, z);
     }
 }
 

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/volumeRendering/VolumetricRenderer.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/volumeRendering/VolumetricRenderer.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as Cesium from "cesium";
+import {VolumetricRenderLayer} from "./VolumetricRenderLayer.js";
+
+import {ShaderLoader} from "@/modules/ShaderLoader.js";
+import {MagoModeler} from "@/modules/common/MagoModeler.js";
+import {MagoAABB} from "@/modules/common/magoGeometry/MagoAABB.js";
+import {MagoPoint3} from "@/modules/common/magoGeometry/MagoPoint3.js";
+import {RenderPrimitive} from "@/modules/common/RenderPrimitive.js";
+
+export class VolumetricRenderer {
+    /**
+     * Constructor for the VolumetricRenderer class.
+     * @param viewer
+     * @param options
+     */
+    constructor(viewer, options) {
+        Object.assign(this, options);
+        this.viewer = viewer;
+        this.shaderLoader = new ShaderLoader("/src/shaders/volumeRendering");
+        this.context = viewer.scene.context;
+        this.jsonIndex = options.jsonIndex;
+        this.pngsBinBlocksArray = options.pngsBinBlocksArray;
+        this.airPollutionLayers = [];
+        this.collection = this.primitiveCollection = new Cesium.PrimitiveCollection();
+        this.currentIdx = 0;
+
+        // make a map key = originalPngFileName, value = pngsBinBlock.***
+        this.map_pngOriginalFileName_pngsBinData = {};
+        let originalPngFileNamesCount = this.jsonIndex.pngsBinDataArray.length; // usually there are only one.***
+        for (let i = 0; i &lt; originalPngFileNamesCount; i++) {
+            let pngsBinData = this.jsonIndex.pngsBinDataArray[i];
+            this.map_pngOriginalFileName_pngsBinData[pngsBinData.originalPngFileName] = pngsBinData;
+        }
+
+        // options.***
+        // timetables for shader uniforms.***
+        this.renderingColorType = 0; // 0 = rainbow, 1 = grayscale, 2 = colorLegend.
+        if (options.renderingColorType !== undefined) {
+            this.renderingColorType = options.renderingColorType; // 0 = rainbow, 1 = grayscale, 2 = colorLegend.
+        }
+        this.cuttingAAPlanePositionMC = undefined; // The position of the cutting plane in model coordinates.
+        if (options.cuttingAAPlanePositionMC !== undefined) {
+            this.cuttingAAPlanePositionMC = options.cuttingAAPlanePositionMC; // The position of the cutting plane in model coordinates.
+        }
+        this.cuttingAAPlaneNormalMC = undefined; // The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.
+        if (options.cuttingAAPlaneNormalMC !== undefined) {
+            this.cuttingAAPlaneNormalMC = options.cuttingAAPlaneNormalMC; // The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.
+        }
+        this.samplingsCount = 50;
+        if (options.samplingsCount !== undefined) {
+            this.samplingsCount = options.samplingsCount; // The number of samplings for the volumetric rendering.
+        }
+        this.colorLegends = [];
+        if (options.colorLegends !== undefined) {
+            this.colorLegends = options.colorLegends; // The color legends for the volumetric rendering.
+        }
+        this.legendValues = [];
+        if (options.legendValues !== undefined) {
+            this.legendValues = options.legendValues; // The legend values for the volumetric rendering.
+        }
+        this.legendValuesScale = 1.0; // Scale for the legend values.
+        if (options.legendValuesScale !== undefined) {
+            this.legendValuesScale = options.legendValuesScale; // Scale for the legend values.
+        }
+    }
+
+    async init() {
+        let layersCount = 1;
+        for (let i = 0; i &lt; layersCount; i++) {
+            let options = {
+                pollutionVolumeOwner: this,
+            };
+            let layer = new VolumetricRenderLayer(this.viewer, this.context, this.jsonIndex, options);
+            this.airPollutionLayers.push(layer);
+        }
+        
+        await this._prepareAirPollutionLayers();
+        await this.createRenderPrimitives();
+    }
+
+    addIndex() {
+        let maxIdx = this.jsonIndex.mosaicTexMetaDataJsonArray.length - 1;
+        this.currentIdx++;
+        if (this.currentIdx >= maxIdx) {
+            this.currentIdx = maxIdx;
+        } else if (this.currentIdx &lt; 0) {
+            this.currentIdx = 0;
+        }
+    }
+
+    onChangeIdx(value) {
+        let maxIdx = this.jsonIndex.mosaicTexMetaDataJsonArray.length - 1;
+        let newIdx = Math.floor(value * maxIdx);
+        this.currentIdx = newIdx;
+        if (this.currentIdx >= maxIdx) {
+            this.currentIdx = maxIdx;
+        } else if (this.currentIdx &lt; 0) {
+            this.currentIdx = 0;
+        }
+    }
+
+    onChangeCuttingPlanePositionMC(value) {
+        let aabb = this.getAABB();
+        let minPos = aabb.minPosition;
+        let maxPos = aabb.maxPosition;
+        let curPos = MagoMathUtils.mixVec3(minPos, maxPos, value);
+
+        let cuttingAAPlanePositionMC = this.#getCuttingAAPlanePositionMC();
+        cuttingAAPlanePositionMC.x = curPos.x;
+        cuttingAAPlanePositionMC.y = curPos.y;
+        cuttingAAPlanePositionMC.z = curPos.z;
+        this.cuttingAAPlanePositionMC = cuttingAAPlanePositionMC;
+    }
+
+    async createRenderPrimitives() {
+        let boxPrimitive = await this.#createRenderPrimitive();
+        this.collection.add(boxPrimitive);
+    }
+
+    async _prepareAirPollutionLayers() {
+        for (let i = 0; i &lt; this.airPollutionLayers.length; i++) {
+            let layer = this.airPollutionLayers[i];
+            await layer._prepare();
+        }
+    }
+
+    getPrimitiveCollection() {
+        return this.primitiveCollection;
+    }
+
+    getBlobArrayBuffer(mosaicFileName) {
+        let pngsBinData = this.map_pngOriginalFileName_pngsBinData[mosaicFileName];
+        if (pngsBinData === undefined) {
+            return undefined;
+        }
+        let pngsBinBlocksCount = this.pngsBinBlocksArray.length;
+        for (let i = 0; i &lt; pngsBinBlocksCount; i++) {
+            let pngsBinBlock = this.pngsBinBlocksArray[i];
+            if (pngsBinBlock.fileName === pngsBinData.pngsBinaryBlockDataFileName) {
+                let startIdx = pngsBinData.startByteIndex;
+                let endIdx = pngsBinData.endByteIndex;
+                let pngsBinBlockData = pngsBinBlock.dataArraybuffer;
+                return pngsBinBlockData.slice(startIdx, endIdx);
+            }
+        }
+
+        return undefined;
+    }
+
+    #getTexture3DSize() {
+        let someData = this.jsonIndex.mosaicTexMetaDataJsonArray[0];
+        let someDataSlice = someData.dataSlices[0];
+        let width = someDataSlice.width;
+        let height = someDataSlice.height;
+        let slicesCount = someData.dataSlices.length;
+
+        return [width, height, slicesCount];
+    }
+
+    #getAltitudeSlices(arrayLength) {
+        //**********************
+        // Uniform for shader.
+        //**********************
+        let someData = this.jsonIndex.mosaicTexMetaDataJsonArray[0];
+        let altitudeSlicesArray = [];
+        for (let i = 0; i &lt; someData.dataSlices.length; i++) {
+            let dataSlice = someData.dataSlices[i];
+            let altitudeSlice = dataSlice.minAltitude;
+            altitudeSlicesArray.push(altitudeSlice);
+        }
+
+        if (altitudeSlicesArray.length &lt; arrayLength) {
+            let diff = arrayLength - altitudeSlicesArray.length;
+            for (let i = 0; i &lt; diff; i++) {
+                altitudeSlicesArray.push(0.0);
+            }
+        }
+        return altitudeSlicesArray;
+    }
+
+    #getMinMaxAltitudeSlices() {
+        //**********************
+        // Uniform for shader.
+        //**********************
+        let someData = this.jsonIndex.mosaicTexMetaDataJsonArray[0];
+        let minMaxAltitudeSlices = [];
+        for (let i = 0; i &lt; 32; i++) {
+            if (i &lt; someData.dataSlices.length) {
+                let dataSlice = someData.dataSlices[i];
+                let minMaxAltitudeSlice = new Cesium.Cartesian2(dataSlice.minAltitude, dataSlice.maxAltitude);
+                minMaxAltitudeSlices.push(minMaxAltitudeSlice);
+            } else {
+                let minMaxAltitudeSlice = new Cesium.Cartesian2(0.0, 0.0);
+                minMaxAltitudeSlices.push(minMaxAltitudeSlice);
+            }
+        }
+
+        return minMaxAltitudeSlices;
+    }
+
+    #getMosaicSize() {
+        //**********************
+        // Uniform for shader.
+        //**********************
+        let someData = this.jsonIndex.mosaicTexMetaDataJsonArray[0];
+        let mosaicColumnsCount = someData.mosaicColumnsCount;
+        let mosaicRowsCount = someData.mosaicRowsCount;
+        const slicesCount = 1;
+        let mosaicSize = [mosaicColumnsCount, mosaicRowsCount, slicesCount];
+        return mosaicSize;
+    }
+
+    #getCuttingAAPlanePositionMC() {
+        // Uniform for shader.
+        if (this.cuttingAAPlanePositionMC === undefined) {
+            this.cuttingAAPlanePositionMC = new Cesium.Cartesian3(0.0, 0.0, 0.0);
+        }
+        return this.cuttingAAPlanePositionMC;
+    }
+
+    #getCuttingAAPlaneNormalMC() {
+        // Uniform for shader.
+        // The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.***
+        if (this.cuttingAAPlaneNormalMC === undefined) {
+            this.cuttingAAPlaneNormalMC = 0;
+        }
+        return this.cuttingAAPlaneNormalMC;
+    }
+
+    getAABB() {
+        let sizeX = this.jsonIndex.width_km * 1000.0;
+        let sizeY = this.jsonIndex.height_km * 1000.0;
+        let sizeZ = this.airPollutionLayers[0].getMaxAltitude();
+        let semiX = sizeX / 2;
+        let semiY = sizeY / 2;
+        let minX = -semiX;
+        let minY = -semiY;
+        let minZ = this.airPollutionLayers[0].getMinAltitude();
+        let maxX = semiX;
+        let maxY = semiY;
+        let maxZ = sizeZ;
+        let minPos = new MagoPoint3(minX, minY, minZ);
+        let maxPos = new MagoPoint3(maxX, maxY, maxZ);
+        let aabb = new MagoAABB(minPos, maxPos);
+        return aabb;
+    }
+
+    createVolumetricBoxGeometry() {
+        let aabb = this.getAABB();
+        let minPos = aabb.minPosition;
+        let maxPos = aabb.maxPosition;
+        let minX = minPos.x;
+        let minY = minPos.y;
+        let minZ = minPos.z;
+        let maxX = maxPos.x;
+        let maxY = maxPos.y;
+        let maxZ = maxPos.z;
+
+        let magoModeler = new MagoModeler();
+        let box = magoModeler.createBox(minX, minY, minZ, maxX, maxY, maxZ);
+
+        return new Cesium.Geometry({
+            attributes: new Cesium.GeometryAttributes({
+                position: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: box.positions,
+                }), normal: new Cesium.GeometryAttribute({
+                    componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: box.normals,
+                }),
+            }), indices: box.indices,
+        });
+    }
+
+    async #createRenderPrimitive() {
+        let aabb = this.getAABB();
+        let minPos = aabb.minPosition;
+        let maxPos = aabb.maxPosition;
+        let minX = minPos.x;
+        let minY = minPos.y;
+        let minZ = minPos.z;
+        let maxX = maxPos.x;
+        let maxY = maxPos.y;
+        let maxZ = maxPos.z;
+
+        let lonDeg = this.jsonIndex.centerGeographicCoord.longitude;
+        let latDeg = this.jsonIndex.centerGeographicCoord.latitude;
+        let altitude = this.jsonIndex.centerGeographicCoord.altitude;
+        let center = Cesium.Cartesian3.fromDegrees(lonDeg, latDeg, altitude);
+        const transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+
+        let tex3DSize = this.#getTexture3DSize();
+        let mosaicSize = this.#getMosaicSize();
+        let minMaxAltitudeSlices = this.#getMinMaxAltitudeSlices();
+
+        let totalMinValue = this.jsonIndex.totalMinValue;
+        let totalMaxValue = this.jsonIndex.totalMaxValue;
+
+        this.legendValuesCount = 0;
+        if (this.legendValues !== undefined &amp;&amp; this.legendValues.length > 0) {
+            this.legendValuesCount = this.legendValues.length;
+        }
+
+        const volumetricVertexShader = await this.shaderLoader.getShaderSource("volumetric.vert");
+        const volumetricFragmentShader = await this.shaderLoader.getShaderSource("volumetric.frag");
+
+        let that = this;
+        return new RenderPrimitive(this.context, {
+            attributeLocations: {
+                position: 0,
+            }, geometry: this.createVolumetricBoxGeometry(), primitiveType: Cesium.PrimitiveType.TRIANGLES, modelMatrix: transform, uniformMap: {
+                u_minBoxPosition: function() {
+                    return new Cesium.Cartesian3(minX, minY, minZ);
+                }, u_maxBoxPosition: function() {
+                    return new Cesium.Cartesian3(maxX, maxY, maxZ);
+                }, mosaicTexture: function() {
+                    return that.airPollutionLayers[0].volumetricDatasArray[that.currentIdx].mosaicTexture;
+                }, u_camPosWC: function() {
+                    return that.viewer.scene.camera.positionWC;
+                }, u_texSize: function() {
+                    return tex3DSize;
+                }, u_mosaicSize: function() {
+                    return mosaicSize;
+                }, u_minMaxAltitudeSlices: function() {
+                    return minMaxAltitudeSlices;
+                }, u_minMaxValues: function() {
+                    return new Cesium.Cartesian2(totalMinValue, totalMaxValue);
+                }, u_legendColors: function() {
+                    return that.colorLegends;
+                }, u_legendValues: function() {
+                    return that.legendValues;
+                }, u_legendColorsCount: function() {
+                    return that.legendValuesCount;
+                }, u_legendValuesScale: function() {
+                    return that.legendValuesScale;
+                }, u_renderingColorType: function() {
+                    return that.renderingColorType;
+                }, u_samplingsCount: function() {
+                    return that.samplingsCount;
+                }, u_AAPlanePosMC: function() {
+                    return that.#getCuttingAAPlanePositionMC();
+                }, u_AAPlaneNormalMC: function() {
+                    return that.#getCuttingAAPlaneNormalMC();
+                },
+            }, vertexShaderSource: new Cesium.ShaderSource({
+                sources: [volumetricVertexShader],
+            }), fragmentShaderSource: new Cesium.ShaderSource({
+                sources: [volumetricFragmentShader],
+            }), rawRenderState: this.createRawRenderState({
+                depthTest: {
+                    enabled: true,
+                }, depthMask: true, blending: {
+                    enabled: true,
+                }, cull: {
+                    enabled: false,
+                },
+            }), autoClear: false,
+        });
+    }
+
+    createRawRenderState(options) {
+        let translucent = true;
+        let closed = false;
+        let existing = {
+            viewport: options.viewport, depthTest: options.depthTest, depthMask: options.depthMask, blending: options.blending, cull: options.cull, colorMask: options.colorMask,
+        };
+
+        let rawRenderState = Cesium.Appearance.getDefaultRenderState(translucent, closed, existing);
+        return rawRenderState;
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawCircle.html">DrawCircle</a></li><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="DrawWall.html">DrawWall</a></li><li><a href="FirstPersonOnGround.html">FirstPersonOnGround</a></li><li><a href="FirstPersonView.html">FirstPersonView</a></li><li><a href="MagoDepth.html">MagoDepth</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="ModelSwapAnimator_ModelSwapAnimator.html">ModelSwapAnimator</a></li><li><a href="SubViewer.html">SubViewer</a></li><li><a href="ThirdPersonOnGround.html">ThirdPersonOnGround</a></li><li><a href="VolumetricRenderer_VolumetricRenderer.html">VolumetricRenderer</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Jun 10 2025 15:05:58 GMT+0900 (대한민국 표준시)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

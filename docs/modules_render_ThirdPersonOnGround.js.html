@@ -27,7 +27,9 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import * as Cesium from "cesium";
-import cesiumMan from "@/assets/cesium-man.glb";
+import cesiumMan from "@/assets/sedan.glb";
+
+//import cesiumMan from "@/assets/cesium-man.glb";
 
 /**
  * ThirdPersonOnGround
@@ -40,7 +42,7 @@ export class ThirdPersonOnGround {
         this.canvas = viewer.canvas;
         this.isActive = false;
         this.handler = new Cesium.ScreenSpaceEventHandler();
-        this.crosshair = undefined;
+        this.f = undefined;
         this.flags = {
             isActive: false,
             speedUp: false,
@@ -65,20 +67,43 @@ export class ThirdPersonOnGround {
         };
     }
 
+    yUpToZUp() {
+        return Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(-90)));
+    }
+
+    finalModelMatrix(modelMatrix) {
+        return Cesium.Matrix4.multiply(
+            modelMatrix,
+            this.yUpToZUp(),
+            new Cesium.Matrix4(),
+        );
+    }
+
     init() {
-        const crosshairDiv = document.createElement("div");
-        crosshairDiv.id = "crosshair";
-        crosshairDiv.style.position = "absolute";
-        crosshairDiv.style.top = "calc(50% - 10px)";
-        crosshairDiv.style.left = "calc(50% - 10px)";
-        crosshairDiv.style.width = "20px";
-        crosshairDiv.style.height = "20px";
-        crosshairDiv.style.color = "white";
-        crosshairDiv.style.fontSize = "24px";
-        crosshairDiv.style.textAlign = "center";
-        crosshairDiv.textContent = "+";
-        document.body.appendChild(crosshairDiv);
-        this.crosshair = crosshairDiv;
+        let modelMatrix = Cesium.Matrix4.inverse(this.viewer.camera.viewMatrix, new Cesium.Matrix4());
+        modelMatrix = this.finalModelMatrix(modelMatrix);
+        console.log("modelMatrix", modelMatrix);
+
+        const camera = this.viewer.camera;
+        const position = camera.positionWC;
+        const direction = camera.directionWC;
+
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+        const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3());
+
+        Cesium.Model.fromGltfAsync({
+            url: cesiumMan,
+            modelMatrix: modelMatrix,
+            scale: 1.0,
+            shadows: Cesium.ShadowMode.DISABLED,
+            minimumPixelSize: 16,
+            allowPicking: false,
+            show: true,
+        }).then((model) => {
+            console.log("added model", model);
+            this.model = model;
+            this.viewer.scene.primitives.add(model);
+        });
     }
 
     toggle() {
@@ -91,22 +116,68 @@ export class ThirdPersonOnGround {
         }
     }
 
+    lookAtCamera() {
+        if (!this.model || !this.viewer) {
+            return;
+        }
+
+        const modelMatrix = this.model.modelMatrix;
+        const targetCamera = this.viewer.camera;
+
+        const targetPos = targetCamera.positionWC;
+        const refPos = Cesium.Matrix4.getTranslation(modelMatrix, new Cesium.Cartesian3());
+
+        if (Cesium.Cartesian3.equals(targetPos, refPos)) {
+            //console.warn("Target camera position is the same as reference camera position. No adjustment needed.");
+            return;
+        }
+
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        //const xAxis = Cesium.Matrix4.getColumn(enuTransform, 0, new Cesium.Cartesian3()); // east → right
+        //const yAxis = Cesium.Matrix4.getColumn(enuTransform, 1, new Cesium.Cartesian3()); // north → up
+        const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3()); // up → back (보정 필요)
+
+        const direction = Cesium.Cartesian3.subtract(refPos, targetPos, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(direction, direction);
+
+        const right = Cesium.Cartesian3.cross(direction, zAxis, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(right, right);
+
+        const up = Cesium.Cartesian3.cross(right, direction, new Cesium.Cartesian3());
+        Cesium.Cartesian3.normalize(up, up);
+
+        targetCamera.direction = direction;
+        targetCamera.up = up;
+        targetCamera.right = right;
+    }
+
     preRenderEvent() {
         const viewer = this.viewer;
-        const camera = viewer.camera;
+        const model = this.model;
+        if (!model) {
+            console.warn("Model not initialized. Call init() first.");
+            return;
+        }
 
         const now = performance.now();
         const dt = (now - this.pysicalState.lastUpdateTime) / 1000;
         this.pysicalState.lastUpdateTime = now;
 
-        const targetPos = camera.positionWC;
-        const carto = Cesium.Cartographic.fromCartesian(targetPos);
+        const camera = viewer.camera;
+
+        const modelMatrix = model.modelMatrix;
+        const position = Cesium.Matrix4.getTranslation(modelMatrix, new Cesium.Cartesian3());
+        const rotation = Cesium.Matrix4.getRotation(modelMatrix, new Cesium.Matrix3());
+        //let direction = Cesium.Matrix4.getColumn(modelMatrix, 2, new Cesium.Cartesian3());
+        //let right = Cesium.Matrix4.getColumn(modelMatrix, 0, new Cesium.Cartesian3());
+
+        const carto = Cesium.Cartographic.fromCartesian(position);
 
         // vertical position adjustment
-        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(targetPos);
+        const enuTransform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
         const zAxis = Cesium.Matrix4.getColumn(enuTransform, 2, new Cesium.Cartesian3());
-        let direction = camera.direction;
-        let right = camera.right;
+        let direction = camera.directionWC;
+        let right = camera.rightWC;
 
         // vector normalization
         Cesium.Cartesian3.normalize(direction, direction);
@@ -167,7 +238,44 @@ export class ThirdPersonOnGround {
         );
         Cesium.Cartesian3.add(newPos, moveVec, newPos);
 
-        camera.position = newPos;
+        let modelRotationMatrix = rotation.clone();
+        const subPos = Cesium.Cartesian3.subtract(newPos, position, new Cesium.Cartesian3());
+        let directionLength = Cesium.Cartesian3.magnitude(subPos);
+
+        if (!Cesium.Cartesian3.equals(newPos, position)) {
+            let newDirection = subPos;
+            Cesium.Cartesian3.normalize(newDirection, newDirection);
+
+            let tempRight = Cesium.Cartesian3.cross(newDirection, zAxis, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(tempRight, tempRight);
+
+            newDirection = Cesium.Cartesian3.cross(zAxis, tempRight, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newDirection, newDirection);
+
+            const newRight = Cesium.Cartesian3.cross(newDirection, zAxis, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newRight, newRight);
+
+            const newUp = Cesium.Cartesian3.cross(newRight, newDirection, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newUp, newUp);
+
+            /*let newRight = Cesium.Cartesian3.cross(direction, zAxis, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newRight, newRight);
+
+            let newDirection = Cesium.Cartesian3.cross(zAxis, newRight, new Cesium.Cartesian3());
+            Cesium.Cartesian3.normalize(newDirection, newDirection);*/
+
+            modelRotationMatrix = Cesium.Matrix3.setColumn(modelRotationMatrix, 0, newDirection, modelRotationMatrix);
+            modelRotationMatrix = Cesium.Matrix3.setColumn(modelRotationMatrix, 1, newRight, modelRotationMatrix);
+            modelRotationMatrix = Cesium.Matrix3.setColumn(modelRotationMatrix, 2, zAxis, modelRotationMatrix);
+        }
+
+        let newModelMatrix = Cesium.Matrix4.IDENTITY.clone();
+        newModelMatrix = Cesium.Matrix4.multiplyByMatrix3(newModelMatrix, modelRotationMatrix, newModelMatrix);
+        newModelMatrix = Cesium.Matrix4.setColumn(newModelMatrix, 3, new Cesium.Cartesian4(newPos.x, newPos.y, newPos.z, 1.0), newModelMatrix);
+
+        model.modelMatrix = newModelMatrix;
+
+        this.lookAtCamera();
     }
 
     /**
@@ -177,11 +285,9 @@ export class ThirdPersonOnGround {
      * @param lockMode {boolean} - If true, enables pointer lock mode for mouse movement.
      */
     activate(lockMode = false) {
-        if (!this.crosshair) {
+        if (!this.model) {
             this.init();
         }
-        this.crosshair.style.display = "block";
-
         const scene = this.viewer.scene;
         scene.screenSpaceCameraController.enableRotate = false;
         scene.screenSpaceCameraController.enableTranslate = false;
@@ -190,11 +296,12 @@ export class ThirdPersonOnGround {
         scene.screenSpaceCameraController.enableLook = false;
 
         this.viewer.clock.onTick.addEventListener(this.keyboardEventHandler, this);
+        this.viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
         document.addEventListener("keydown", this.keyDownEventHandler, false);
         document.addEventListener("keyup", this.keyUpEventHandler, false);
 
-        const viewer = this.viewer;
-        viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
+        /*const viewer = this.viewer;
+
 
         if (lockMode) {
             viewer.canvas.addEventListener("click", this.mouseClickWithPointerLockHandler, false);
@@ -202,7 +309,7 @@ export class ThirdPersonOnGround {
         } else {
             this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             this.handler.setInputAction(this.mouseMoveHandler, Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
-        }
+        }*/
     }
 
     /**
@@ -211,10 +318,6 @@ export class ThirdPersonOnGround {
      * @description This method deactivates the first-person view controller, restoring the default camera controls and removing event listeners.
      */
     deactivate() {
-        if (this.crosshair) {
-            this.crosshair.style.display = "none";
-        }
-
         const scene = this.viewer.scene;
         scene.screenSpaceCameraController.enableRotate = true;
         scene.screenSpaceCameraController.enableTranslate = true;
@@ -223,16 +326,15 @@ export class ThirdPersonOnGround {
         scene.screenSpaceCameraController.enableLook = true;
 
         this.viewer.clock.onTick.removeEventListener(this.keyboardEventHandler);
+        this.viewer.scene.preRender.addEventListener(this.preRenderEvent, this);
         document.removeEventListener("keydown", this.keyDownEventHandler, false);
         document.removeEventListener("keyup", this.keyUpEventHandler, false);
 
-        this.viewer.canvas.removeEventListener("click", this.mouseClickWithPointerLockHandler, false);
+        /*this.viewer.canvas.removeEventListener("click", this.mouseClickWithPointerLockHandler, false);
         this.viewer.canvas.removeEventListener("mousemove", this.mouseMoveWithPointerLockHandler, false);
 
         this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);
-
-        this.viewer.scene.preRender.removeEventListener(this.preRenderEvent, this);
+        this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE, Cesium.KeyboardEventModifier.SHIFT);*/
 
         this.flags = {
             isActive: false,
@@ -256,6 +358,9 @@ export class ThirdPersonOnGround {
             jumpSpeed: 10.0,
             lastUpdateTime: performance.now(),
         };
+
+        this.viewer.scene.primitives.remove(this.model);
+        this.model = undefined;
     }
 
     keyboardEventHandler = () => {
@@ -293,7 +398,7 @@ export class ThirdPersonOnGround {
         if (typeof flagName !== "undefined") {
             flags[flagName] = false;
         }
-        if (e.key === "Shift") {
+        if (event.key === "Shift") {
             this.flags.fastMove = false;
         }
     };
@@ -390,13 +495,13 @@ export class ThirdPersonOnGround {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawCircle.html">DrawCircle</a></li><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="DrawWall.html">DrawWall</a></li><li><a href="FirstPersonOnGround.html">FirstPersonOnGround</a></li><li><a href="FirstPersonView.html">FirstPersonView</a></li><li><a href="MagoDepth.html">MagoDepth</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="ModelSwapAnimator_ModelSwapAnimator.html">ModelSwapAnimator</a></li><li><a href="SubViewer.html">SubViewer</a></li><li><a href="ThirdPersonOnGround.html">ThirdPersonOnGround</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrawCircle.html">DrawCircle</a></li><li><a href="DrawLineString.html">DrawLineString</a></li><li><a href="DrawPolygon.html">DrawPolygon</a></li><li><a href="DrawWall.html">DrawWall</a></li><li><a href="FirstPersonOnGround.html">FirstPersonOnGround</a></li><li><a href="FirstPersonView.html">FirstPersonView</a></li><li><a href="MagoDepth.html">MagoDepth</a></li><li><a href="MagoEdge.html">MagoEdge</a></li><li><a href="MagoFluid.html">MagoFluid</a></li><li><a href="MagoFluidOptions.html">MagoFluidOptions</a></li><li><a href="MagoFrame.html">MagoFrame</a></li><li><a href="MagoSSAO.html">MagoSSAO</a></li><li><a href="MagoTools.html">MagoTools</a></li><li><a href="MagoWind.html">MagoWind</a></li><li><a href="MeasureAngle.html">MeasureAngle</a></li><li><a href="MeasureArea.html">MeasureArea</a></li><li><a href="MeasureDistance.html">MeasureDistance</a></li><li><a href="MeasureHeight.html">MeasureHeight</a></li><li><a href="MeasureMultiDistance.html">MeasureMultiDistance</a></li><li><a href="MeasurePosition.html">MeasurePosition</a></li><li><a href="ModelSwapAnimator_ModelSwapAnimator.html">ModelSwapAnimator</a></li><li><a href="SubViewer.html">SubViewer</a></li><li><a href="ThirdPersonOnGround.html">ThirdPersonOnGround</a></li><li><a href="VolumetricRenderer_VolumetricRenderer.html">VolumetricRenderer</a></li><li><a href="Vworld.html">Vworld</a></li><li><a href="drawPoint_.html">drawPoint</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Jun 04 2025 16:10:35 GMT+0900 (대한민국 표준시)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Jun 10 2025 15:05:58 GMT+0900 (대한민국 표준시)
 </footer>
 
 <script> prettyPrint(); </script>
