@@ -74,7 +74,8 @@ let info;
 const init = async () => {
     console.log(Cesium.Cartesian3.fromDegrees(lon, lat, 1000.0));
 
-    await magoTools.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    //await magoTools.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoTools.createMaptilerImageryProvider();
     magoTools.initPosition(lon, lat, 1000.0);
 
     await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");

@@ -9,7 +9,7 @@ import {ModelSwapAnimator} from "@/modules/model/ModelSwapAnimator.js";
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
   <div id="toolbar">
-    <h1>Mago Cesium Tools (🧊 MarchingCube/Isosurface)</h1>
+    <h1>Mago Cesium Tools (🧊 MarchingCube)</h1>
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <button id="start">Start</button>
@@ -49,7 +49,7 @@ const magoViewer = new MagoTools(viewer);
 let modelSwapAnimator;
 let info;
 const init = async () => {
-    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.createMaptilerImageryProvider();
     magoViewer.initPosition(lon, lat, 1000.0);
 
     const infoJson = await fetch("/marching-cube-sample/index.json");
@@ -60,7 +60,7 @@ const init = async () => {
 
     const center = Cesium.Cartesian3.fromDegrees(lon, lat);
     const options = {center};
-    modelSwapAnimator = new ModelSwapAnimator(viewer, center);
+    modelSwapAnimator = new ModelSwapAnimator(viewer, options);
 
     setDefaultValue();
     if (!viewer.scene.clampToHeightSupported) {
@@ -78,6 +78,8 @@ const nextFrame = () => {
     const glbFileName = currentGlb.glbFileName;
     const maxValue = currentGlb.maxValue;
     const glbUrl = `/marching-cube-sample/${glbFileName}`;
+
+    console.log(`Loading GLB: ${glbUrl} with maxValue: ${maxValue}`);
     modelSwapAnimator.loadModel(glbUrl, maxValue);
 };
 

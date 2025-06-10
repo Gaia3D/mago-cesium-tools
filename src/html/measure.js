@@ -95,7 +95,7 @@ const drawWallClamped = new DrawWall(viewer, {clampToGround: true, color: Cesium
 
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
-    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.createMaptilerImageryProvider();
     await magoViewer.createGridImageryProvider();
     await magoViewer.changeTerrain("https://seoul.gaia3d.com:10107/mago_terrain/output/hamilton_2024_dtm_4326_d20");
     const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});

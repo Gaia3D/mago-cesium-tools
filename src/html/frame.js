@@ -88,7 +88,7 @@ const fluid = new MagoFrame(viewer);
 
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
-    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.createMaptilerImageryProvider();
     await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
 
     const infoJson = await fetch("/sample/info.json");
@@ -172,6 +172,8 @@ document.querySelector("#color").addEventListener("change", (event) => {
 const refreshRectangle = () => {
     const extent = fluid.calcExtent(options);
     const rectangle = fluid.createRectangle(extent);
+    console.log("Rectangle:", rectangle);
+    console.log("Extent:", extent);
 };
 
 const animationStatus = {
