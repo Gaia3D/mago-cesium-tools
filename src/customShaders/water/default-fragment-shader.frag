@@ -51,30 +51,12 @@ float interpolateAlpha(float waterHeight) {
     return value;
 }
 
-
-/*float interpolateAlpha(float waterHeight) {
-    float minimum = 0.01;
-    float maximum = 0.4;
-    float intensity = u_color_intensity;
-
-    maximum = min(0.8, maximum * intensity);
-
-    float scaledValue = waterHeight / (u_max_height / 1000.0) * intensity;
-
-    float value = min(maximum, max(minimum, scaledValue));
-    return value;
-}*/
-
-//vec3 getNormalTexture(vec2 texCoord) {
-//    return texture(u_water_normal_texture, texCoord).xyz;
-//}
-
 void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
     //vec3 norTex = getNormalTexture(v_texCoord * 64.0);
 
     //material.diffuse = vec3(0.0);
     //material.emissive = vec3(0.0);
-    material.roughness = 0.1;
+    //material.roughness = 0.1;
     //material.occlusion = 1.0;
     //material.specular = vec3(0.02);
 
@@ -86,6 +68,7 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
             color = interpolateHeightMapColor(0.0);
         }
         material.alpha = 0.75;
+        material.roughness = 1.0;
     } else {
         color = v_water_color * u_water_brightness;
         material.alpha = interpolateAlpha(v_water_height);
@@ -94,6 +77,7 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         if (v_water_height != v_temp_water_height) {
             material.alpha = interpolateAlpha(0.0);
         }
+        material.roughness = 0.1;
     }
 
     float margin = (1.0 / u_grid_size);
@@ -105,11 +89,4 @@ void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         material.diffuse = color;
         material.normalEC = czm_normal * v_normal;
     }
-
-/*if (v_water_height != v_temp_water_height) {
-        material.diffuse = vec3(0.1, 0.1, 0.1);
-    }*/
-
-    //material.diffuse = vec3(v_flux_value.x, v_flux_value.y, 0.0);
-    //material.alpha = 1.0;
 }
