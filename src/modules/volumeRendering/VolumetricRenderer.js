@@ -346,8 +346,8 @@ export class VolumetricRenderer {
                 sources: [volumetricFragmentShader],
             }), rawRenderState: this.createRawRenderState({
                 depthTest: {
-                    enabled: true,
-                }, depthMask: true, blending: {
+                    enabled: false,
+                }, depthMask: false, blending: {
                     enabled: true,
                 }, cull: {
                     enabled: false,

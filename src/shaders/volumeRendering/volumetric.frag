@@ -577,7 +577,7 @@ void recalculateMinOrMaxSamplePositionWithCuttingPlane(inout vec3 minSamplePos, 
     }
 }
 
-vec4 getColorWhenCameraIsOutSideBox() {
+vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
     vec4 color = vec4(1.0, 0.0, 0.0, 1.0); // Default color
     vec3 camDirMC = normalize(positionMC - camPosMC);
     float dot = dot(normalMC, camDirMC);
@@ -585,8 +585,17 @@ vec4 getColorWhenCameraIsOutSideBox() {
         discard;
     }
 
+    float distToGround = distance(camPosMC, groundPosMC);
+
     float tMin, tMax;
     bool isIntersect = intersectAABBox(camPosMC, camDirMC, tMin, tMax);
+    if(tMin > distToGround){
+        discard;
+    }
+    tMin = max(tMin, 0.0); // Ensure tMin is not negative.
+    if(tMax > distToGround){
+        tMax = distToGround;
+    }
     vec3 minSamplePos = camPosMC + tMin * camDirMC;
     vec3 maxSamplePos = camPosMC + tMax * camDirMC;
     recalculateMinOrMaxSamplePositionWithCuttingPlane(minSamplePos, maxSamplePos, tMin, tMax, camPosMC, camDirMC);
@@ -608,9 +617,9 @@ vec4 getColorWhenCameraIsOutSideBox() {
 
     // sample from far to near.
     bool alphaSaturated = false;
-    for (int i = 0; i < u_samplingsCount; i++) {
+    for(int i = 0; i < u_samplingsCount; i++) {
         vec3 samplePos = firstPosMC + camDirMC * increDist * float(i);
-        if (samplePos.z < u_minBoxPosition.z) {
+        if(samplePos.z < u_minBoxPosition.z) {
             continue;
         }
         vec3 texCoord3D = getTexCoord3DFromPositionMC(samplePos);
@@ -632,7 +641,7 @@ vec4 getColorWhenCameraIsOutSideBox() {
     return color;
 }
 
-vec4 getColorWhenCameraIsInSideBox() {
+vec4 getColorWhenCameraIsInSideBox(vec3 groundPosMC) {
     vec4 color = vec4(1.0, 0.0, 0.0, 1.0); // Default color
     vec3 camDirMC = normalize(positionMC - camPosMC);
     float dot = dot(normalMC, camDirMC);
@@ -640,8 +649,17 @@ vec4 getColorWhenCameraIsInSideBox() {
         discard;
     }
 
+    float distToGround = distance(camPosMC, groundPosMC);
+
     float tMin, tMax;
     bool isIntersect = intersectAABBox(camPosMC, camDirMC, tMin, tMax);
+    if(tMin > distToGround){
+        discard;
+    }
+    tMin = max(tMin, 0.0); // Ensure tMin is not negative.
+    if(tMax > distToGround){
+        tMax = distToGround;
+    }
 
     // calculate the distance from tMin to tMax.
     vec3 minSamplePos = camPosMC; // here the camera is inside the box.
@@ -662,9 +680,9 @@ vec4 getColorWhenCameraIsInSideBox() {
 
     // sample from far to near.
     bool alphaSaturated = false;
-    for (int i = 0; i < u_samplingsCount; i++) {
+    for(int i = 0; i < u_samplingsCount; i++) {
         vec3 samplePos = firstPosMC + camDirMC * increDist * float(i);
-        if (samplePos.z < u_minBoxPosition.z) {
+        if(samplePos.z < u_minBoxPosition.z) {
             continue;
         }
         vec3 texCoord3D = getTexCoord3DFromPositionMC(samplePos);
@@ -789,20 +807,50 @@ bool isCuttingPlane_original(vec3 posMC) {
     return false;
 }
 
+vec3 getDepthTexPositionMC() {
+    vec2 screenTexCoord2 = gl_FragCoord.xy / czm_viewport.zw;
+    float unpackDepth = czm_unpackDepth(texture(czm_globeDepthTexture, screenTexCoord2));
+    vec4 clipPos;
+    clipPos.xy = screenTexCoord2 * 2.0 - 1.0;
+    clipPos.z = unpackDepth * 2.0 - 1.0;
+    clipPos.w = 1.0;
+
+    vec4 eyeCoords = czm_windowToEyeCoordinates(gl_FragCoord.xy, unpackDepth);
+    eyeCoords /= eyeCoords.w;
+
+    vec4 worldEyePos = czm_inverseView * eyeCoords;
+    vec4 eyePosMC = czm_inverseModel * worldEyePos;
+    return eyePosMC.xyz; // Return the position in model coordinates.
+}
+
 void main() {
-    if (isCuttingPlane(positionMC)) {
-        fragColor_1 = vec4(0.9, 0.5, 0.5, 1.0); // Default color
+    vec3 groundPosMC = getDepthTexPositionMC();
+    if(isCuttingPlane(positionMC)) {
+        float distToCamMC = distance(camPosMC, positionMC);
+        float distGroundToCamMC = distance(camPosMC, groundPosMC);
+        float alpha = 1.0;
+        if(distToCamMC > distGroundToCamMC){
+            alpha = 0.2;
+        }
+        fragColor_1 = vec4(0.9, 0.5, 0.5, alpha); // Default color
         return;
     }
-    if (isBoxEdge(positionMC)) {
-        fragColor_1 = vec4(0.5, 0.5, 0.5, 1.0); // Default color
-        return;
-    }
-    bool isCameraInsideBox = isPointInsideAABB(camPosMC, u_minBoxPosition, u_maxBoxPosition);
-    if (isCameraInsideBox) {
-        fragColor_1 = getColorWhenCameraIsInSideBox();
+    if(isBoxEdge(positionMC)) {
+        float distToCamMC = distance(camPosMC, positionMC);
+        float distGroundToCamMC = distance(camPosMC, groundPosMC);
+        float alpha = 1.0;
+        if(distToCamMC > distGroundToCamMC){
+            alpha = 0.2;
+        }
+        fragColor_1 = vec4(0.5, 0.5, 0.5, alpha); // Default color
         return;
     }
 
-    fragColor_1 = getColorWhenCameraIsOutSideBox();
+    bool isCameraInsideBox = isPointInsideAABB(camPosMC, u_minBoxPosition, u_maxBoxPosition);
+    if (isCameraInsideBox) {
+        fragColor_1 = getColorWhenCameraIsInSideBox(groundPosMC);
+        return;
+    }
+
+    fragColor_1 = getColorWhenCameraIsOutSideBox(groundPosMC);
 }

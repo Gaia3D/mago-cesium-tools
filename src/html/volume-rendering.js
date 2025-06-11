@@ -77,10 +77,13 @@ const init = async () => {
     }
 
     const options = {
-        projectFolderPath: projectFolderPath, pngsBinBlocksArray: pngsBinBlocksArray, jsonIndex: jsonIndex,
+        projectFolderPath: projectFolderPath,
+        pngsBinBlocksArray: pngsBinBlocksArray,
+        jsonIndex: jsonIndex,
     };
     volumeRenderer = new VolumetricRenderer(viewer, options);
     await volumeRenderer.init();
+    volumeRenderer.currentIdx = 33;
     const primitiveCollection = volumeRenderer.getPrimitiveCollection();
     viewer.scene.primitives.add(primitiveCollection);
 
