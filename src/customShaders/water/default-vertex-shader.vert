@@ -25,22 +25,21 @@ vec2 getVelocity(vec2 texCoord) {
 }
 
 /*float getBuildingHeight(vec2 texCoord) {
-          return texture(u_building, texCoord).z * 255.0;
-      }*/
+    return texture(u_building, texCoord).z * 255.0;
+}*/
 
-//vec3 getNormalTexture(vec2 texCoord) {
-//    return texture(u_water_normal_texture, texCoord).xyz;
-//}
 
 vec3 calculateWaterSurfaceNormal(in VertexInput vsInput) {
     float divX = 1.0 / u_grid_size;
     float divY = 1.0 / u_grid_size;
     float cellSize = u_grid_size;
     vec2 texCoord = vec2(vsInput.attributes.texCoord_0);
+    vec2 texCooordRight = texCoord + vec2(divX, 0.0);
+    vec2 texCooordTop = texCoord + vec2(0.0, divY);
 
     float currentHeight = getWaterHeight(texCoord) + getTerrainHeight(texCoord);
-    float rightHeight = getWaterHeight(texCoord + vec2(divX, 0.0)) + getTerrainHeight(texCoord + vec2(divX, 0.0));
-    float topHeight = getWaterHeight(texCoord + vec2(0.0, divY)) + getTerrainHeight(texCoord + vec2(0.0, divY));
+    float rightHeight = getWaterHeight(texCooordRight) + getTerrainHeight(texCooordRight);
+    float topHeight = getWaterHeight(texCooordTop) + getTerrainHeight(texCooordTop);
 
     vec3 p0 = vec3(vsInput.attributes.positionMC.x, currentHeight, vsInput.attributes.positionMC.z);
     vec3 p1 = vec3(vsInput.attributes.positionMC.x + 1.0, rightHeight, vsInput.attributes.positionMC.z);

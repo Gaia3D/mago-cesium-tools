@@ -5,6 +5,7 @@ import {Viewer} from "cesium";
 import {MagoTools} from "../modules/MagoTools.js";
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
 import {VolumetricRenderer} from "@/modules/volumeRendering/VolumetricRenderer.js";
+import {ModelSwapAnimator} from "@/modules/model/ModelSwapAnimator.js";
 
 document.querySelector("#app").innerHTML = `
   <div id="cesiumContainer"></div>
@@ -45,9 +46,11 @@ const frame = {
 
 const magoViewer = new MagoTools(viewer);
 let volumeRenderer = undefined;
+let modelSwapAnimator = undefined;
 
 const init = async () => {
-    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    //await magoViewer.createMaptilerImageryProvider();
+    await magoViewer.createMaptilerImageryProvider();
     //await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     //const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
     //viewer.scene.primitives.add(tileset);
@@ -82,10 +85,19 @@ const init = async () => {
         jsonIndex: jsonIndex,
     };
     volumeRenderer = new VolumetricRenderer(viewer, options);
+    volumeRenderer.currentIdx = 33;
     await volumeRenderer.init();
     volumeRenderer.currentIdx = 33;
     const primitiveCollection = volumeRenderer.getPrimitiveCollection();
     viewer.scene.primitives.add(primitiveCollection);
+
+    const center = Cesium.Cartesian3.fromDegrees(lon, lat);
+    const modelOptions = {center};
+    modelSwapAnimator = new ModelSwapAnimator(viewer, modelOptions);
+
+    const maxValue = 0.484;
+    const glbUrl = "/marching-cube-sample/airPollution_20081911.glb";
+    modelSwapAnimator.loadModel(glbUrl, maxValue);
 
     setDefaultValue();
     if (!viewer.scene.clampToHeightSupported) {

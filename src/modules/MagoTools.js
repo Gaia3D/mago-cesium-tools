@@ -169,6 +169,31 @@ export class MagoTools {
         layers.addImageryProvider(grid);
     }
 
+    createMaptilerImageryProvider() {
+        // https://api.maptiler.com/maps/satellite/{TileMatrix}/{TileCol}/{TileRow}@2x.jpg?key=wXZcjNjag4zllcraYc7s
+        const minLevel = 0;
+        const maxLevel = 19;
+        const options = {
+            url: "https://api.maptiler.com/maps/satellite/{TileMatrix}/{TileCol}/{TileRow}@2x.jpg?key=wXZcjNjag4zllcraYc7s",
+            layer: "satellite",
+            style: "default",
+            maximumLevel: maxLevel,
+            credit: new Cesium.Credit("Vworld Korea"),
+            tileMatrixSetID: "default028mm",
+        };
+
+        const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(
+            options);
+        const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
+            show: true,
+            minimumTerrainLevel: minLevel,
+        });
+
+        const layers = this.viewer.scene.imageryLayers;
+        layers.add(imageryLayer);
+        return imageryLayer;
+    }
+
     /**
      * VWORLD Imagery Layer Provider on the globe.
      * @param type {String} Base, Satellite, White, Midnight

@@ -46,7 +46,8 @@ const options = {
 
 const init = async () => {
     const magoViewer = new MagoTools(viewer);
-    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.createMaptilerImageryProvider();
+    //await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
     await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
 
     magoViewer.changeGlobeColor("#000000");

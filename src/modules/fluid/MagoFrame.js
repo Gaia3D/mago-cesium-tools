@@ -66,8 +66,7 @@ export class MagoFrame {
         this.intervalObject = undefined;
 
         this.info = {
-            status: "off",
-            totalWater: 0,
+            status: "off", totalWater: 0,
         };
 
         /**
@@ -125,24 +124,13 @@ export class MagoFrame {
      */
     createRectangle(extent = this.extent) {
         console.log("[MCT][FRAME] createRectangle");
-        const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(),
-            extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
+        const rectangle = Cesium.Rectangle.fromDegrees(extent.getMinLon(), extent.getMinLat(), extent.getMaxLon(), extent.getMaxLat());
         return this.viewer.entities.add({
             rectangle: {
-                coordinates: rectangle,
-                material: Cesium.Color.BLACK.withAlpha(0.1),
-                outline: true,
-                outlineColor: Cesium.Color.BLACK,
-                clampToGround: true,
-            },
-            polyline: {
+                coordinates: rectangle, material: Cesium.Color.BLACK.withAlpha(0.1), outline: true, outlineColor: Cesium.Color.BLACK, clampToGround: true,
+            }, polyline: {
                 positions: Cesium.Cartesian3.fromRadiansArray([
-                    rectangle.west, rectangle.south,
-                    rectangle.east, rectangle.south,
-                    rectangle.east, rectangle.north,
-                    rectangle.west, rectangle.north,
-                    rectangle.west, rectangle.south,
-                ]),
+                    rectangle.west, rectangle.south, rectangle.east, rectangle.south, rectangle.east, rectangle.north, rectangle.west, rectangle.north, rectangle.west, rectangle.south]),
                 width: 3,
                 material: Cesium.Color.RED.withAlpha(0.5),
                 clampToGround: true,
@@ -151,30 +139,21 @@ export class MagoFrame {
     }
 
     calcLonLat(center, offset) {
-        const transformMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            center);
-        const translatedMatrix = Cesium.Matrix4.multiplyByTranslation(
-            transformMatrix,
-            offset, new Cesium.Matrix4());
-        const translation = Cesium.Matrix4.getTranslation(translatedMatrix,
-            new Cesium.Cartesian3());
+        const transformMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        const translatedMatrix = Cesium.Matrix4.multiplyByTranslation(transformMatrix, offset, new Cesium.Matrix4());
+        const translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
         const cartographic = Cesium.Cartographic.fromCartesian(translation);
         return {
-            lon: Cesium.Math.toDegrees(cartographic.longitude),
-            lat: Cesium.Math.toDegrees(cartographic.latitude),
+            lon: Cesium.Math.toDegrees(cartographic.longitude), lat: Cesium.Math.toDegrees(cartographic.latitude),
         };
     }
 
     calcLonLatWithCenterMatrix(centerMatrix, offset) {
-        const translatedMatrix = Cesium.Matrix4.multiplyByTranslation(
-            centerMatrix,
-            offset, new Cesium.Matrix4());
-        const translation = Cesium.Matrix4.getTranslation(translatedMatrix,
-            new Cesium.Cartesian3());
+        const translatedMatrix = Cesium.Matrix4.multiplyByTranslation(centerMatrix, offset, new Cesium.Matrix4());
+        const translation = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
         const cartographic = Cesium.Cartographic.fromCartesian(translation);
         return {
-            lon: Cesium.Math.toDegrees(cartographic.longitude),
-            lat: Cesium.Math.toDegrees(cartographic.latitude),
+            lon: Cesium.Math.toDegrees(cartographic.longitude), lat: Cesium.Math.toDegrees(cartographic.latitude),
         };
     }
 
@@ -184,15 +163,12 @@ export class MagoFrame {
 
         const realGridSize = gridSize * cellSize;
         const center = Cesium.Cartesian3.fromDegrees(options.lon, options.lat);
-        const leftDown = new Cesium.Cartesian3(-realGridSize / 2.0,
-            -realGridSize / 2.0, 0.0);
-        const rightTop = new Cesium.Cartesian3(realGridSize / 2.0,
-            realGridSize / 2.0, 0.0);
+        const leftDown = new Cesium.Cartesian3(-realGridSize / 2.0, -realGridSize / 2.0, 0.0);
+        const rightTop = new Cesium.Cartesian3(realGridSize / 2.0, realGridSize / 2.0, 0.0);
         const leftDownLonLat = this.calcLonLat(center, leftDown);
         const rightTopLonLat = this.calcLonLat(center, rightTop);
 
-        const extent = Extent.createFromDegrees(leftDownLonLat.lon,
-            leftDownLonLat.lat, rightTopLonLat.lon, rightTopLonLat.lat);
+        const extent = Extent.createFromDegrees(leftDownLonLat.lon, leftDownLonLat.lat, rightTopLonLat.lon, rightTopLonLat.lat);
         return extent;
     }
 
@@ -281,8 +257,7 @@ export class MagoFrame {
         const centerPosition = this.calcCellCenterPosition(cellPosition);
 
         this.options.waterMinusSourcePositions.push(cellPosition * 4);
-        console.log("[MCT][FRAME] setWaterMinusSourcePosition",
-            cellPosition * 4);
+        console.log("[MCT][FRAME] setWaterMinusSourcePosition", cellPosition * 4);
         return centerPosition;
     }
 
@@ -347,19 +322,15 @@ export class MagoFrame {
 
         let heightOffset = 0;
         if (terrainProvider instanceof Cesium.CesiumTerrainProvider) {
-            const centerWithHeight = await Cesium.sampleTerrainMostDetailed(
-                terrainProvider,
-                [Cesium.Cartographic.fromDegrees(options.lon, options.lat)]);
+            const centerWithHeight = await Cesium.sampleTerrainMostDetailed(terrainProvider, [Cesium.Cartographic.fromDegrees(options.lon, options.lat)]);
             heightOffset = centerWithHeight[0].height;
         }
         this.options.heightOffset = heightOffset;
 
         const scaleVector = new Cesium.Cartesian3(cellSize, cellSize, 1.0);
         let transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-        transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector,
-            new Cesium.Matrix4());
-        transform = Cesium.Matrix4.multiplyByTranslation(transform,
-            new Cesium.Cartesian3(0, 0, heightOffset), new Cesium.Matrix4());
+        transform = Cesium.Matrix4.multiplyByScale(transform, scaleVector, new Cesium.Matrix4());
+        transform = Cesium.Matrix4.multiplyByTranslation(transform, new Cesium.Cartesian3(0, 0, heightOffset), new Cesium.Matrix4());
 
         const baseUrl = this.baseUrl.replace(/\/$/, "");
         let gridModelUrl;
@@ -380,12 +351,9 @@ export class MagoFrame {
         });
         this.gridPrimitive = gltf;
 
-        const vertexShaderText = await this.customShaderLoader.getShaderSource(
-            "default-vertex-shader.vert");
-        const fragmentShaderText = await this.customShaderLoader.getShaderSource(
-            "default-fragment-shader.frag");
-        this.waterTextureArray = new Uint8Array(
-            this.options.gridSize * this.options.gridSize * 4);
+        const vertexShaderText = await this.customShaderLoader.getShaderSource("default-vertex-shader.vert");
+        const fragmentShaderText = await this.customShaderLoader.getShaderSource("default-fragment-shader.frag");
+        this.waterTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
         this.waterTextureUniform = new Cesium.TextureUniform({
             typedArray: this.waterTextureArray,
             width: this.options.gridSize,
@@ -395,8 +363,7 @@ export class MagoFrame {
             repeat: false,
         });
 
-        this.fluxTextureArray = new Uint8Array(
-            this.options.gridSize * this.options.gridSize * 4);
+        this.fluxTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
         this.fluxTextureUniform = new Cesium.TextureUniform({
             typedArray: this.fluxTextureArray,
             width: this.options.gridSize,
@@ -406,8 +373,7 @@ export class MagoFrame {
             repeat: false,
         });
 
-        this.terrainTextureArray = new Uint8Array(
-            this.options.gridSize * this.options.gridSize * 4);
+        this.terrainTextureArray = new Uint8Array(this.options.gridSize * this.options.gridSize * 4);
         this.terrainTextureUniform = new Cesium.TextureUniform({
             typedArray: this.terrainTextureArray,
             width: this.options.gridSize,
@@ -420,47 +386,33 @@ export class MagoFrame {
         this.customShader = new Cesium.CustomShader({
             uniforms: {
                 u_height_offset: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.heightOffset,
+                    type: Cesium.UniformType.FLOAT, value: this.options.heightOffset,
                 }, u_water_skirt: {
-                    type: Cesium.UniformType.BOOL,
-                    value: this.options.waterSkirt,
+                    type: Cesium.UniformType.BOOL, value: this.options.waterSkirt,
                 }, u_water: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.waterTextureUniform,
+                    type: Cesium.UniformType.SAMPLER_2D, value: this.waterTextureUniform,
                 }, u_terrain: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.terrainTextureUniform,
+                    type: Cesium.UniformType.SAMPLER_2D, value: this.terrainTextureUniform,
                 }, u_flux: {
-                    type: Cesium.UniformType.SAMPLER_2D,
-                    value: this.fluxTextureUniform,
+                    type: Cesium.UniformType.SAMPLER_2D, value: this.fluxTextureUniform,
                 }, u_cell_size: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.cellSize,
+                    type: Cesium.UniformType.FLOAT, value: this.options.cellSize,
                 }, u_grid_size: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.gridSize,
+                    type: Cesium.UniformType.FLOAT, value: this.options.gridSize,
                 }, u_max_height: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.maxHeight,
+                    type: Cesium.UniformType.FLOAT, value: this.options.maxHeight,
                 }, u_color_intensity: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.colorIntensity,
+                    type: Cesium.UniformType.FLOAT, value: this.options.colorIntensity,
                 }, u_max_opacity: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.maxOpacity,
+                    type: Cesium.UniformType.FLOAT, value: this.options.maxOpacity,
                 }, u_water_brightness: {
-                    type: Cesium.UniformType.FLOAT,
-                    value: this.options.waterBrightness,
+                    type: Cesium.UniformType.FLOAT, value: this.options.waterBrightness,
                 }, u_height_palette: {
-                    type: Cesium.UniformType.BOOL,
-                    value: this.options.heightPalette,
+                    type: Cesium.UniformType.BOOL, value: this.options.heightPalette,
                 }, u_water_color: {
-                    type: Cesium.UniformType.VEC3,
-                    value: this.options.waterColor,
+                    type: Cesium.UniformType.VEC3, value: this.options.waterColor,
                 },
-            },
-            varyings: {
+            }, varyings: {
                 v_normal: Cesium.VaryingType.VEC3,
                 v_water_height: Cesium.VaryingType.FLOAT,
                 v_temp_water_height: Cesium.VaryingType.FLOAT,
@@ -468,10 +420,7 @@ export class MagoFrame {
                 v_isNoWater: Cesium.VaryingType.FLOAT,
                 v_flux_value: Cesium.VaryingType.VEC2,
                 v_water_color: Cesium.VaryingType.VEC3,
-            },
-            vertexShaderText: vertexShaderText,
-            fragmentShaderText: fragmentShaderText,
-            translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
+            }, vertexShaderText: vertexShaderText, fragmentShaderText: fragmentShaderText, translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
         });
         gltf.customShader = this.customShader;
 
@@ -513,8 +462,7 @@ export class MagoFrame {
             console.log("[MCT][FRAME] preload : ", i);
             const url = `${this.baseUrl}/sample/${i}.bin`;
             const frame = {
-                status: "loading",
-                data: undefined,
+                status: "loading", data: undefined,
             };
             this.frameData[url] = frame;
             frame.data = await this.loadBinFromUrl(url);
@@ -543,8 +491,7 @@ export class MagoFrame {
                     }
                 } else {
                     const frame = {
-                        status: "loading",
-                        data: undefined,
+                        status: "loading", data: undefined,
                     };
                     this.frameData[binUrl] = frame;
 
@@ -565,14 +512,12 @@ export class MagoFrame {
                         magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
                         repeat: false,
                     });
-                    this.customShader.setUniform("u_water",
-                        this.waterTextureUniform);
+                    this.customShader.setUniform("u_water", this.waterTextureUniform);
                     this.currentFrame = this.frameNumber;
                 }
             }
 
-            if (this.terrainMap === undefined && this.frameterrainStatus !==
-                "loading") {
+            if (this.terrainMap === undefined && this.frameterrainStatus !== "loading") {
                 this.frameterrainStatus = "loading";
                 const bin = await this.loadBinFromUrl(this.terrainUrl);
 
@@ -585,20 +530,16 @@ export class MagoFrame {
                     magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
                     repeat: false,
                 });
-                this.customShader.setUniform("u_terrain",
-                    this.terrainTextureUniform);
+                this.customShader.setUniform("u_terrain", this.terrainTextureUniform);
                 this.terrainMap = [];
                 this.frameterrainStatus = "loaded";
             }
         }
-        this.customShader.setUniform("u_color_intensity",
-            this.options.colorIntensity);
+        this.customShader.setUniform("u_color_intensity", this.options.colorIntensity);
         this.customShader.setUniform("u_max_opacity", this.options.maxOpacity);
         this.customShader.setUniform("u_water_skirt", this.options.waterSkirt);
-        this.customShader.setUniform("u_water_brightness",
-            this.options.waterBrightness);
-        this.customShader.setUniform("u_height_palette",
-            this.options.heightPalette);
+        this.customShader.setUniform("u_water_brightness", this.options.waterBrightness);
+        this.customShader.setUniform("u_height_palette", this.options.heightPalette);
         this.customShader.setUniform("u_water_color", this.options.waterColor);
     }
 
@@ -619,12 +560,9 @@ export class MagoFrame {
         const realj = (index % gridSize) * cellSize;
         const reali = Math.floor(index / gridSize) * cellSize;
 
-        const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(
-            this.extent.getMinLon(), this.extent.getMinLat());
-        const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            leftBottomCartesian);
-        const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix,
-            new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+        const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(this.extent.getMinLon(), this.extent.getMinLat());
+        const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
+        const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
 
         console.log("[MCT][FRAME] calcCellCenterPosition", gridPosition);
 
@@ -640,25 +578,17 @@ export class MagoFrame {
         const cellSize = this.options.cellSize;
         const realGridSize = gridSize * cellSize;
 
-        const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon,
-            minLat);
-        const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            leftBottomCartesian);
+        const leftBottomCartesian = Cesium.Cartesian3.fromDegrees(minLon, minLat);
+        const centerMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(leftBottomCartesian);
         for (let i = 0; i < gridSize - 1; i++) {
             for (let j = 0; j < gridSize - 1; j++) {
                 const realj = j * cellSize;
                 const reali = i * cellSize;
-                const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix,
-                    new Cesium.Cartesian3(realGridSize - reali, realj, 0));
-                const nextGridPosition = this.calcLonLatWithCenterMatrix(
-                    centerMatrix,
-                    new Cesium.Cartesian3(realGridSize - (reali - cellSize),
-                        (realj - cellSize), 0));
+                const gridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - reali, realj, 0));
+                const nextGridPosition = this.calcLonLatWithCenterMatrix(centerMatrix, new Cesium.Cartesian3(realGridSize - (reali - cellSize), (realj - cellSize), 0));
 
-                const inLon = gridPosition.lon <= lon && nextGridPosition.lon >=
-                    lon;
-                const inLat = gridPosition.lat >= lat && nextGridPosition.lat <=
-                    lat;
+                const inLon = gridPosition.lon <= lon && nextGridPosition.lon >= lon;
+                const inLat = gridPosition.lat >= lat && nextGridPosition.lat <= lat;
                 if (inLon && inLat) {
                     const index = this.findIndex(j, i);
                     console.log("[MCT][FRAME] findCellFromDegree", index);

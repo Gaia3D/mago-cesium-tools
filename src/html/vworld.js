@@ -57,7 +57,7 @@ const magoViewer = new MagoTools(viewer);
 const vworld = new Vworld(viewer);
 
 const init = async () => {
-    await magoViewer.createVworldImageryLayerWithoutToken("Satellite", "jpeg");
+    await magoViewer.createMaptilerImageryProvider();
     await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
     viewer.scene.primitives.add(tileset);
