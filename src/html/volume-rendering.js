@@ -44,17 +44,19 @@ const frame = {
     current: 0, max: 8, interval: null,
 };
 
-const magoViewer = new MagoTools(viewer);
+const magoTools = new MagoTools(viewer);
 let volumeRenderer = undefined;
 let modelSwapAnimator = undefined;
 
 const init = async () => {
     //await magoViewer.createMaptilerImageryProvider();
-    await magoViewer.createMaptilerImageryProvider();
-    //await magoViewer.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
-    //const tileset = await Cesium.Cesium3DTileset.fromUrl("http://192.168.10.75:9099/data/{public}/korea-open-data-buildings/tileset.json", {});
-    //viewer.scene.primitives.add(tileset);
-    magoViewer.initPosition(lon, lat, 1000.0);
+    await magoTools.createMaptilerImageryProvider();
+    //await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
+    //const tree = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/FOREST_MAP/tileset.json");
+    //viewer.scene.primitives.add(tree);
+    const buildings = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/NGII_BUILDINGS/tileset.json", {});
+    viewer.scene.primitives.add(buildings);
+    magoTools.initPosition(lon, lat, 1000.0);
 
     //const projectFolderPath = "/volume-render-chemical-diffusion/";
     const projectFolderPath = "/volume-render-air-pollution/";
@@ -85,7 +87,6 @@ const init = async () => {
         jsonIndex: jsonIndex,
     };
     volumeRenderer = new VolumetricRenderer(viewer, options);
-    volumeRenderer.currentIdx = 33;
     await volumeRenderer.init();
     volumeRenderer.currentIdx = 33;
     const primitiveCollection = volumeRenderer.getPrimitiveCollection();

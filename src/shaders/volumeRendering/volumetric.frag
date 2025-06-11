@@ -1,9 +1,8 @@
-#version 300 es
 precision highp float;
 in vec3 positionMC;
 in vec3 camPosMC;
 in vec3 normalMC;
-layout(location = 0) out vec4 fragColor;
+layout (location = 0) out vec4 fragColor;
 
 uniform sampler2D mosaicTexture;
 uniform vec3 u_minBoxPosition; // Minimum position for the volume.
@@ -590,11 +589,11 @@ vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
 
     float tMin, tMax;
     bool isIntersect = intersectAABBox(camPosMC, camDirMC, tMin, tMax);
-    if(tMin > distToGround){
+    if (tMin > distToGround) {
         discard;
     }
     tMin = max(tMin, 0.0); // Ensure tMin is not negative.
-    if(tMax > distToGround){
+    if (tMax > distToGround) {
         tMax = distToGround;
     }
     vec3 minSamplePos = camPosMC + tMin * camDirMC;
@@ -618,9 +617,9 @@ vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
 
     // sample from far to near.
     bool alphaSaturated = false;
-    for(int i = 0; i < u_samplingsCount; i++) {
+    for (int i = 0; i < u_samplingsCount; i++) {
         vec3 samplePos = firstPosMC + camDirMC * increDist * float(i);
-        if(samplePos.z < u_minBoxPosition.z) {
+        if (samplePos.z < u_minBoxPosition.z) {
             continue;
         }
         vec3 texCoord3D = getTexCoord3DFromPositionMC(samplePos);
@@ -654,11 +653,11 @@ vec4 getColorWhenCameraIsInSideBox(vec3 groundPosMC) {
 
     float tMin, tMax;
     bool isIntersect = intersectAABBox(camPosMC, camDirMC, tMin, tMax);
-    if(tMin > distToGround){
+    if (tMin > distToGround) {
         discard;
     }
     tMin = max(tMin, 0.0); // Ensure tMin is not negative.
-    if(tMax > distToGround){
+    if (tMax > distToGround) {
         tMax = distToGround;
     }
 
@@ -681,9 +680,9 @@ vec4 getColorWhenCameraIsInSideBox(vec3 groundPosMC) {
 
     // sample from far to near.
     bool alphaSaturated = false;
-    for(int i = 0; i < u_samplingsCount; i++) {
+    for (int i = 0; i < u_samplingsCount; i++) {
         vec3 samplePos = firstPosMC + camDirMC * increDist * float(i);
-        if(samplePos.z < u_minBoxPosition.z) {
+        if (samplePos.z < u_minBoxPosition.z) {
             continue;
         }
         vec3 texCoord3D = getTexCoord3DFromPositionMC(samplePos);
@@ -826,21 +825,21 @@ vec3 getDepthTexPositionMC() {
 
 void main() {
     vec3 groundPosMC = getDepthTexPositionMC();
-    if(isCuttingPlane(positionMC)) {
+    if (isCuttingPlane(positionMC)) {
         float distToCamMC = distance(camPosMC, positionMC);
         float distGroundToCamMC = distance(camPosMC, groundPosMC);
         float alpha = 1.0;
-        if(distToCamMC > distGroundToCamMC){
+        if (distToCamMC > distGroundToCamMC) {
             alpha = 0.2;
         }
         fragColor = vec4(0.9, 0.5, 0.5, alpha); // Default color
         return;
     }
-    if(isBoxEdge(positionMC)) {
+    if (isBoxEdge(positionMC)) {
         float distToCamMC = distance(camPosMC, positionMC);
         float distGroundToCamMC = distance(camPosMC, groundPosMC);
         float alpha = 1.0;
-        if(distToCamMC > distGroundToCamMC){
+        if (distToCamMC > distGroundToCamMC) {
             alpha = 0.2;
         }
         fragColor = vec4(0.5, 0.5, 0.5, alpha); // Default color
