@@ -1,8 +1,9 @@
+#version 300 es
 precision highp float;
 in vec3 positionMC;
 in vec3 camPosMC;
 in vec3 normalMC;
-out vec4 fragColor_1;
+layout(location = 0) out vec4 fragColor;
 
 uniform sampler2D mosaicTexture;
 uniform vec3 u_minBoxPosition; // Minimum position for the volume.
@@ -832,7 +833,7 @@ void main() {
         if(distToCamMC > distGroundToCamMC){
             alpha = 0.2;
         }
-        fragColor_1 = vec4(0.9, 0.5, 0.5, alpha); // Default color
+        fragColor = vec4(0.9, 0.5, 0.5, alpha); // Default color
         return;
     }
     if(isBoxEdge(positionMC)) {
@@ -842,15 +843,15 @@ void main() {
         if(distToCamMC > distGroundToCamMC){
             alpha = 0.2;
         }
-        fragColor_1 = vec4(0.5, 0.5, 0.5, alpha); // Default color
+        fragColor = vec4(0.5, 0.5, 0.5, alpha); // Default color
         return;
     }
 
     bool isCameraInsideBox = isPointInsideAABB(camPosMC, u_minBoxPosition, u_maxBoxPosition);
     if (isCameraInsideBox) {
-        fragColor_1 = getColorWhenCameraIsInSideBox(groundPosMC);
+        fragColor = getColorWhenCameraIsInSideBox(groundPosMC);
         return;
     }
 
-    fragColor_1 = getColorWhenCameraIsOutSideBox(groundPosMC);
+    fragColor = getColorWhenCameraIsOutSideBox(groundPosMC);
 }

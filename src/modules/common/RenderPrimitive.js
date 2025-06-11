@@ -34,7 +34,7 @@ export class RenderPrimitive {
             shaderProgram: shaderProgram,
             framebuffer: this.framebuffer,
             renderState: renderState,
-            pass: Cesium.Pass.TRANSLUCENT,
+            pass: Cesium.Pass.OPAQUE,
         });
     }
 
