@@ -1,40 +1,44 @@
 import {VolumetricData} from "./VolumetricData";
 import * as Cesium from "cesium";
 
+/**
+ * VolumetricRenderLayer class for managing volumetric data rendering in Cesium.
+ */
 export class VolumetricRenderLayer {
-    // An air pollution layer is a collection of air pollution slice data,
-    // and represents a volume of air pollution data.
-    constructor(viewer, context, jsonIndex, options) {
+
+    /**
+     * Creates an instance of VolumetricRenderLayer.
+     * @param viewer
+     * @param options
+     */
+    constructor(viewer, options) {
         this.volumetricDatasArray = [];
 
         this.viewer = viewer;
-        this.context = context;
-        this.jsonIndex = jsonIndex;
+        this.context = viewer.scene.context;
+        this.jsonIndex = options.jsonIndex;
         this.options = options;
 
         this.show = true;
         this.pollutionVolumeOwner = options.pollutionVolumeOwner;
         this.volume = options.volume;
-        this.jsonData = undefined;
-        this.jsonIndex = jsonIndex;
-        this.jsonUrl = undefined;
-        this.jsonDataArray = [];
+        //this.jsonData = undefined;
+        //this.jsonUrl = undefined;
+        //`this.jsonDataArray = [];
         this.pngsBinBlocksArray = [];
     }
 
-    async _createTextureFromBlob_invertY(arrayBuffer) {
+    async #createTextureFromBlob_invertY(arrayBuffer) {
         const blob = new Blob([arrayBuffer], {type: "image/png"});
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => {
-                // Crear canvas con dimensiones de la imagen
                 const canvas = document.createElement("canvas");
                 canvas.width = img.width;
                 canvas.height = img.height;
 
                 const ctx = canvas.getContext("2d");
 
-                // Voltear en Y
                 ctx.translate(0, img.height);
                 ctx.scale(1, -1);
                 ctx.drawImage(img, 0, 0);
@@ -50,7 +54,7 @@ export class VolumetricRenderLayer {
         });
     }
 
-    async _createTextureFromBlob(arrayBuffer) {
+    async #createTextureFromBlob(arrayBuffer) {
         const blob = new Blob([arrayBuffer], {type: "image/png"});
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -72,7 +76,7 @@ export class VolumetricRenderLayer {
             let jsonData = this.jsonIndex.mosaicTexMetaDataJsonArray[i];
             let mosaicTextureFileName = jsonData.mosaicTextureFileName;
             let blobArrayBuffer = this.pollutionVolumeOwner.getBlobArrayBuffer(mosaicTextureFileName);
-            const mosaicTexture = await this._createTextureFromBlob(blobArrayBuffer);
+            const mosaicTexture = await this.#createTextureFromBlob(blobArrayBuffer);
             let volumetricData = this.newVolumetricData();
             volumetricData.setMosaicTexture(mosaicTexture);
         }

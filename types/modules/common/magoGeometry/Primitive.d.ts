@@ -1,10 +1,10 @@
 /**
- * MagoPrimitive class represents a geometric primitive composed of multiple surfaces.
+ * Primitive class represents a geometric primitive composed of multiple surfaces.
  * It provides methods to manage surfaces, calculate normals, and retrieve vertex buffer objects (VBOs).
  * This class is used in 3D rendering applications to handle complex geometries efficiently.
- * @class MagoPrimitive
+ * @class Primitive
  */
-export class MagoPrimitive {
+export class Primitive {
     /**
      * Array of surfaces that compose this primitive.
      * @type {Array<Surface>}

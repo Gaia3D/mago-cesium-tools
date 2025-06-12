@@ -1,5 +1,13 @@
+/**
+ * VolumetricRenderLayer class for managing volumetric data rendering in Cesium.
+ */
 export class VolumetricRenderLayer {
-    constructor(viewer: any, context: any, jsonIndex: any, options: any);
+    /**
+     * Creates an instance of VolumetricRenderLayer.
+     * @param viewer
+     * @param options
+     */
+    constructor(viewer: any, options: any);
     volumetricDatasArray: any[];
     viewer: any;
     context: any;
@@ -8,15 +16,11 @@ export class VolumetricRenderLayer {
     show: boolean;
     pollutionVolumeOwner: any;
     volume: any;
-    jsonData: any;
-    jsonUrl: any;
-    jsonDataArray: any[];
     pngsBinBlocksArray: any[];
-    _createTextureFromBlob_invertY(arrayBuffer: any): Promise<any>;
-    _createTextureFromBlob(arrayBuffer: any): Promise<any>;
     _prepare(): Promise<void>;
     newVolumetricData(): VolumetricData;
     getMaxAltitude(): number;
     getMinAltitude(): number;
+    #private;
 }
 import { VolumetricData } from "./VolumetricData";

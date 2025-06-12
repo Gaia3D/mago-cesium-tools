@@ -1,4 +1,4 @@
-export class MagoColorUtils {
+export class ColorUtils {
     static getColorFromHex(hex) {
         const r = (hex >> 16) & 0xff;
         const g = (hex >> 8) & 0xff;

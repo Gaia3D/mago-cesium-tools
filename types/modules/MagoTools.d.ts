@@ -88,6 +88,7 @@ export class MagoTools {
      * magoTools.createGridImageryProvider()
      */
     createGridImageryProvider(cell?: number): void;
+    createMaptilerImageryProvider(): Cesium.ImageryLayer;
     /**
      * VWORLD Imagery Layer Provider on the globe.
      * @param type {String} Base, Satellite, White, Midnight
@@ -129,3 +130,4 @@ export class MagoTools {
     destroy(): void;
 }
 import { Viewer } from "cesium";
+import * as Cesium from "cesium";

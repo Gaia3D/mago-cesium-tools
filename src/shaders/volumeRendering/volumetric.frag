@@ -7,10 +7,10 @@ layout (location = 0) out vec4 fragColor;
 uniform sampler2D mosaicTexture;
 uniform vec3 u_minBoxPosition; // Minimum position for the volume.
 uniform vec3 u_maxBoxPosition; // Maximum position for the volume.
-uniform int u_texSize[3]; // The original texture3D size.***
-uniform int u_mosaicSize[3]; // The mosaic composition (xTexCount X yTexCount X zSlicesCount).***
-uniform vec2 u_minMaxAltitudeSlices[32]; // limited to 32 slices.***
-uniform vec2 u_minMaxValues; // The min and max values of the texture.***
+uniform int u_texSize[3]; // The original texture3D size
+uniform int u_mosaicSize[3]; // The mosaic composition (xTexCount X yTexCount X zSlicesCount)
+uniform vec2 u_minMaxAltitudeSlices[32]; // limited to 32 slices
+uniform vec2 u_minMaxValues; // The min and max values of the texture
 
 // legend colors & values.
 uniform vec4 u_legendColors[16];
@@ -18,11 +18,13 @@ uniform float u_legendValues[16];
 uniform int u_legendColorsCount;
 uniform float u_legendValuesScale;
 
-uniform int u_renderingColorType;  // 0= rainbow, 1= monotone, 2= legendColors.
+// 0= rainbow, 1= monotone, 2= legendColors.
+uniform int u_renderingColorType;
 uniform int u_samplingsCount;
-
-uniform vec3 u_AAPlanePosMC; // The position of the plane in model coordinates.***
-uniform int u_AAPlaneNormalMC; // The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.***
+// The position of the plane in model coordinates
+uniform vec3 u_AAPlanePosMC;
+// The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z
+uniform int u_AAPlaneNormalMC;
 
 void checkTexCoordRange(inout vec2 texCoord) {
     float error = 0.0;
@@ -44,9 +46,9 @@ float unpackDepth(const in vec4 rgba_depth) {
 }
 
 vec2 subTexCoord_to_texCoord(in vec2 subTexCoord, in int col_mosaic, in int row_mosaic) {
-    // given col, row & subTexCoord, this function returns the texCoord into mosaic texture.***
-    // The "subTexCoord" is the texCoord of the subTexture[col, row].***
-    // u_mosaicSize =  The mosaic composition (xTexCount X yTexCount X zSlicesCount).***
+    // given col, row & subTexCoord, this function returns the texCoord into mosaic texture
+    // The "subTexCoord" is the texCoord of the subTexture[col, row]
+    // u_mosaicSize =  The mosaic composition (xTexCount X yTexCount X zSlicesCount)
     checkTexCoordRange(subTexCoord);
     float sRange = 1.0 / float(u_mosaicSize[0]);
     float tRange = 1.0 / float(u_mosaicSize[1]);
@@ -54,32 +56,34 @@ vec2 subTexCoord_to_texCoord(in vec2 subTexCoord, in int col_mosaic, in int row_
     float s = float(col_mosaic) * sRange + subTexCoord.x * sRange;
     float t = float(row_mosaic) * tRange + subTexCoord.y * tRange;
 
-    // must check if the texCoord_tl is boundary in x & y.***************************************************************************
-    float mosaicTexSize_x = float(u_texSize[0] * u_mosaicSize[0]); // for example : 150 pixels * 3 columns = 450 pixels.***
-    float mosaicTexSize_y = float(u_texSize[1] * u_mosaicSize[1]); // for example : 150 pixels * 3 rows = 450 pixels.***
+    // must check if the texCoord_tl is boundary in x & y
+    // for example : 150 pixels * 3 columns = 450 pixels
+    // for example : 150 pixels * 3 rows = 450 pixels
+    float mosaicTexSizeX = float(u_texSize[0] * u_mosaicSize[0]);
+    float mosaicTexSizeY = float(u_texSize[1] * u_mosaicSize[1]);
 
-    float currMosaicStart_x = float(col_mosaic * u_texSize[0]);
-    float currMosaicStart_y = float(row_mosaic * u_texSize[1]);
-    float currMosaicEnd_x = currMosaicStart_x + float(u_texSize[0]);
-    float currMosaicEnd_y = currMosaicStart_y + float(u_texSize[1]);
+    float currMosaicStartX = float(col_mosaic * u_texSize[0]);
+    float currMosaicStartY = float(row_mosaic * u_texSize[1]);
+    float currMosaicEndX = currMosaicStartX + float(u_texSize[0]);
+    float currMosaicEndY = currMosaicStartY + float(u_texSize[1]);
 
-    float pixel_x = s * mosaicTexSize_x;
-    float pixel_y = t * mosaicTexSize_y;
+    float pixelX = s * mosaicTexSizeX;
+    float pixelY = t * mosaicTexSizeY;
 
-    if (pixel_x < currMosaicStart_x + 1.0) {
-        pixel_x = currMosaicStart_x + 1.0;
-    } else if (pixel_x > currMosaicEnd_x - 1.0) {
-        pixel_x = currMosaicEnd_x - 1.0;
+    if (pixelX < currMosaicStartX + 1.0) {
+        pixelX = currMosaicStartX + 1.0;
+    } else if (pixelX > currMosaicEndX - 1.0) {
+        pixelX = currMosaicEndX - 1.0;
     }
 
-    if (pixel_y < currMosaicStart_y + 1.0) {
-        pixel_y = currMosaicStart_y + 1.0;
-    } else if (pixel_y > currMosaicEnd_y - 1.0) {
-        pixel_y = currMosaicEnd_y - 1.0;
+    if (pixelY < currMosaicStartY + 1.0) {
+        pixelY = currMosaicStartY + 1.0;
+    } else if (pixelY > currMosaicEndY - 1.0) {
+        pixelY = currMosaicEndY - 1.0;
     }
 
-    s = pixel_x / mosaicTexSize_x;
-    t = pixel_y / mosaicTexSize_y;
+    s = pixelX / mosaicTexSizeX;
+    t = pixelY / mosaicTexSizeY;
 
 
     vec2 resultTexCoord = vec2(s, t);
@@ -106,8 +110,7 @@ bool intersectAAPlane(vec3 rayOrigin, vec3 rayDir, int normalAxis, vec3 planePos
     float denom;
     float numer;
 
-    // The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.***
-
+    // The normal of the plane. 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z
     if (normalAxis == 1 || normalAxis == 4) { // ±X
                                               denom = rayDir.x;
                                               numer = planePosition.x - rayOrigin.x;
@@ -148,10 +151,10 @@ vec4 getColorByLegendColors(float realValue) {
     vec4 colorAux = vec4(0.3, 0.3, 0.3, 0.0);
     vec4 colorZero = vec4(0.3, 0.3, 0.3, 0.0);
 
-    // The legendValues are scaled, so must scale the realPollutionValue.***
+    // The legendValues are scaled, so must scale the realPollutionValue
     float scaledValue = realValue * u_legendValuesScale;
 
-    // find legendIdx.***
+    // find legendIdx
     for (int i = 0; i < u_legendColorsCount; i++) {
         if (i >= u_legendColorsCount) {
             break;
@@ -201,53 +204,52 @@ vec4 getRainbowColor(in float height, in float minHeight_rainbow, in float maxHe
     float h = floor(value);
     float f = fract(value);
 
-
     vec4 resultColor = vec4(0.0, 0.0, 0.0, (gray));
 
     if (hotToCold) {
-        // HOT to COLD.***
+        // HOT to COLD
         resultColor.rgb = vec3(1.0, 0.0, 0.0); // init
         if (h >= 0.0 && h < 1.0) {
-            // mix red & yellow.***
+            // mix red & yellow
             vec3 red = vec3(1.0, 0.0, 0.0);
             vec3 yellow = vec3(1.0, 1.0, 0.0);
             resultColor.rgb = mix(red, yellow, f);
         } else if (h >= 1.0 && h < 2.0) {
-            // mix yellow & green.***
+            // mix yellow & green
             vec3 green = vec3(0.0, 1.0, 0.0);
             vec3 yellow = vec3(1.0, 1.0, 0.0);
             resultColor.rgb = mix(yellow, green, f);
         } else if (h >= 2.0 && h < 3.0) {
-            // mix green & cyan.***
+            // mix green & cyan
             vec3 green = vec3(0.0, 1.0, 0.0);
             vec3 cyan = vec3(0.0, 1.0, 1.0);
             resultColor.rgb = mix(green, cyan, f);
         } else if (h >= 3.0) {
-            // mix cyan & blue.***
+            // mix cyan & blue
             vec3 blue = vec3(0.0, 0.0, 1.0);
             vec3 cyan = vec3(0.0, 1.0, 1.0);
             resultColor.rgb = mix(cyan, blue, f);
         }
     } else {
-        // COLD to HOT.***
+        // COLD to HOT
         resultColor.rgb = vec3(0.0, 0.0, 1.0); // init
         if (h >= 0.0 && h < 1.0) {
-            // mix blue & cyan.***
+            // mix blue & cyan
             vec3 blue = vec3(0.0, 0.0, 1.0);
             vec3 cyan = vec3(0.0, 1.0, 1.0);
             resultColor.rgb = mix(blue, cyan, f);
         } else if (h >= 1.0 && h < 2.0) {
-            // mix cyan & green.***
+            // mix cyan & green
             vec3 green = vec3(0.0, 1.0, 0.0);
             vec3 cyan = vec3(0.0, 1.0, 1.0);
             resultColor.rgb = mix(cyan, green, f);
         } else if (h >= 2.0 && h < 3.0) {
-            // mix green & yellow.***
+            // mix green & yellow
             vec3 green = vec3(0.0, 1.0, 0.0);
             vec3 yellow = vec3(1.0, 1.0, 0.0);
             resultColor.rgb = mix(green, yellow, f);
         } else if (h >= 3.0) {
-            // mix yellow & red.***
+            // mix yellow & red
             vec3 red = vec3(1.0, 0.0, 0.0);
             vec3 yellow = vec3(1.0, 1.0, 0.0);
             resultColor.rgb = mix(yellow, red, f);
@@ -285,11 +287,6 @@ void getSliceIndexFromPositionMC(vec3 positionMC, out int sliceDownIdx, out int 
         }
     }
 
-    // if(currSliceIdx < 0)
-    // {
-    //     currSliceIdx = 0;
-    // }
-
     if (currSliceIdx == 0) {
         sliceDownIdx = currSliceIdx;
         sliceUpIdx = currSliceIdx;
@@ -325,24 +322,22 @@ void getSliceIndexFromPositionMC(vec3 positionMC, out int sliceDownIdx, out int 
     distDown = abs(altitude - sliceDownAltitude);
 }
 
-void getColunmRowFromSliceIndex(int sliceIndex, out int col_mosaic, out int row_mosaic) {
-    // The sliceIndex is the index of the slice in the 3D texture.***
-    // The col_mosaic and row_mosaic are the column and row of the mosaic texture.***
-    // The u_mosaicSize[0] is the number of columns in the mosaic texture.***
-    // The u_mosaicSize[1] is the number of rows in the mosaic texture.***
+void getColunmRowFromSliceIndex(int sliceIndex, out int colMosaic, out int rowMosaic) {
+    // The sliceIndex is the index of the slice in the 3D texture
+    // The col_mosaic and row_mosaic are the column and row of the mosaic texture
+    // The u_mosaicSize[0] is the number of columns in the mosaic texture
+    // The u_mosaicSize[1] is the number of rows in the mosaic texture
     // col_mosaic = sliceIndex % u_mosaicSize[0];
     // row_mosaic = sliceIndex / u_mosaicSize[0];
-
     float rowAux = floor(float(sliceIndex) / float(u_mosaicSize[0]));
     float colAux = float(sliceIndex) - rowAux * float(u_mosaicSize[0]);
-    col_mosaic = int(colAux);
-    row_mosaic = int(rowAux);
+    colMosaic = int(colAux);
+    rowMosaic = int(rowAux);
 }
 
-float getValue_triLinearInterpolation(in vec2 subTexCoord2d, in int col_mosaic, in int row_mosaic) {
-    // The subTexCoord2d is the 2D texture coordinate of the slice.***
-    // The col_mosaic and row_mosaic are the column and row of the mosaic texture.***
-
+float getValue_triLinearInterpolation(in vec2 subTexCoord2d, in int colMosaic, in int rowMosaic) {
+    // The subTexCoord2d is the 2D texture coordinate of the slice
+    // The col_mosaic and row_mosaic are the column and row of the mosaic texture
     vec3 sim_res3d = vec3(u_texSize[0], u_texSize[1], u_texSize[2]);
     vec2 px = 1.0 / sim_res3d.xy;
     vec2 vc = (floor(subTexCoord2d * sim_res3d.xy)) * px;
@@ -357,10 +352,10 @@ float getValue_triLinearInterpolation(in vec2 subTexCoord2d, in int col_mosaic, 
     texCoord_bl.y = 1.0 - texCoord_bl.y; // Invert Y coordinate for texture sampling.
     texCoord_br.y = 1.0 - texCoord_br.y; // Invert Y coordinate for texture sampling.
 
-    vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_tl, col_mosaic, row_mosaic));
-    vec4 texColor_tr = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_tr, col_mosaic, row_mosaic));
-    vec4 texColor_bl = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_bl, col_mosaic, row_mosaic));
-    vec4 texColor_br = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_br, col_mosaic, row_mosaic));
+    vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_tl, colMosaic, rowMosaic));
+    vec4 texColor_tr = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_tr, colMosaic, rowMosaic));
+    vec4 texColor_bl = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_bl, colMosaic, rowMosaic));
+    vec4 texColor_br = texture(mosaicTexture, subTexCoord_to_texCoord(texCoord_br, colMosaic, rowMosaic));
 
     float realvalueRange = u_minMaxValues.y - u_minMaxValues.x;
     float value_tl = unpackDepth(texColor_tl) * realvalueRange + u_minMaxValues.x;
@@ -375,12 +370,12 @@ float getValue_triLinearInterpolation(in vec2 subTexCoord2d, in int col_mosaic, 
     return value;
 }
 
-float getValue_NEAREST(in vec2 subTexCoord2d, in int col_mosaic, in int row_mosaic) {
-    // The subTexCoord2d is the 2D texture coordinate of the slice.***
-    // The col_mosaic and row_mosaic are the column and row of the mosaic texture.***
+float getValue_NEAREST(in vec2 subTexCoord2d, in int colMosaic, in int rowMosaic) {
+    // The subTexCoord2d is the 2D texture coordinate of the slice
+    // The colMosaic and row_mosaic are the column and row of the mosaic texture
     vec2 subTexCoord = subTexCoord2d;
     subTexCoord.y = 1.0 - subTexCoord.y; // Invert Y coordinate for texture sampling.
-    vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(subTexCoord, col_mosaic, row_mosaic));
+    vec4 texColor_tl = texture(mosaicTexture, subTexCoord_to_texCoord(subTexCoord, colMosaic, rowMosaic));
     float realvalueRange = u_minMaxValues.y - u_minMaxValues.x;
     float value_tl = unpackDepth(texColor_tl) * realvalueRange + u_minMaxValues.x;
 
@@ -431,13 +426,13 @@ void getValue(in vec3 texCoord3d, in vec3 positionMC, out float value) {
     float valueDown = getValue_triLinearInterpolation(subTexCoordDown, colDown, rowDown);
     float valueUp = getValue_triLinearInterpolation(subTexCoordUp, colUp, rowUp);
 
-    // The value is the linear interpolation of the two values.***
+    // The value is the linear interpolation of the two values
     value = mix(valueDown, valueUp, distDownRatio);
 }
 
-bool findFirstSamplePosition(in vec3 frontPosMC, in vec3 camDirMC, in float increLength, out vec3 result_samplePos) {
-    // The frontPosMC is the position of the camera.***
-    // The result_samplePos is the position of the first sample.***
+bool findFirstSamplePosition(in vec3 frontPosMC, in vec3 camDirMC, in float increLength, out vec3 resultSamplePos) {
+    // The frontPosMC is the position of the camera
+    // The resultSamplePos is the position of the first sample
     vec3 samplePosMC;
     vec3 samplePosMC_prev;
     for (int i = 0; i < 30; i++) {
@@ -452,26 +447,9 @@ bool findFirstSamplePosition(in vec3 frontPosMC, in vec3 camDirMC, in float incr
         float value;
         getValueFAST(texCoord3d, samplePosMC, value);
         if (value > u_minMaxValues.x) {
-            // if(i > 0) {
-            //     // check the previous sample.***
-            //     vec3 samplePosMC_semiPrev = samplePosMC - camDirMC * (increLength * 0.5);
-            //     vec3 texCoord3d_semiPrev = getTexCoord3DFromPositionMC(samplePosMC_semiPrev);
-            //     float value_semiPrev;
-            //     getValueFAST(texCoord3d_semiPrev, samplePosMC_semiPrev, value_semiPrev);
-            //     if(value_semiPrev > u_minMaxValues.x) {
-            //         result_samplePos = samplePosMC_prev;
-            //         return true;
-            //     }
-            //     else {
-            //         result_samplePos = texCoord3d_semiPrev;
-            //         return true;
-            //     }
-            // }
-
-            result_samplePos = samplePosMC;
+            resultSamplePos = samplePosMC;
             return true;
         }
-
         samplePosMC_prev = samplePosMC;
     }
 
@@ -522,7 +500,7 @@ vec3 getPlanePositionMC() {
 
 bool isInFrontOfCuttingPlane(vec3 posMC) {
     // Check if the position is in front of the cutting plane.
-    // u_AAPlaneNormalMC : 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.***
+    // u_AAPlaneNormalMC : 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z
     vec3 planePosMC = getPlanePositionMC();
 
     if (u_AAPlaneNormalMC == 0) {
@@ -550,9 +528,9 @@ bool isInFrontOfCuttingPlane(vec3 posMC) {
 }
 
 void recalculateMinOrMaxSamplePositionWithCuttingPlane(inout vec3 minSamplePos, inout vec3 maxSamplePos, inout float tMin, inout float tMax, in vec3 camPosMC, in vec3 camDirMC) {
-    // u_AAPlaneNormalMC : 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z.***
+    // u_AAPlaneNormalMC : 0 = noApply, 1 = x, 2 = y, 3 = z, 4 = -x, 5 = -y, 6 = -z
     if (u_AAPlaneNormalMC != 0) {
-        // do not draw in front of cutting planes.***
+        // do not draw in front of cutting planes
         bool minSamplePosInFrontOfPlane = isInFrontOfCuttingPlane(minSamplePos);
         bool maxSamplePosInFrontOfPlane = isInFrontOfCuttingPlane(maxSamplePos);
         if (minSamplePosInFrontOfPlane && maxSamplePosInFrontOfPlane) {
@@ -578,7 +556,7 @@ void recalculateMinOrMaxSamplePositionWithCuttingPlane(inout vec3 minSamplePos, 
 }
 
 vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
-    vec4 color = vec4(1.0, 0.0, 0.0, 1.0); // Default color
+    vec4 color = vec4(1.0, 0.0, 0.0, 1.0);
     vec3 camDirMC = normalize(positionMC - camPosMC);
     float dot = dot(normalMC, camDirMC);
     if (dot > 0.0) {
@@ -592,7 +570,7 @@ vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
     if (tMin > distToGround) {
         discard;
     }
-    tMin = max(tMin, 0.0); // Ensure tMin is not negative.
+    tMin = max(tMin, 0.0);
     if (tMax > distToGround) {
         tMax = distToGround;
     }
@@ -611,7 +589,6 @@ vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
         discard;
     }
 
-    //firstPosMC = minSamplePos;
     float dist = distance(firstPosMC, maxSamplePos);
     increDist = dist / float(u_samplingsCount);
 
@@ -642,7 +619,7 @@ vec4 getColorWhenCameraIsOutSideBox(vec3 groundPosMC) {
 }
 
 vec4 getColorWhenCameraIsInSideBox(vec3 groundPosMC) {
-    vec4 color = vec4(1.0, 0.0, 0.0, 1.0); // Default color
+    vec4 color = vec4(1.0, 0.0, 0.0, 1.0);
     vec3 camDirMC = normalize(positionMC - camPosMC);
     float dot = dot(normalMC, camDirMC);
     if (dot < 0.0) {
@@ -704,10 +681,10 @@ vec4 getColorWhenCameraIsInSideBox(vec3 groundPosMC) {
     return color;
 }
 
+// Check if the position is on the edge of the box.
 bool isBoxEdge(vec3 posMC) {
-    // Check if the position is on the edge of the box.
     vec3 texCoord3d = getTexCoord3DFromPositionMC(posMC);
-    float edgeThreshold = 0.002; // Adjust this value as needed.
+    float edgeThreshold = 0.001; // Adjust this value as needed.
     bool isEdgeX = (texCoord3d.x < edgeThreshold || texCoord3d.x > 1.0 - edgeThreshold);
     bool isEdgeY = (texCoord3d.y < edgeThreshold || texCoord3d.y > 1.0 - edgeThreshold);
     bool isEdgeZ = (texCoord3d.z < edgeThreshold || texCoord3d.z > 1.0 - edgeThreshold);
@@ -718,11 +695,10 @@ bool isBoxEdge(vec3 posMC) {
     if (isEdgeZ) isEdgesCount++;
 
     if (isEdgesCount > 1) {
-        return true; // Not a single edge
+        return true;
     }
 
     return false;
-
 }
 
 bool isCuttingPlane(vec3 posMC) {
@@ -832,17 +808,17 @@ void main() {
         if (distToCamMC > distGroundToCamMC) {
             alpha = 0.2;
         }
-        fragColor = vec4(0.9, 0.5, 0.5, alpha); // Default color
+        fragColor = vec4(1.0, 0.5, 0.5, alpha);
         return;
     }
     if (isBoxEdge(positionMC)) {
         float distToCamMC = distance(camPosMC, positionMC);
         float distGroundToCamMC = distance(camPosMC, groundPosMC);
-        float alpha = 1.0;
+        float alpha = 0.75;
         if (distToCamMC > distGroundToCamMC) {
-            alpha = 0.2;
+            alpha = 0.25;
         }
-        fragColor = vec4(0.5, 0.5, 0.5, alpha); // Default color
+        fragColor = vec4(1.0, 1.0, 1.0, alpha);
         return;
     }
 

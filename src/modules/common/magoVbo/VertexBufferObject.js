@@ -1,9 +1,33 @@
-export class MagoVbo {
+export class VertexBufferObject {
     constructor() {
+        /**
+         * Array of positions for the vertices in Cartesian coordinates.
+         * @type {Array<number>}
+         */
         this.positions = null;
+
+        /**
+         * Array of normals for the vertices, represented as 3D vectors.
+         * @type {Array<number>}
+         */
         this.normals = null;
+
+        /**
+         * Array of colors for the vertices, represented as RGBA values.
+         * @type {Array<number>}
+         */
         this.colors = null;
+
+        /**
+         * Array of texture coordinates for the vertices.
+         * @type {Array<number>}
+         */
         this.uvs = null;
+
+        /**
+         * Array of indices for the vertices, defining the order in which they are connected.
+         * @type {Array<number>}
+         */
         this.indices = null;
     }
 

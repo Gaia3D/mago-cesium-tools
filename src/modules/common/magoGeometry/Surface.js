@@ -1,14 +1,28 @@
-import {MagoVbo} from "../magoVbo/MagoVbo.js";
+import {VertexBufferObject} from "../magoVbo/VertexBufferObject.js";
 
-export class MagoSurface {
+export class Surface {
     constructor() {
+        /**
+         * Array of faces that compose this surface.
+         * @type {Array<Face>}
+         */
         this.faces = [];
     }
 
+    /**
+     * Adds a face to the surface.
+     * @param face {Face} The face to be added.
+     */
     addFace(face) {
         this.faces.push(face);
     }
 
+    /**
+     * Calculates the normals for each face in the surface.
+     * This method iterates through all the faces and calls their `calculateFaceNormal` method.
+     * This is essential for rendering the surface correctly with lighting effects.
+     * @returns {void}
+     */
     calculateFacesNormals() {
         for (let i = 0; i < this.faces.length; i++) {
             const face = this.faces[i];
@@ -16,6 +30,12 @@ export class MagoSurface {
         }
     }
 
+    /**
+     * Calculates the triangle indices for each face in the surface.
+     * This method iterates through all the faces and calls their `calculateTriangleIndices` method.
+     * This is essential for rendering the surface correctly with triangle-based rendering.
+     * @return {void}
+     */
     calculateFacesTriangleIndices() {
         for (let i = 0; i < this.faces.length; i++) {
             const face = this.faces[i];
@@ -23,10 +43,19 @@ export class MagoSurface {
         }
     }
 
+    /**
+     * Returns the number of faces in the surface.
+     * @returns {number}
+     */
     getFacesCount() {
         return this.faces.length;
     }
 
+    /**
+     * Returns the face at the specified index.
+     * @param index
+     * @returns {undefined|Face}
+     */
     getFace(index) {
         if (index < 0 || index >= this.faces.length) {
             return undefined;
@@ -34,6 +63,10 @@ export class MagoSurface {
         return this.faces[index];
     }
 
+    /**
+     * Returns an array of vertices that compose the surface.
+     * @returns {Array<Vertex>} Array of vertices
+     */
     getVertices() {
         const vertices = [];
         for (let i = 0; i < this.faces.length; i++) {
@@ -56,9 +89,10 @@ export class MagoSurface {
         let indices = [];
 
         let vertices = this.getVertices();
+        //console.log("MagoSurface.getVbo: vertices.length = " + vertices.length);
         for (let i = 0; i < vertices.length; i++) {
             let vertex = vertices[i];
-            vertex.setIdx(i);
+            vertex.index = i;
 
             positions.push(vertex.position.x);
             positions.push(vertex.position.y);
@@ -77,10 +111,10 @@ export class MagoSurface {
                 if (colors === undefined) {
                     colors = [];
                 }
-                colors.push(vertex.color.r);
-                colors.push(vertex.color.g);
-                colors.push(vertex.color.b);
-                colors.push(vertex.color.a);
+                colors.push(vertex.color.red);
+                colors.push(vertex.color.green);
+                colors.push(vertex.color.blue);
+                colors.push(vertex.color.alpha);
             }
 
             if (vertex.texCoord !== undefined) {
@@ -100,15 +134,15 @@ export class MagoSurface {
             }
             const indicesCount = faceIndices.length;
             for (let j = 0; j < indicesCount; j++) {
-                let idx = faceIndices[j];
-                let faceVertex = face.vertexArray[idx];
-                if (faceVertex.idx !== undefined) {
-                    indices.push(faceVertex.idx);
+                let index = faceIndices[j];
+                let faceVertex = face.vertices[index];
+                if (faceVertex.index !== undefined) {
+                    indices.push(faceVertex.index);
                 }
             }
         }
 
-        let magoVbo = new MagoVbo();
+        let magoVbo = new VertexBufferObject();
 
         magoVbo.setPositions(positions);
         if (normals !== undefined) {

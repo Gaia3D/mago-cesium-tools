@@ -10,18 +10,27 @@ export class RenderPrimitive {
         this.clearCommand = undefined;
         if (this.autoClear) {
             this.clearCommand = new Cesium.ClearCommand({
-                color: new Cesium.Color(0.0, 0.0, 0.0, 0.0), depth: 1.0, framebuffer: this.framebuffer, pass: Cesium.Pass.OPAQUE,
+                color: new Cesium.Color(0.0, 0.0, 0.0, 0.0),
+                depth: 1.0,
+                framebuffer: this.framebuffer,
+                pass: Cesium.Pass.OPAQUE,
             });
         }
     }
 
     createCommand(context) {
         const vertexArray = Cesium.VertexArray.fromGeometry({
-            context: context, geometry: this.geometry, attributeLocations: this.attributeLocations, bufferUsage: Cesium.BufferUsage.STATIC_DRAW,
+            context: context,
+            geometry: this.geometry,
+            attributeLocations: this.attributeLocations,
+            bufferUsage: Cesium.BufferUsage.STATIC_DRAW,
         });
 
         const shaderProgram = Cesium.ShaderProgram.fromCache({
-            context: context, attributeLocations: this.attributeLocations, vertexShaderSource: this.vertexShaderSource, fragmentShaderSource: this.fragmentShaderSource,
+            context: context,
+            attributeLocations: this.attributeLocations,
+            vertexShaderSource: this.vertexShaderSource,
+            fragmentShaderSource: this.fragmentShaderSource,
         });
 
         const renderState = Cesium.RenderState.fromCache(this.rawRenderState);

@@ -151,6 +151,7 @@ export class MagoFluid {
     initWaterSimulation(options: any): Promise<void>;
     interval: number;
     startFrame(): void;
+    saveWaterImage(): void;
     /**
      * Saves the water map image as a PNG file.
      */

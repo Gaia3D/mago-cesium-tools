@@ -4,9 +4,10 @@ in vec3 position;
 in vec3 normal;
 uniform vec4 u_camPosWC;
 
-out vec3 positionMC; // Output variable for model coordinates.
-out vec3 camPosMC; // Output variable for camera position in model coordinates.
-
+// Output variable for model coordinates.
+out vec3 positionMC;
+// Output variable for camera position in model coordinates.
+out vec3 camPosMC;
 out vec3 normalMC;
 
 void main() {

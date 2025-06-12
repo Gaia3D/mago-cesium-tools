@@ -40,9 +40,6 @@ viewer.scene.globe.enableLighting = false;
 viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
 const [lon, lat] = [127.3839550536586, 36.46552371257934];
-const frame = {
-    current: 0, max: 8, interval: null,
-};
 
 const magoTools = new MagoTools(viewer);
 let volumeRenderer = undefined;
@@ -88,17 +85,17 @@ const init = async () => {
     };
     volumeRenderer = new VolumetricRenderer(viewer, options);
     await volumeRenderer.init();
-    volumeRenderer.currentIdx = 33;
+    volumeRenderer.currentIndex = 33;
     const primitiveCollection = volumeRenderer.getPrimitiveCollection();
     viewer.scene.primitives.add(primitiveCollection);
 
-    const center = Cesium.Cartesian3.fromDegrees(lon, lat);
-    const modelOptions = {center};
-    modelSwapAnimator = new ModelSwapAnimator(viewer, modelOptions);
+    //const center = Cesium.Cartesian3.fromDegrees(lon, lat);
+    //const modelOptions = {center};
+    //modelSwapAnimator = new ModelSwapAnimator(viewer, modelOptions);
 
-    const maxValue = 0.484;
-    const glbUrl = "/marching-cube-sample/airPollution_20081911.glb";
-    modelSwapAnimator.loadModel(glbUrl, maxValue);
+    //const maxValue = 0.484;
+    //const glbUrl = "/marching-cube-sample/airPollution_20081911.glb";
+    //modelSwapAnimator.loadModel(glbUrl, maxValue);
 
     setDefaultValue();
     if (!viewer.scene.clampToHeightSupported) {
@@ -113,7 +110,7 @@ const setDefaultValue = () => {
 const nextFrame = () => {
     if (volumeRenderer) {
         volumeRenderer.addIndex();
-        console.log(volumeRenderer.currentIdx);
+        console.log(volumeRenderer.currentIndex);
     }
 };
 
