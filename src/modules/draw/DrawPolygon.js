@@ -36,6 +36,8 @@ export class DrawPolygon {
      * @returns {void}
      */
     on = (isContinue = false) => {
+        this.clearEntities();
+
         this.scene.canvas.style.cursor = "crosshair";
         const viewer = this.viewer;
         const scene = viewer.scene;
@@ -195,6 +197,10 @@ export class DrawPolygon {
             scene.screenSpaceCameraController.enableZoom = true;
             scene.screenSpaceCameraController.enableTilt = true;
             scene.screenSpaceCameraController.enableLook = true;
+
+            if (isContinue) {
+                this.off(false);
+            }
         };
         handler.setInputAction(mouseLeftClickHandler,
             Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -209,14 +215,17 @@ export class DrawPolygon {
     /**
      * Disables the polygon drawing tool. and clears the entities.
      * @function
+     * @param {boolean} [clear=false] - Whether to clear the drawn polygon.
      * @returns {void}
      */
-    off = () => {
+    off = (clear = true) => {
         this.getPositions();
 
         this.scene.canvas.style.cursor = "default";
         this.status = false;
-        this.clearEntities();
+        if (clear) {
+            this.clearEntities();
+        }
         const handler = this.handler;
         if (handler) {
             handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);

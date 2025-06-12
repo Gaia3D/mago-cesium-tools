@@ -289,7 +289,7 @@ export class MagoTools {
         try {
             this.viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
                 url, {
-                    requestVertexNormals: true,
+                    //requestVertexNormals: true,
                 });
         } catch (error) {
             console.warn("Failed to load terrain provider:", error);
