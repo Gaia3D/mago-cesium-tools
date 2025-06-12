@@ -14,7 +14,23 @@ document.querySelector("#app").innerHTML = `
     <h3>Gaia3D, Inc.</h3>
     <span class="line"></span>
     <button id="start">Start</button>
+    <button id="previous-frame" class="btn">Previous Frame</button>
     <button id="next-frame" class="btn">Next Frame</button>
+    <span class="line"></span>
+    <div>
+        <label for="sampling-count">Sampling Count: </label>
+        <input type="range" id="sampling-range" min="0" max="100" value="10">
+        <input type="text" id="sampling-count" readonly>
+    </div>
+    <span class="line"></span>
+ </div>
+  <div id="timeSliderWrap">
+    <div id="timeSlider">
+        <input type="range" id="timeSliderInput" value="0" step="1" min="0" max="360">
+        <span id="timeSliderBufferingBar" class="bufferingBar"></span>
+    </div>
+    <input type="text" id="timeSliderValue" readonly>
+    <button id="timeSliderButton">Start</button>
  </div>
 `;
 
@@ -46,20 +62,23 @@ let volumeRenderer = undefined;
 let modelSwapAnimator = undefined;
 
 const init = async () => {
-    //await magoViewer.createMaptilerImageryProvider();
     await magoTools.createMaptilerImageryProvider();
-    //await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
-    //const tree = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/FOREST_MAP/tileset.json");
-    //viewer.scene.primitives.add(tree);
+    await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
     const buildings = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/NGII_BUILDINGS/tileset.json", {});
     viewer.scene.primitives.add(buildings);
-    magoTools.initPosition(lon, lat, 1000.0);
 
-    //const projectFolderPath = "/volume-render-chemical-diffusion/";
-    const projectFolderPath = "/volume-render-air-pollution/";
+    const projectFolderPath = "/volume-render-chemical-diffusion/";
+    //const projectFolderPath = "/volume-render-air-pollution/";
     const res = await fetch(projectFolderPath + "index.json");
     const json = await res.text();
     const jsonIndex = JSON.parse(json);
+    console.log(jsonIndex);
+
+    const lon = jsonIndex.centerGeographicCoord.longitude;
+    const lat = jsonIndex.centerGeographicCoord.latitude;
+    const altitude = jsonIndex.centerGeographicCoord.altitude;
+    magoTools.initPosition(lon, lat, altitude + 1000.0);
+
     let pngsBinBlockFileNames = jsonIndex.pngsBinBlockFileNames;
     let pngsBinBlockFileNamesCount = pngsBinBlockFileNames.length;
     let pngsBinBlocksArray = [];
@@ -104,7 +123,24 @@ const init = async () => {
 };
 
 const setDefaultValue = () => {
+    if (volumeRenderer) {
+        let defaultSamplingCount = volumeRenderer.samplingCount;
+        let defaultSamplingCountMax = volumeRenderer.mosaicTextureMetaDatas.length - 1;
 
+        document.querySelector("#sampling-range").value = defaultSamplingCount;
+        document.querySelector("#sampling-count").value = defaultSamplingCount;
+        document.querySelector("#timeSliderInput").max = defaultSamplingCountMax;
+        document.querySelector("#timeSliderInput").value = 0;
+        document.querySelector("#timeSliderValue").value = `0/${defaultSamplingCountMax}`;
+        document.querySelector("#timeSliderBufferingBar").style.width = "0%";
+    }
+};
+
+const setFrame = (value) => {
+    if (volumeRenderer) {
+        volumeRenderer.currentIndex = value;
+        document.querySelector("#timeSliderValue").value = `${value}/${document.querySelector("#timeSliderInput").max}`;
+    }
 };
 
 const nextFrame = () => {
@@ -114,23 +150,89 @@ const nextFrame = () => {
     }
 };
 
+const previousFrame = () => {
+    if (volumeRenderer) {
+        volumeRenderer.subIndex();
+        console.log(volumeRenderer.currentIndex);
+    }
+};
+
 const animator = {
     playInterval: undefined,
+
 };
 
 document.querySelector("#start").addEventListener("click", async () => {
     if (animator.playInterval) {
+        animator.isStart = false;
         clearInterval(animator.playInterval);
         animator.playInterval = undefined;
     } else {
+        animator.isStart = true;
         animator.playInterval = setInterval(() => {
             nextFrame();
         }, 300);
     }
 });
 
+document.querySelector("#previous-frame").addEventListener("click", async () => {
+    previousFrame();
+});
+
 document.querySelector("#next-frame").addEventListener("click", async () => {
     nextFrame();
+});
+
+document.querySelector("#sampling-range").addEventListener("input", (event) => {
+    const samplingCount = event.target.value;
+    document.querySelector("#sampling-count").value = samplingCount;
+    if (volumeRenderer) {
+        volumeRenderer.samplingCount = samplingCount;
+    }
+});
+
+const setBufferBar = (max, value) => {
+    const bufferingBar = document.querySelector("#timeSliderBufferingBar");
+    const percent = (value / max) * 100;
+    bufferingBar.style.width = `${percent}%`;
+};
+
+document.querySelector("#timeSliderInput").addEventListener("input", (event) => {
+    document.querySelector("#timeSliderButton").innerText = "Start";
+
+    console.log(event.target.value);
+    const value = parseInt(event.target.value);
+
+    setFrame(value);
+    document.querySelector("#timeSliderValue").value = `${value}/${event.target.max}`;
+});
+
+document.querySelector("#timeSliderButton").addEventListener("click", (event) => {
+    if (animator.isStart) {
+        clearInterval(animator.playInterval);
+        animator.playInterval = undefined;
+        event.target.innerText = "Start";
+    } else {
+        const max = document.querySelector("#timeSliderInput").max;
+        let count = animationStatus.recentFrame;
+        animator.playInterval = setInterval(() => {
+            if (count > max) {
+                count = 0;
+            }
+            // document.querySelector('#timeSliderInput').value = count;
+            // document.querySelector('#timeSliderValue').value = `${count}/${max}`;
+
+            setFrame(count);
+
+            /* const url = `sample/${count}.bin`;
+            fluid.frameUrl = url;
+            fluid.frameNumber = count;
+            animationStatus.recentFrame = count;*/
+            count++;
+        }, 100);
+        event.target.innerText = "Stop";
+    }
+    animator.isStart = !animator.isStart;
 });
 
 init();

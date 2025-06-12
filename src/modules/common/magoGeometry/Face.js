@@ -15,7 +15,7 @@ export class Face {
          * Array of indices that compose this face.
          * @type {Array<number>}
          */
-        this.indices = [];
+        this.indices = undefined;
 
         /**
          * The face normal.
