@@ -62,13 +62,13 @@ const init = async () => {
     viewer.scene.imageryLayers.addImageryProvider(grid);
     await magoTools.changeTerrain("https://seoul.gaia3d.com:10024/resource/static/NGII_5M_DEM");
 
-    cesiumTerrainEditor = new CesiumTerrainEditor({
+    cesiumTerrainEditor = new CesiumTerrainEditor(viewer, {
         terrainProvider: viewer.terrainProvider,
     });
 
     const buildings = await Cesium.Cesium3DTileset.fromUrl("https://seoul.gaia3d.com:10024/resource/static/NGII_BUILDINGS/tileset.json", {});
     viewer.scene.primitives.add(buildings);
-    magoTools.initPosition(lon, lat, 1000.0);
+    magoTools.initPosition(lon, lat, 3000.0);
 
     setDefaultValue();
     if (!viewer.scene.clampToHeightSupported) {

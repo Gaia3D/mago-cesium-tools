@@ -200,6 +200,8 @@ export class DrawPolygon {
 
             if (isContinue) {
                 this.off(false);
+                console.log("Continue drawing polygon");
+                this.getPositions();
             }
         };
         handler.setInputAction(mouseLeftClickHandler,
@@ -219,8 +221,6 @@ export class DrawPolygon {
      * @returns {void}
      */
     off = (clear = true) => {
-        this.getPositions();
-
         this.scene.canvas.style.cursor = "default";
         this.status = false;
         if (clear) {
