@@ -151,4 +151,31 @@ export class Triangle {
             indices: newIndices,
         };
     }
+
+    /**
+     * Generates triangles from the provided vertices and indices.
+     * @param {Array<Cesium.Cartesian3>} vertices
+     * @param {Array<number>} indices
+     * @returns {module:cesium.PolygonHierarchy}
+     */
+    static generateTrianglesFromVerticesWithIndices(vertices, indices) {
+        if (indices.length === 0 && indices.length % 3 !== 0) {
+            console.warn("CesiumTerrainEditor.sampleTriangles: No indices generated or indices length is not a multiple of 3.");
+        }
+
+        const triangles = [];
+        for (let i = 0; i < indices.length; i += 3) {
+            const index1 = indices[i];
+            const index2 = indices[i + 1];
+            const index3 = indices[i + 2];
+
+            if (index1 < vertices.length && index2 < vertices.length && index3 < vertices.length) {
+                const triangle = new Triangle(vertices[index1], vertices[index2], vertices[index3]);
+                triangles.push(triangle);
+            } else {
+                console.warn(`Index out of bounds: ${index1}, ${index2}, ${index3}`);
+            }
+        }
+        return triangles;
+    }
 }

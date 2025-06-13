@@ -1,5 +1,6 @@
 import * as Cesium from "cesium";
 import {Quantizer} from "@/modules/common/Quantizer.js";
+import {Triangle} from "@/modules/common/magoGeometry/Triangle.js";
 
 export class CesiumTerrainEditor {
 
@@ -49,7 +50,16 @@ export class CesiumTerrainEditor {
             },
         });
 
-        //Cesium.PolygonPipeline.triangulate(positions, []);
+        const indices = Cesium.PolygonPipeline.triangulate(positions, []);
+        const triangles = Triangle.generateTrianglesFromVerticesWithIndices(cartesianPositions, indices);
+        console.log("CesiumTerrainEditor.sampleTriangles: indices.length = " + indices.length);
+
+        // TODO
+
+        /*if (indices.length === 0 && indices.length % 3 !== 0) {
+            console.warn("CesiumTerrainEditor.sampleTriangles: No indices generated or indices length is not a multiple of 3.");
+            return new Cesium.PolygonHierarchy(cartesianPositions);
+        }*/
 
         return new Cesium.PolygonHierarchy(cartesianPositions);
     }

@@ -174,9 +174,7 @@ export class Quantizer {
         let eastIndices = sideIndices.east;
         let southIndices = sideIndices.south;
         let northIndices = sideIndices.north;
-
-        console.log("Quantizer.createMoreSimpleTile: vertices.length = " + vertices.length);
-
+        
         const positions = this.dequantize(vertices);
         const boundingSphere = Cesium.BoundingSphere.fromPoints(positions);
 
